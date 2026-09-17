@@ -459,9 +459,11 @@ uploaded_files = st.file_uploader(
 images = []
 if uploaded_files:
     images = [Image.open(f) for f in uploaded_files]
-    cols = st.columns(min(len(images), 4))
-    for idx, img in enumerate(images):
-        cols[idx % 4].image(img, caption=f"Ảnh {idx+1}", use_container_width=True)
+    # Thu gọn ảnh vào expander mặc định đóng để trang luôn gọn gàng
+    with st.expander(f"👁️ Xem lại {len(images)} ảnh đã tải lên (Bấm để mở/đóng)", expanded=False):
+        cols = st.columns(min(len(images), 4))
+        for idx, img in enumerate(images):
+            cols[idx % 4].image(img, caption=f"Ảnh {idx+1}", use_container_width=True)
 
 can_generate = bool(input_text.strip()) or bool(images)
 
