@@ -194,11 +194,16 @@ BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
 PHONG CÁCH KẾT XUẤT THỊ GIÁC: """ + style.upper() + r"""
 MỌI PROMPT PHẢI TUÂN THEO ĐÚNG PHONG CÁCH NÀY.
 
-QUY TẮC PHÂN CẢNH VÀ ĐẠO DIỄN:
+QUY TẮC ĐẠO DIỄN & LỜI THOẠI BẮT BUỘC:
 1. THỜI LƯỢNG MỖI CẢNH: CHỈ ĐƯỢC DÙNG 3 MỐC: 4s, 6s, 8s. TUYỆT ĐỐI CẤM DÙNG MỐC 10 GIÂY.
-2. Giọng đọc: 100% tiếng Việt miền Bắc chuẩn Hà Nội, nêu rõ Giới tính và Độ tuổi phù hợp, đồng nhất suốt các cảnh.
-3. Tích hợp thoại vào Veo 3: Trong 'video_prompt', nhúng nguyên văn lời thoại tiếng Việt có dấu kèm biểu cảm gương mặt, khẩu hình và cử chỉ cơ thể.
-4. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
+2. 100% CÁC PHÂN CẢNH ĐỀU PHẢI CÓ LỜI THOẠI (VOICEOVER): Tuyệt đối không để cảnh nào bị trống thoại, đảm bảo mạch truyền tải thông tin liên tục, hấp dẫn.
+3. QUY CHUẨN ĐỊNH MỨC TỪ VỰNG THEO THỜI LƯỢNG (Để nhân vật/voice đọc khớp hoàn hảo, không bị hụt hơi hay quá dài):
+   - Cảnh 4s: Lời thoại tối đa 10 - 12 từ (Câu ngắn, gãy gọn, tập trung vào điểm nhấn).
+   - Cảnh 6s: Lời thoại từ 15 - 18 từ (Mô tả hành động hoặc nỗi đau vừa đủ).
+   - Cảnh 8s: Lời thoại từ 22 - 25 từ (Giải thích tính năng sâu hoặc kêu gọi hành động).
+4. Giọng đọc: 100% tiếng Việt miền Bắc chuẩn Hà Nội, nêu rõ Giới tính và Độ tuổi phù hợp, đồng nhất suốt các cảnh.
+5. Tích hợp thoại vào Veo 3: Trong 'video_prompt', nhúng nguyên văn lời thoại tiếng Việt có dấu kèm biểu cảm gương mặt, khẩu hình và cử chỉ cơ thể khớp với thời lượng.
+6. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
 """
     if mode == "🛒 TikTok Shop & Bán Hàng":
         return base + r"""
