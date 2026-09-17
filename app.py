@@ -6,14 +6,51 @@ from PIL import Image
 import json
 import base64
 import os
+import re
 import time
 
 st.set_page_config(page_title="TikTok AI Video Suite Pro", page_icon="🎬", layout="wide")
 
-# CSS tối ưu giao diện: Màu sắc nổi bật, font chữ sắc nét, tương thích di động
+# CSS tối ưu giao diện: Tiêu đề lớn căn giữa bắt mắt, nút bấm gradient, tương thích Mobile 100%
 st.markdown("""
 <style>
-    .main-title { font-size: 1.55rem !important; font-weight: 800; color: #1e1e1e; margin-bottom: 0.5rem; }
+    /* Khung Header căn giữa và hiệu ứng nổi bật */
+    .header-container {
+        text-align: center;
+        padding: 1.2rem 1rem 1.8rem 1rem;
+        margin-bottom: 1rem;
+        background: radial-gradient(circle, rgba(255,75,75,0.08) 0%, rgba(255,255,255,0) 70%);
+        border-radius: 16px;
+    }
+    .main-title {
+        font-size: 2.35rem !important;
+        font-weight: 900 !important;
+        background: linear-gradient(90deg, #ff0050 0%, #ff5252 50%, #ff7300 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem !important;
+        line-height: 1.25 !important;
+        letter-spacing: -0.5px;
+    }
+    .sub-title {
+        font-size: 1.12rem !important;
+        font-weight: 500 !important;
+        color: #4a5568 !important;
+        margin-top: 0.2rem;
+    }
+    .header-badge {
+        display: inline-block;
+        background: #fee2e2;
+        color: #b91c1c;
+        font-size: 0.8rem;
+        font-weight: 800;
+        padding: 3px 12px;
+        border-radius: 9999px;
+        margin-bottom: 0.5rem;
+        letter-spacing: 0.5px;
+        border: 1px solid #fca5a5;
+    }
+
     .stExpander { border-radius: 8px !important; margin-bottom: 8px !important; }
     
     /* Thiết lập nút bấm nổi bật */
@@ -50,6 +87,12 @@ st.markdown("""
     .badge-pending { color: #d97706; font-weight: 700; background: #fef3c7; padding: 2px 8px; border-radius: 4px; }
     .badge-ready { color: #15803d; font-weight: 700; background: #dcfce7; padding: 2px 8px; border-radius: 4px; }
     .badge-dynamic { color: #1e40af; font-weight: 700; background: #dbeafe; padding: 2px 8px; border-radius: 4px; }
+
+    @media (max-width: 768px) {
+        .main-title { font-size: 1.65rem !important; }
+        .sub-title { font-size: 0.95rem !important; }
+        .header-container { padding: 0.8rem 0.5rem 1.2rem 0.5rem; }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -120,14 +163,15 @@ def clean_and_parse_json(text_content: str):
 SYSTEM_INSTRUCTIONS = """
 BẠN LÀ BẬC THẦY SẢN XUẤT VIDEO VIRAL VÀ TĂNG CHUYỂN ĐỔI TIKTOK SHOP, TỔNG ĐẠO DIỄN VIRTUAL CHO IMAGEN 3 VÀ VEO 3.
 
-I. CHÍNH SÁCH TIKTOK SHOP & AN TOÀN NỘI DUNG:
-1. Giá bán: Tuyệt đối không nhắc giá số cụ thể. Chỉ dùng từ ngữ đời thường ('vài chục', 'cốc trà đá', 'bát phở', 'deal hời góc trái').
-2. Từ ngữ cấm: Cấm hoàn toàn cam kết tuyệt đối ('chữa dứt điểm', 'vĩnh viễn', '100%', 'khỏi hẳn').
-3. Đối tượng trẻ em: Phụ huynh luôn xuất hiện thao tác trực tiếp, cấm để trẻ em một mình trước ống kính.
-4. Sức khỏe/Người lớn tuổi: Hướng vào cảm giác thư giãn, nhẹ nhõm hoặc con cái báo hiếu cha mẹ. Cấm cận cảnh mụn nhọt, vết thương, răng sâu, cử chỉ đau đớn dữ dội.
+I. CHÍNH SÁCH TIKTOK SHOP & AN TOÀN NỘI DUNG TUYỆT ĐỐI:
+1. Giá bán: Tuyệt đối không nhắc giá số cụ thể. Chỉ dùng từ ngữ đời thường tự nhiên ('vài chục', 'cốc trà đá', 'bát phở', 'deal hời góc trái giỏ hàng').
+2. Từ ngữ cấm: Cấm hoàn toàn cam kết tuyệt đối ('chữa dứt điểm', 'vĩnh viễn', '100%', 'khỏi hẳn', 'cam kết hiệu quả tức thì').
+3. Trẻ em: Phụ huynh luôn xuất hiện thao tác trực tiếp, cấm để trẻ em một mình trước ống kính.
+4. Sức khỏe/Người lớn tuổi: Hướng vào cảm giác thư giãn, nhẹ nhõm hoặc con cái báo hiếu cha mẹ. Cấm cận cảnh mụn nhọt, vết thương hở, răng sâu, cử chỉ đau đớn dữ dội.
+5. Mỹ phẩm/Chăm sóc da: Tập trung vào kết cấu kem mềm mịn, da căng bóng tự nhiên dưới ánh sáng studio, cấm phóng đại trước/sau phi thực tế.
 
 II. ĐỘ CHUẨN XÁC VẬT LÝ & CƠ KHÍ SẢN PHẨM:
-1. Giải phẫu chi tiết: Khóa chặt hình dạng, Hero Color, kết cấu bề mặt nhám/bóng, vị trí và số lượng nút công tắc, lẫy khóa, cổng sạc, phụ kiện đi kèm theo đúng các ảnh tham chiếu.
+1. Giải phẫu chi tiết: Khóa chặt hình dạng, màu nhận diện chủ đạo (Hero Color), bề mặt nhám/bóng, vị trí và số lượng nút công tắc, lẫy khóa, cổng sạc, phụ kiện đi kèm theo đúng các ảnh tham chiếu.
 2. Thao tác tay thực tế: Cầm đúng trọng tâm, ngón cái gạt công tắc, ngàm xoay theo chiều kim đồng hồ chuẩn công thái học. Chỉ tối đa 1 bàn tay người lớn tương tác tự nhiên, chống mọc thừa tay.
 3. KHÍ ĐỘNG HỌC THỰC TẾ (MÁY THỔI, HÚT, SẤY):
    - Tuyệt đối cấm tạo luồng gió thành tia laser, tia lửa, khói đặc hay vệt nước chảy ma mị.
@@ -136,11 +180,13 @@ II. ĐỘ CHUẨN XÁC VẬT LÝ & CƠ KHÍ SẢN PHẨM:
 
 III. BỐI CẢNH UY TÍN & ĐỘNG HỌC PHÂN CẢNH (PACING):
 1. Bối cảnh: Với kịch bản review, siêu sale, deal hời, hãy đưa bối cảnh vào PHÂN XƯỞNG SẢN XUẤT TẤP NẬP, KHO PALLET HÀNG HÓA hoặc SHOWROOM ÁNH SÁNG HIỆN ĐẠI để tối đa uy tín.
-2. Quy chuẩn thời lượng phân cảnh:
+2. QUY CHUẨN THỜI LƯỢNG NGHIÊM NGẶT:
    - Số phân cảnh: Tự động quyết định từ 3 đến 6 cảnh cho phù hợp nội dung.
-   - Thời lượng từng cảnh: Bắt buộc chỉ dùng các mốc: 4s, 6s, 8s, 10s.
-   - Ưu tiên chủ đạo: Sử dụng chủ yếu 4s (Hook/lướt cảnh), 6s và 8s (demo tính năng, thao tác cơ khí, bối cảnh uy tín).
-   - Khóa cứng mốc 10s: Toàn bộ video TỐI ĐA CHỈ ĐƯỢC DÙNG 1 ĐẾN 2 CẢNH 10s (chỉ cho phân cảnh tổng kết giải pháp phức tạp hoặc đại cảnh kho xưởng/showroom chốt CTA).
+   - Thời lượng từng cảnh: BẮT BUỘC CHỈ DÙNG 3 MỐC: 4s, 6s, 8s.
+   - TUYỆT ĐỐI CẤM SỬ DỤNG MỐC 10 GIÂY Ở BẤT KỲ ĐÂU.
+   - Phân bổ: 
+     + 4s: Hook 3-4s đầu giữ chân, bắt cận góc máy hoặc chuyển cảnh lướt nhanh.
+     + 6s & 8s: Biểu diễn tính năng, thao tác tháo lắp cơ học, tác động môi trường, bối cảnh xưởng/showroom và chốt deal kêu gọi hành động (CTA).
 
 IV. ĐẠO DIỄN GIỌNG ĐỌC & TÍCH HỢP PROMPT VEO 3:
 1. Giọng đọc: 100% tiếng Việt miền Bắc chuẩn Hà Nội, nêu rõ Giới tính (Nam/Nữ) và Độ tuổi phù hợp tình huống, đồng nhất suốt các cảnh.
@@ -149,9 +195,8 @@ IV. ĐẠO DIỄN GIỌNG ĐỌC & TÍCH HỢP PROMPT VEO 3:
 4. Chuyển cảnh: Xác định rõ 'Cắt cảnh (Hard Cut)' hoặc 'Cảnh nối tiếp (Continuous Motion)'. Nếu là nối tiếp thì 'image_prompt' để rỗng ("").
 """
 
-import re
-
 def generate_with_smart_retry(contents, system_inst, max_tokens=8192):
+    """Sử dụng duy nhất model gemini-3.6-flash với cơ chế auto-retry khi máy chủ bận hoặc chạm rate limit 429"""
     model_name = "gemini-3.6-flash"
     max_attempts = 5
     last_err = None
@@ -173,16 +218,12 @@ def generate_with_smart_retry(contents, system_inst, max_tokens=8192):
             last_err = e
             err_msg = str(e)
             
-            # Xử lý khi chạm giới hạn Rate limit 429 hoặc quá tải 503
             if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
-                # Tìm số giây Google yêu cầu chờ trong thông báo lỗi (mặc định 40s)
                 wait_match = re.search(r"retry in (\d+\.?\d*)s", err_msg)
                 wait_sec = int(float(wait_match.group(1))) + 2 if wait_match else 40
-                
-                with st.spinner(f"⏳ Đang chạm giới hạn tạm thời của Google. Hệ thống tự động chờ {wait_sec}s rồi tiếp tục..."):
+                with st.spinner(f"⏳ Đang chạm giới hạn tạm thời của Google. Tự động chờ {wait_sec}s rồi tiếp tục..."):
                     time.sleep(wait_sec)
                 continue
-                
             elif "503" in err_msg or "UNAVAILABLE" in err_msg or "high demand" in err_msg:
                 time.sleep(4 * (attempt + 1))
                 continue
@@ -191,12 +232,12 @@ def generate_with_smart_retry(contents, system_inst, max_tokens=8192):
     raise last_err
 
 def create_scene_details_for_id(target_id: int):
-    """Hàm tạo chi tiết phân cảnh cho một kịch bản theo ID"""
+    """Hàm tạo chi tiết phân cảnh cho một kịch bản theo ID (Chỉ 4s, 6s, 8s)"""
     outline = next((sc for sc in st.session_state.script_outlines if sc.get("id") == target_id), None)
     if not outline:
         return
     
-    with st.spinner(f"Đang phân bổ nhịp cảnh và dựng prompt chi tiết cho '{outline.get('title')}'..."):
+    with st.spinner(f"Đang phân bổ nhịp cảnh (4s, 6s, 8s) và dựng prompt chi tiết cho '{outline.get('title')}'..."):
         vp = outline.get("voice_profile", {})
         prompt_detail = f"""
         Dựa trên sản phẩm cơ khí chuẩn xác và ý tưởng sau:
@@ -206,13 +247,11 @@ def create_scene_details_for_id(target_id: int):
         - Hook: {outline.get('target_hook')}
         - Giọng đọc: {vp.get('gender', 'Nữ')} miền Bắc, tuổi {vp.get('age_range', '25-30')}
 
-        QUY ĐỊNH THỜI LƯỢNG & BỐI CẢNH TỪNG CẢNH:
+        QUY ĐỊNH THỜI LƯỢNG NGHIÊM NGẶT (TUYỆT ĐỐI BỎ MỐC 10 GIÂY):
         - Mỗi scene bắt buộc có trường 'scene_setting': Mô tả ngắn gọn bối cảnh không gian cụ thể cho cảnh này.
-        - 'duration' của mỗi cảnh CHỈ ĐƯỢC LÀ một trong các mốc: '4s', '6s', '8s', '10s'.
-        - CHỦ YẾU SỬ DỤNG: '4s' (Hook/chuyển cảnh), '6s' và '8s' (demo tính năng, cơ khí, bối cảnh xưởng/showroom, thao tác thực tế).
-        - MỐC '10s': TOÀN BỘ KỊCH BẢN TỐI ĐA CHỈ ĐƯỢC XUẤT HIỆN 1 ĐẾN 2 CẢNH.
+        - 'duration' của mỗi cảnh CHỈ ĐƯỢC LÀ một trong 3 mốc: '4s', '6s', '8s'. TUYỆT ĐỐI CẤM DÙNG '10s'.
         - Máy thổi/hút: Luồng khí là không khí trong suốt áp lực cao, không tia lửa/vệt sáng. Thể hiện lực qua bụi bay tung tóe, giấy bay phần phật.
-        - 'video_prompt': Tích hợp nguyên văn lời thoại tiếng Việt có dấu và biểu cảm diễn xuất.
+        - 'video_prompt': Tích hợp nguyên văn lời thoại tiếng Việt có dấu và biểu cảm diễn xuất, hành vi cơ thể.
 
         Định dạng JSON:
         {{
@@ -243,8 +282,14 @@ def create_scene_details_for_id(target_id: int):
         except Exception as e:
             st.error(f"Lỗi tạo chi tiết: {e}")
 
-st.markdown('<div class="main-title">🎬 Hệ Thống Kịch Bản TikTok Shop Đa Năng</div>', unsafe_allow_html=True)
-st.write("Tự động bóc tách sản phẩm, tối ưu nhịp độ và tạo kịch bản viral chuyển đổi cao.")
+# KHU VỰC TIÊU ĐỀ CHÍNH CĂN GIỮA NỔI BẬT
+st.markdown("""
+<div class="header-container">
+    <div class="header-badge">🚀 VEO 3 & IMAGEN 3 AUTOMATION PRO</div>
+    <div class="main-title">🎬 Hệ Thống Kịch Bản TikTok Shop Đa Năng</div>
+    <div class="sub-title">Tự động phân tích sản phẩm, tối ưu nhịp độ (4s, 6s, 8s) và tạo kịch bản viral chuyển đổi cao</div>
+</div>
+""", unsafe_allow_html=True)
 
 uploaded_files = st.file_uploader(
     "Tải các góc ảnh sản phẩm (Mặt trước, mặt sau, bao bì, phụ kiện):",
@@ -258,8 +303,8 @@ if uploaded_files:
     for idx, img in enumerate(images):
         cols[idx % 4].image(img, caption=f"Góc {idx+1}", use_container_width=True)
 
-    if st.button("🚀 Bắt Đầu Phân Tích Sản Phẩm & Đề Xuất 5 Ý Tưởng Kịch Bản", type="primary", use_container_width=True):
-        with st.spinner("Đang bóc tách chi tiết sản phẩm và phân tích góc tiếp cận viral..."):
+    if st.button("🚀 Bắt Đầu Phân Tích Cơ Khí & Đề Xuất 5 Ý Tưởng Kịch Bản", type="primary", use_container_width=True):
+        with st.spinner("Đang bóc tách chi tiết cơ khí và phân tích góc tiếp cận viral..."):
             prompt = """
             Phân tích toàn diện sản phẩm từ ảnh và xuất JSON:
             1. 'product_analysis':
@@ -277,7 +322,7 @@ if uploaded_files:
                - setting_style: Bối cảnh chính (Phân xưởng sản xuất, Kho hàng tấp nập, Showroom, Không gian thực tế)
                - angle: Góc tiếp cận chuyển đổi (Deal xưởng/Siêu Sale, Giải quyết nỗi đau, Demo tính năng ASMR, So sánh trước sau, Unboxing bảo hành)
                - target_hook: Ý tưởng câu hook 3-4s đầu
-               - recommended_scenes_count: Phân bổ nhịp cảnh đề xuất (ví dụ: '4 cảnh (4s-6s-8s-8s)', '4 cảnh (4s-6s-8s-10s)')
+               - recommended_scenes_count: Phân bổ nhịp cảnh đề xuất CHỈ DÙNG 4s, 6s, 8s (TUYỆT ĐỐI KHÔNG DÙNG 10s, ví dụ: '4 cảnh (4s-6s-8s-8s)', '4 cảnh (4s-6s-6s-8s)', '3 cảnh (4s-6s-8s)')
                - voice_profile: {gender: 'Nam'/'Nữ', age_range: 'Độ tuổi', tone: 'Âm điệu miền Bắc'}
             """
             try:
@@ -313,7 +358,7 @@ if st.session_state.product_analysis:
 if st.session_state.script_outlines:
     st.divider()
     st.markdown(f"### 📋 **Danh sách {len(st.session_state.script_outlines)} ý tưởng kịch bản tối ưu chuyển đổi**")
-    st.write("Bấm **'✨ Tạo chi tiết kịch bản này'** để AI tự động phân bổ nhịp cảnh (chủ yếu 4s, 6s, 8s; mốc 10s tối đa 1-2 cảnh).")
+    st.write("Bấm **'✨ Tạo chi tiết kịch bản này'** để AI tự động phân bổ nhịp cảnh linh hoạt (chỉ gồm 4s, 6s, 8s).")
 
     for outline in st.session_state.script_outlines:
         sc_id = outline.get("id")
@@ -348,7 +393,7 @@ if st.session_state.script_outlines:
             - setting_style: Bối cảnh chính
             - angle: Góc độ mới lạ
             - target_hook: Ý tưởng hook 3-4s
-            - recommended_scenes_count: Phân bổ nhịp cảnh
+            - recommended_scenes_count: Phân bổ nhịp cảnh CHỈ DÙNG 4s, 6s, 8s (tuyệt đối không dùng 10s)
             - voice_profile: Giọng miền Bắc đồng nhất
             - Xuất JSON gồm key 'script_outlines' chứa 5 ý tưởng này.
             """
@@ -434,7 +479,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                     Dựa trên kịch bản win chi tiết sau: {json.dumps(target_win_script, ensure_ascii=False)}
                     Hãy tạo ĐÚNG 5 BIẾN THỂ WIN MỚI:
                     - Biến hóa 5 cách mở đầu (Hook 3-4s) và bối cảnh (chuyển đổi linh hoạt giữa phân xưởng sản xuất, kho hàng bận rộn và showroom sang trọng).
-                    - Phân bổ số phân cảnh kết hợp thời lượng chủ yếu 4s, 6s, 8s (mốc 10s chỉ tối đa 1-2 cảnh).
+                    - Phân bổ số phân cảnh kết hợp thời lượng CHỈ GỒM 4s, 6s, 8s (TUYỆT ĐỐI KHÔNG DÙNG 10s).
                     - Xuất JSON gồm 'cloned_outlines' chứa 5 ý tưởng biến thể (id mới tiếp theo, title, setting_style, angle, target_hook, recommended_scenes_count, voice_profile).
                     """
                     try:
