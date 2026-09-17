@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 from google import genai
 from google.genai import types
 from PIL import Image
@@ -9,17 +8,13 @@ import time
 
 st.set_page_config(page_title="TikTok AI Video Suite Pro", page_icon="🎬", layout="wide")
 
-# Tối ưu CSS cho thiết bị di động và kiểu chữ in đậm
+# CSS tối ưu di động và làm đậm tiêu đề
 st.markdown("""
 <style>
-    .main-title { font-size: 1.6rem !important; font-weight: 800; color: #1e1e1e; margin-bottom: 0.5rem; }
-    .script-header { font-size: 1.2rem !important; font-weight: 700; color: #ff4b4b; }
-    .scene-header { font-size: 1.05rem !important; font-weight: 700; color: #262730; }
+    .main-title { font-size: 1.5rem !important; font-weight: 800; color: #1e1e1e; margin-bottom: 0.5rem; }
+    .stExpander { border-radius: 8px !important; margin-bottom: 8px !important; }
     button[kind="primary"], button[kind="secondary"] { width: 100% !important; border-radius: 8px !important; }
-    @media (max-width: 768px) {
-        .main-title { font-size: 1.3rem !important; }
-        .stExpander { border-radius: 8px !important; margin-bottom: 8px !important; }
-    }
+    .stCodeBlock { margin-top: -8px !important; margin-bottom: 12px !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -36,41 +31,6 @@ if "product_analysis" not in st.session_state:
 if "all_scripts" not in st.session_state:
     st.session_state.all_scripts = []
 
-def copy_button_ui(text_to_copy: str, button_label: str = "📋 Sao chép Prompt"):
-    escaped_text = json.dumps(text_to_copy)
-    btn_id = f"btn_{abs(hash(text_to_copy)) % 10000000}"
-    html_code = f"""
-    <div style="margin: 6px 0 12px 0;">
-        <button id="{btn_id}" onclick='
-            navigator.clipboard.writeText({escaped_text}).then(() => {{
-                var b = document.getElementById("{btn_id}");
-                var oldText = b.innerText;
-                b.innerText = "✅ Đã sao chép vào bộ nhớ!";
-                b.style.backgroundColor = "#2e7d32";
-                b.style.borderColor = "#2e7d32";
-                setTimeout(() => {{
-                    b.innerText = oldText;
-                    b.style.backgroundColor = "#ff4b4b";
-                    b.style.borderColor = "#ff4b4b";
-                }}, 2000);
-            }});
-        ' style="
-            background-color: #ff4b4b;
-            color: white;
-            border: 1px solid #ff4b4b;
-            padding: 8px 16px;
-            font-size: 14px;
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            max-width: 320px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-        ">{button_label}</button>
-    </div>
-    """
-    components.html(html_code, height=52)
-
 SYSTEM_INSTRUCTIONS = """
 BẠN LÀ CHUYÊN GIA SẢN XUẤT VIDEO REVIEW TIKTOK SHOP ĐỈNH CAO, ĐẠO DIỄN HÌNH ẢNH CHO IMAGEN 3/VEO 3 VÀ GIÁM ĐỐC LỒNG TIẾNG.
 
@@ -82,7 +42,7 @@ BẠN LÀ CHUYÊN GIA SẢN XUẤT VIDEO REVIEW TIKTOK SHOP ĐỈNH CAO, ĐẠO 
 
 2. QUY CHUẨN ĐỒNG NHẤT GIỌNG ĐỌC & TÍCH HỢP PROMPT:
    - Giọng đọc: 100% tiếng Việt miền Bắc chuẩn Hà Nội. Bắt buộc nêu rõ: Giới tính (Nam/Nữ) và Độ tuổi phù hợp bối cảnh. Đồng nhất 100% âm sắc, nhịp điệu từ phân cảnh 1 đến 4.
-   - TÍCH HỢP THOẠI VÀO PROMPT VEO 3: Trong 'video_prompt', bắt buộc tích hợp toàn bộ lời thoại tiếng Việt kèm hướng dẫn khẩu hình, biểu cảm gương mặt (hào hứng, ngạc nhiên, tin cậy) và hành vi cơ thể (tay cầm chắc chắn, chỉ ngón tay vào điểm nổi bật).
+   - TÍCH HỢP THOẠI VÀO PROMPT VEO 3: Trong 'video_prompt', bắt buộc tích hợp toàn bộ lời thoại tiếng Việt có dấu kèm hướng dẫn khẩu hình, biểu cảm gương mặt (hào hứng, ngạc nhiên, tin cậy) và hành vi cơ thể (tay cầm chắc chắn, chỉ ngón tay vào điểm nổi bật).
    - Tối đa 1 bàn tay người lớn tương tác, chống mọc tay thừa. Màn hình sạch, không chữ nổi, không logo, không watermark.
 
 3. LOẠI HÌNH PHÂN CẢNH:
@@ -94,7 +54,7 @@ Mỗi kịch bản gồm 4 phân cảnh (8s/phân cảnh, tổng thời lượng
 """
 
 st.markdown('<div class="main-title">🎬 Hệ Thống Kịch Bản TikTok Shop Đa Năng</div>', unsafe_allow_html=True)
-st.write("Tải ảnh sản phẩm để tự động phân tích chi tiết và xuất kịch bản chuẩn hóa chuyển đổi cao.")
+st.write("Tải ảnh sản phẩm để tự động phân tích chi tiết và xuất kịch bản chuyển đổi cao.")
 
 uploaded_files = st.file_uploader(
     "Tải các góc ảnh sản phẩm (Mặt trước, mặt sau, bao bì, phụ kiện):",
@@ -165,7 +125,7 @@ if uploaded_files:
                             st.error(f"Lỗi kết nối: {e}")
                             break
 
-    # Nút Nhân bản 5 kịch bản Win (thay thế vị trí gọi thêm)
+    # Nút Nhân bản 5 kịch bản Win
     with col_btn2:
         if st.session_state.all_scripts:
             script_titles = [f"{i+1}. {sc.get('script_title')}" for i, sc in enumerate(st.session_state.all_scripts)]
@@ -221,17 +181,16 @@ if st.session_state.product_analysis:
         for pain in p.get('core_pain_points', []):
             st.markdown(f"- {pain}")
 
-# Hiển thị Danh sách Kịch bản dạng List Accordion
+# Hiển thị Danh sách Kịch bản dạng List
 if st.session_state.all_scripts:
     st.divider()
-    st.markdown(f"### 📑 **Danh sách {len(st.session_state.all_scripts)} kịch bản sản xuất** *(Bấm để mở chi tiết)*")
+    st.markdown(f"### 📑 **Danh sách {len(st.session_state.all_scripts)} kịch bản sản xuất** *(Bấm để xem chi tiết)*")
 
     for idx, sc_item in enumerate(st.session_state.all_scripts):
         title = sc_item.get("script_title", f"Kịch bản {idx+1}")
         with st.expander(f"📌 **{idx+1}. {title.upper()}**", expanded=False):
             vp = sc_item.get("voice_profile", {})
-            st.markdown(f"🎙️ **Đồng nhất giọng đọc:** Giọng **{vp.get('gender', 'Nữ')} miền Bắc**, độ tuổi **{vp.get('age_range', '25-30 tuổi')}** | *{vp.get('tone_description', 'Tự nhiên, tốc độ 1.15x')}*")
-            st.markdown("---")
+            st.info(f"🎙️ **Đồng nhất giọng đọc:** Giọng **{vp.get('gender', 'Nữ')} miền Bắc**, độ tuổi **{vp.get('age_range', '25-30 tuổi')}** | *{vp.get('tone_description', 'Tự nhiên, tốc độ 1.15x')}*")
 
             for scene in sc_item.get("scenes", []):
                 sc_num = scene.get("scene_number", 1)
@@ -244,24 +203,22 @@ if st.session_state.all_scripts:
 
                 # 2. Lời thoại
                 st.markdown("**💬 Lời thoại lồng tiếng (100% Miền Bắc):**")
-                st.info(f"\"{scene.get('voiceover_vi', '')}\"")
+                st.markdown(f"> *\"{scene.get('voiceover_vi', '')}\"*")
 
-                # 3. Prompt Tạo Ảnh
+                # 3. Prompt Tạo Ảnh (Có nút copy góc phải của ô code)
                 st.markdown("**🖼️ Prompt Tạo Ảnh Gốc (Imagen 3 - 9:16):**")
                 if "nối tiếp" in trans_type.lower() or not scene.get("image_prompt"):
                     st.warning("👉 **Lấy ảnh cuối của video trước làm ảnh đầu vào cho phân cảnh này.**")
                 else:
                     st.code(scene.get("image_prompt", ""), language="text")
-                    copy_button_ui(scene.get("image_prompt", ""), "📋 Copy Prompt Ảnh (Imagen 3)")
 
-                # 4. Prompt Chuyển Động Veo 3
+                # 4. Prompt Chuyển Động Veo 3 (Có nút copy góc phải của ô code)
                 st.markdown(f"**🎥 Prompt Chuyển Động Video ({trans_type} - Veo 3):**")
                 st.code(scene.get("video_prompt", ""), language="text")
-                copy_button_ui(scene.get("video_prompt", ""), "📋 Copy Prompt Video (Veo 3)")
 
                 st.markdown("---")
 
-    # Vị trí Ô gọi thêm kịch bản (ở dưới cùng danh sách kịch bản)
+    # Nút Tạo thêm 5 kịch bản ở dưới cùng danh sách
     st.markdown("#### ➕ **Mở Rộng Thêm Kịch Bản Mới**")
     if st.button("➕ Tạo Thêm 5 Kịch Bản Mới Khác Biệt", use_container_width=True):
         with st.spinner("Đang tư duy thêm 5 góc tiếp cận mới lạ..."):
