@@ -398,7 +398,7 @@ st.markdown("""
 <div class="header-container">
     <div class="header-badge">🌟 KENTOM AI VIDEO STUDIO PRO</div>
     <div class="main-title">🎬 Xây Dựng Kịch Bản Đa Vũ Trụ</div>
-    <div class="sub-title">TikTok Shop Chuyên Sâu, TVC Điện Ảnh, Phim Đời Sống, Du Lịch,Văn Hóa - Tâm Linh, Nhà Đẹp & Xe Cộ</div>
+    <div class="sub-title">TikTok Shop Chuyên Sâu, TVC Điện Ảnh, Phim Đời Sống, Du Lịch, Văn Hóa - Tâm Linh, Nhà Đẹp & Xe Cộ</div>
 </div>
 """, unsafe_allow_html=True)
 
