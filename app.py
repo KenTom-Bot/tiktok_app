@@ -57,6 +57,13 @@ st.markdown("""
         margin-bottom: 16px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
+    .dna-box {
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 14px;
+    }
     .card-title-win { color: #dc2626; font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
     .card-title-add { color: #d97706; font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
     .card-title-unmade { color: #2563eb; font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
@@ -175,7 +182,6 @@ def optimize_image_for_api(image: Image.Image, max_dimension: int = 896, quality
     return Image.open(buffer)
 
 def format_analysis_field(field_val) -> str:
-    """Hàm chuyển đổi linh hoạt dict/list thành chuỗi văn bản sạch để tránh lỗi in raw HTML"""
     if isinstance(field_val, dict):
         return "<br>".join([f"<b>{k.replace('_', ' ').title()}:</b> {v}" for k, v in field_val.items()])
     elif isinstance(field_val, list):
