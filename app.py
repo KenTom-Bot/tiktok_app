@@ -57,6 +57,13 @@ st.markdown("""
         margin-bottom: 16px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
+    .dna-box {
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 14px;
+    }
     .card-title-win { color: #dc2626; font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
     .card-title-add { color: #d97706; font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
     .card-title-unmade { color: #2563eb; font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
@@ -186,18 +193,20 @@ QUY TẮC PHÂN CẢNH VÀ ĐẠO DIỄN:
 3. Tích hợp thoại vào Veo 3: Trong 'video_prompt', nhúng nguyên văn lời thoại tiếng Việt có dấu kèm biểu cảm gương mặt, khẩu hình và cử chỉ cơ thể.
 4. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
 """
-    if mode == "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp":
+    if mode == "🛒 TikTok Shop & Bán Hàng":
+        return base + """
+CHẾ ĐỘ: TIKTOK SHOP & SẢN PHẨM CHUYỂN ĐỔI
+- Khóa chặt giải phẫu cơ khí: Màu sắc Hero Color, chất liệu (nhám matte, nhựa ABS, kim loại), vị trí nút bấm, cổng sạc, danh sách phụ kiện đi kèm.
+- Ma trận nỗi đau & mong muốn: Bóc tách rõ 3 tầng nỗi đau (Chức năng, Tài chính, Cảm xúc) và mong muốn cốt lõi của khách hàng.
+- Vật lý siêu thực: Bụi/vụn rác bị hút xoáy thẳng vào buồng chứa trong suốt; hơi sương siêu mịn; vải đàn hồi hồi form ngay.
+- Chính sách TikTok: Cấm giá cụ thể (chỉ dùng 'vài chục', 'cốc trà đá', 'deal hời giỏ hàng'); cấm từ ngữ tuyệt đối ('100%', 'khỏi hẳn'); tương tác tay chuẩn công thái học.
+- 5 Kịch bản gốc bắt buộc tuân thủ 5 ma trận: 1. Phân xưởng/Kho hàng, 2. Showroom/Cửa hàng, 3. Deal xưởng/Trợ giá, 4. Nỗi đau đời sống, 5. Stress-test độ bền.
+"""
+    elif mode == "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp":
         return base + """
 CHẾ ĐỘ: TVC QUẢNG CÁO ĐIỆN ẢNH & THƯƠNG HIỆU CAO CẤP
 - Ngôn ngữ thị giác điện ảnh: Ánh sáng Dramatic Lighting, Rim Light, tương phản sắc nét, chuyển động máy nghệ thuật.
 - Lời thoại cô đọng, giàu cảm xúc, kết thúc bằng Slogan hoặc Tagline định vị thương hiệu đẳng cấp.
-"""
-    elif mode == "🛒 TikTok Shop & Bán Hàng":
-        return base + """
-CHẾ ĐỘ: TIKTOK SHOP & SẢN PHẨM CHUYỂN ĐỔI
-- Khóa chặt giải phẫu cơ khí, Hero Color, nút bấm, chất liệu vỏ từ ảnh tham chiếu hoặc văn bản.
-- Vật lý siêu thực: Hút xoáy thẳng vào buồng chứa; hơi sương siêu mịn; vải co giãn hồi form ngay.
-- Chính sách: Cấm giá cụ thể, cấm từ ngữ tuyệt đối ('100%', 'khỏi hẳn').
 """
     else:
         return base + f"""
@@ -242,7 +251,6 @@ def generate_with_smart_retry(contents, system_inst, max_tokens=8192):
     raise last_err
 
 def create_scene_details_for_id(target_id: int, current_mode: str, current_style: str):
-    # Gom tất cả nguồn để tìm chính xác kịch bản mục tiêu theo ID
     all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
     outline = next((sc for sc in all_sources if isinstance(sc, dict) and sc.get("id") == target_id), None)
     
@@ -307,7 +315,6 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
             if "voice_profile" not in detail_data or not isinstance(detail_data["voice_profile"], dict):
                 detail_data["voice_profile"] = vp
 
-            # Lưu vào session state và active ID để load sang giai đoạn 2
             st.session_state.generated_details[target_id] = detail_data
             st.session_state.active_script_id = target_id
             st.rerun()
@@ -342,7 +349,6 @@ def add_five_scripts_continuation(current_mode: str, current_style: str):
                 more_data = more_data[0]
             new_scripts = more_data.get("script_outlines", [])
             
-            # Đảm bảo gán đúng ID liên tiếp
             for i, sc in enumerate(new_scripts):
                 sc["id"] = cur_len + i + 1
 
@@ -357,13 +363,13 @@ def add_five_scripts_continuation(current_mode: str, current_style: str):
             st.error(f"Lỗi tạo thêm: {e}")
 
 # ==============================================================================
-# GIAI ĐOẠN 1: BANNER & BỘ CHỌN THỂ LOẠI (MODE SWITCHER)
+# KHU VỰC 1: BANNER & BỘ CHỌN THỂ LOẠI (MODE SWITCHER)
 # ==============================================================================
 st.markdown("""
 <div class="header-container">
     <div class="header-badge">🌟 UNIVERSAL AI VIDEO STUDIO PRO</div>
     <div class="main-title">🎬 Hệ Thống Kịch Bản Đa Vũ Trụ</div>
-    <div class="sub-title">TVC Điện ảnh, Sản phẩm, Phim đời sống, Du lịch, Nhà đẹp, Xe cộ, Lịch sử & Hoạt hình 3D</div>
+    <div class="sub-title">TikTok Shop Chuyên Sâu, TVC Điện Ảnh, Phim Đời Sống, Du Lịch, Nhà Đẹp & Xe Cộ</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -404,8 +410,8 @@ st.markdown("---")
 st.markdown("### 📥 **Dữ Liệu Đầu Vào (Nhập Văn Bản, Tải Ảnh hoặc Kết Hợp Cả Hai)**")
 
 prompt_placeholders = {
-    "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp": "Mô tả sản phẩm/dịch vụ TVC: Spa trị liệu cao cấp, khu nghỉ dưỡng ven biển, đồng hồ xa xỉ...",
     "🛒 TikTok Shop & Bán Hàng": "Mô tả sản phẩm, tính năng độc nhất (USP), chương trình khuyến mãi hoặc đối tượng sử dụng...",
+    "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp": "Mô tả sản phẩm/dịch vụ TVC: Spa trị liệu cao cấp, khu nghỉ dưỡng ven biển, đồng hồ xa xỉ...",
     "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan": "Mô tả căn nhà: Biệt thự đồi thông Đà Lạt, căn hộ penthouse tối giản, nhà vườn phong cách Indochine...",
     "🌿 Du Lịch & Phong Cảnh Đất Nước": "Nhập tên địa danh hoặc ý tưởng: Vịnh Hạ Long lúc hoàng hôn, Mù Cang Chải mùa lúa chín...",
     "🚗 Xe Cộ & Trải Nghiệm Lái": "Nhập dòng xe & bối cảnh: Porsche 911 GT3 RS màu xanh Shark Blue, xe lướt trên cung đèo ven biển...",
@@ -416,7 +422,7 @@ prompt_placeholders = {
 }
 
 input_text = st.text_area(
-    f"✍️ Tóm tắt ý tưởng, cốt truyện, tên địa danh, dòng xe hoặc mô tả TVC/dịch vụ chi tiết:",
+    f"✍️ Tóm tắt ý tưởng, cốt truyện, tên địa danh, dòng xe hoặc mô tả chi tiết:",
     placeholder=prompt_placeholders.get(selected_mode, "Nhập thông tin mô tả tại đây..."),
     height=100
 )
@@ -430,7 +436,6 @@ uploaded_files = st.file_uploader(
 images = []
 if uploaded_files:
     images = [Image.open(f) for f in uploaded_files]
-    # Thu gọn ảnh vào expander mặc định đóng để trang luôn gọn gàng
     with st.expander(f"👁️ Xem lại {len(images)} ảnh đã tải lên (Bấm để mở/đóng)", expanded=False):
         cols = st.columns(min(len(images), 4))
         for idx, img in enumerate(images):
@@ -438,27 +443,30 @@ if uploaded_files:
 
 can_generate = bool(input_text.strip()) or bool(images)
 
-if st.button("🚀 Bắt Đầu Bóc Tách DNA Nội Dung & Lên 5 Kịch Bản Gốc", type="primary", use_container_width=True, disabled=not can_generate):
-    with st.spinner(f"Đang bóc tách DNA và sáng tạo kịch bản thể loại '{selected_mode}'..."):
+if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận Kịch Bản", type="primary", use_container_width=True, disabled=not can_generate):
+    with st.spinner(f"Đang bóc tách chi tiết cơ khí, ma trận nỗi đau khách hàng và lên kịch bản cho '{selected_mode}'..."):
         prompt = f"""
-        Phân tích dữ liệu đầu vào cho thể loại '{selected_mode}' theo phong cách '{selected_style}' và xuất JSON:
-        THÔNG TIN VĂN BẢN / CỐT TRUYỆN TỪ NGƯỜI DÙNG:
+        Phân tích chuyên sâu dữ liệu đầu vào cho thể loại '{selected_mode}' theo phong cách '{selected_style}' và xuất JSON chuẩn xác:
+        THÔNG TIN TỪ NGƯỜI DÙNG:
         "{input_text.strip() if input_text.strip() else 'Không có mô tả văn bản, phân tích hoàn toàn từ ảnh.'}"
 
-        YÊU CẦU:
-        1. 'content_analysis':
-           - category_or_genre: Thể loại chi tiết
-           - core_subject_dna: Khóa chặt đặc tính cốt lõi
-           - emotional_or_usp_hook: Thông điệp chạm cảm xúc, Slogan TVC hoặc USP
-           - visual_physics_rules: Quy chuẩn vật lý/thị giác bắt buộc
-           - target_audience: Khán giả mục tiêu
-           - prompt_dna_lock: Chuỗi tiếng Anh cố định khóa chặt chủ thể
-        2. 'script_outlines': ĐÚNG 5 Ý TƯỞNG KỊCH BẢN GỐC (id: 1 đến 5):
-           - id: 1 đến 5
-           - title: Tên kịch bản hấp dẫn, sâu sắc
-           - setting_style: Bối cảnh không gian chính
-           - angle: Góc tiếp cận
-           - target_hook: Ý tưởng câu hook mở đầu 3-4s
+        YÊU CẦU CẤU TRÚC JSON:
+        1. 'content_analysis' (Phải tách bạch chi tiết):
+           - category_or_genre: Thể loại & Ngành hàng chi tiết
+           - mechanical_and_accessories: Mô tả chi tiết kết cấu cơ khí (Màu Hero Color, chất liệu vỏ matte/ABS/kim loại, vị trí cổng sạc, nút bấm) và danh sách phụ kiện đi kèm (đầu hút, ống nối...).
+           - customer_pain_points: 3 tầng nỗi đau (Chức năng, Tài chính, Cảm xúc) của khách hàng đối với sản phẩm này.
+           - core_desires: Mong muốn cốt lõi của khách hàng.
+           - emotional_or_usp_hook: Slogan / Điểm bán hàng độc nhất (USP).
+           - visual_physics_rules: Quy chuẩn vật lý siêu thực (hút xoáy chân không, hơi sương, đàn hồi...).
+           - target_audience: Chân dung khán giả mục tiêu.
+           - prompt_dna_lock: Chuỗi tiếng Anh cố định khóa chặt chủ thể đưa vào Imagen 3 & Veo 3.
+
+        2. 'script_outlines': ĐÚNG 5 Ý TƯỞNG KỊCH BẢN GỐC TUÂN THỦ 5 MA TRẬN (id: 1 đến 5):
+           - id: 1 đến 5 (1: Phân xưởng/Kho hàng, 2: Showroom/Cửa hàng, 3: Deal xưởng/Trợ giá, 4: Nỗi đau đời sống, 5: Stress-test độ bền)
+           - title: Tên kịch bản giật tít, sâu sắc
+           - setting_style: Bối cảnh không gian cụ thể (Xưởng, Showroom, Phòng khách...)
+           - angle: Góc tiếp cận (Thuộc 1 trong 5 ma trận trên)
+           - target_hook: Ý tưởng câu hook mở đầu 3-4s đánh trúng nỗi đau/mong muốn
            - recommended_scenes_count: Phân bổ nhịp cảnh CHỈ DÙNG 4s, 6s, 8s
            - voice_profile: {{gender: 'Nam'/'Nữ', age_range: 'Độ tuổi', tone: 'Âm điệu miền Bắc'}}
         """
@@ -480,27 +488,35 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Nội Dung & Lên 5 Kịch Bản 
         except Exception as e:
             st.error(f"Lỗi khởi tạo: {e}")
 
-# Hiển thị Bóc tách DNA nội dung
+# Hiển thị Bóc tách DNA chi tiết đa tầng
 if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
     st.divider()
-    st.markdown(f"### 🔍 **Phân Tích DNA Cốt Lõi — [{selected_mode.upper()}]**")
+    st.markdown(f"### 🔍 **Phân Tích DNA Chi Tiết Đa Tầng — [{selected_mode.upper()}]**")
     ca = st.session_state.content_analysis
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown(f"**Chuyên mục:** {ca.get('category_or_genre', 'N/A')}")
-        st.markdown(f"**Khóa nhận diện cốt lõi (DNA):** {ca.get('core_subject_dna', 'N/A')}")
-        st.markdown(f"**Điểm chạm cảm xúc / Slogan / USP:** {ca.get('emotional_or_usp_hook', 'N/A')}")
-    with c2:
-        st.markdown(f"**Quy chuẩn vật lý & thị giác:** {ca.get('visual_physics_rules', 'N/A')}")
-        st.markdown(f"**Khán giả mục tiêu:** {ca.get('target_audience', 'N/A')}")
-        st.markdown(f"**Chuỗi khóa thị giác (Visual DNA Lock):** `{ca.get('prompt_dna_lock', 'N/A')}`")
+    
+    st.markdown(f"""
+    <div class="dna-box">
+        <div style="font-weight: 800; color: #1e293b; font-size: 1.1rem; margin-bottom: 8px;">🏭 1. Thông số Cơ khí & Phụ kiện đi kèm:</div>
+        <div style="color: #334155; margin-bottom: 12px;">{ca.get('mechanical_and_accessories', 'N/A')}</div>
+        
+        <div style="font-weight: 800; color: #b91c1c; font-size: 1.1rem; margin-bottom: 8px;">🎯 2. Ma trận 3 Tầng Nỗi đau Khách hàng:</div>
+        <div style="color: #334155; margin-bottom: 12px;">{ca.get('customer_pain_points', 'N/A')}</div>
+
+        <div style="font-weight: 800; color: #15803d; font-size: 1.1rem; margin-bottom: 8px;">💡 3. Mong muốn cốt lõi & USP:</div>
+        <div style="color: #334155; margin-bottom: 12px;"><b>Mong muốn:</b> {ca.get('core_desires', 'N/A')}<br><b>USP / Slogan:</b> {ca.get('emotional_or_usp_hook', 'N/A')}</div>
+
+        <div style="font-weight: 800; color: #1e40af; font-size: 1.1rem; margin-bottom: 8px;">⚙️ 4. Quy chuẩn Vật lý & Chuỗi khóa thị giác (Visual DNA Lock):</div>
+        <div style="color: #334155; margin-bottom: 6px;"><b>Vật lý:</b> {ca.get('visual_physics_rules', 'N/A')}</div>
+        <div><b>Prompt Lock:</b> <code>{ca.get('prompt_dna_lock', 'N/A')}</code></div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ==============================================================================
 # GIAI ĐOẠN 1: KHI CHƯA TẠO CHI TIẾT KỊCH BẢN NÀO
 # ==============================================================================
 if st.session_state.all_scripts and st.session_state.active_script_id is None:
     st.divider()
-    st.markdown(f"### 📋 **Danh Sách {len(st.session_state.all_scripts)} Kịch Bản Đề Xuất**")
+    st.markdown(f"### 📋 **Danh Sách 5 Ma Trận Kịch Bản Thực Chiến**")
     st.write("Chọn **'✨ Tạo chi tiết kịch bản này'** để AI tiến hành phân cảnh chi tiết (chỉ gồm 4s, 6s, 8s).")
 
     for outline in st.session_state.all_scripts:
@@ -511,7 +527,7 @@ if st.session_state.all_scripts and st.session_state.active_script_id is None:
         with col_info:
             pacing_badge = f'<span class="badge-dynamic">{outline.get("recommended_scenes_count", "Động học")}</span>'
             st.markdown(f"**{sc_id}. {outline.get('title')}** — <span class='badge-pending'>CHƯA TẠO CHI TIẾT</span> {pacing_badge}", unsafe_allow_html=True)
-            st.caption(f"🏛️ **Bối cảnh:** {outline.get('setting_style', 'Thực tế')} | 🎯 **Góc độ:** {outline.get('angle')} | ⚡ **Hook:** *\"{outline.get('target_hook')}\"*")
+            st.caption(f"🏛️ **Bối cảnh:** {outline.get('setting_style')} | 🎯 **Góc tiếp cận:** {outline.get('angle')} | ⚡ **Hook:** *\"{outline.get('target_hook')}\"*")
         with col_act:
             if st.button("✨ Tạo chi tiết kịch bản này", key=f"btn_init_{sc_id}", use_container_width=True):
                 create_scene_details_for_id(sc_id, selected_mode, selected_style)
