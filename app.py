@@ -1,21 +1,21 @@
 import streamlit as st
-from st_copy_to_clipboard import st_copy_to_clipboard
+import streamlit.components.v1 as components
 from google import genai
 from google.genai import types
 from PIL import Image
 import json
+import base64
 import os
 import time
 
 st.set_page_config(page_title="TikTok AI Video Suite Pro", page_icon="🎬", layout="wide")
 
-# CSS tối ưu di động và định dạng tiêu đề
 st.markdown("""
 <style>
     .main-title { font-size: 1.5rem !important; font-weight: 800; color: #1e1e1e; margin-bottom: 0.5rem; }
     .stExpander { border-radius: 8px !important; margin-bottom: 8px !important; }
     button[kind="primary"], button[kind="secondary"] { width: 100% !important; border-radius: 8px !important; }
-    .stCodeBlock { margin-top: -6px !important; margin-bottom: 8px !important; }
+    .stCodeBlock { margin-top: -6px !important; margin-bottom: 4px !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -31,6 +31,39 @@ if "product_analysis" not in st.session_state:
     st.session_state.product_analysis = None
 if "all_scripts" not in st.session_state:
     st.session_state.all_scripts = []
+
+def safe_copy_button(text_to_copy: str, button_label: str = "📋 Copy Prompt"):
+    """Nút copy độc lập mã hóa Base64 chống vỡ ký tự tiếng Việt và dấu nháy"""
+    b64_content = base64.b64encode(text_to_copy.encode('utf-8')).decode('utf-8')
+    html_code = f"""
+    <div style="margin: 4px 0 10px 0;">
+        <button id="copy_btn" onclick='
+            const text = decodeURIComponent(escape(atob("{b64_content}")));
+            navigator.clipboard.writeText(text).then(() => {{
+                const btn = document.getElementById("copy_btn");
+                const old = btn.innerText;
+                btn.innerText = "✅ Đã sao chép!";
+                btn.style.backgroundColor = "#2e7d32";
+                setTimeout(() => {{
+                    btn.innerText = old;
+                    btn.style.backgroundColor = "#ff4b4b";
+                }}, 2000);
+            }});
+        ' style="
+            background-color: #ff4b4b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 280px;
+        ">{button_label}</button>
+    </div>
+    """
+    components.html(html_code, height=48)
 
 SYSTEM_INSTRUCTIONS = """
 BẠN LÀ CHUYÊN GIA SẢN XUẤT VIDEO REVIEW TIKTOK SHOP ĐỈNH CAO, ĐẠO DIỄN HÌNH ẢNH CHO IMAGEN 3/VEO 3 VÀ GIÁM ĐỐC LỒNG TIẾNG.
@@ -182,7 +215,7 @@ if st.session_state.product_analysis:
         for pain in p.get('core_pain_points', []):
             st.markdown(f"- {pain}")
 
-# Hiển thị Danh sách Kịch bản dạng List Accordion
+# Hiển thị Danh sách Kịch bản dạng List
 if st.session_state.all_scripts:
     st.divider()
     st.markdown(f"### 📑 **Danh sách {len(st.session_state.all_scripts)} kịch bản sản xuất** *(Bấm để xem chi tiết)*")
@@ -211,13 +244,15 @@ if st.session_state.all_scripts:
                 if "nối tiếp" in trans_type.lower() or not scene.get("image_prompt"):
                     st.warning("👉 **Lấy ảnh cuối của video trước làm ảnh đầu vào cho phân cảnh này.**")
                 else:
-                    st.code(scene.get("image_prompt", ""), language="text")
-                    st_copy_to_clipboard(scene.get("image_prompt", ""), "📋 Copy Prompt Ảnh (Imagen 3)")
+                    img_p = scene.get("image_prompt", "")
+                    st.code(img_p, language="text")
+                    safe_copy_button(img_p, "📋 Copy Prompt Ảnh (Imagen 3)")
 
                 # 4. Prompt Chuyển Động Veo 3
                 st.markdown(f"**🎥 Prompt Chuyển Động Video ({trans_type} - Veo 3):**")
-                st.code(scene.get("video_prompt", ""), language="text")
-                st_copy_to_clipboard(scene.get("video_prompt", ""), "📋 Copy Prompt Video (Veo 3)")
+                vid_p = scene.get("video_prompt", "")
+                st.code(vid_p, language="text")
+                safe_copy_button(vid_p, "📋 Copy Prompt Video (Veo 3)")
 
                 st.markdown("---")
 
