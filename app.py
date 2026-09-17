@@ -1,4 +1,5 @@
 import streamlit as st
+from st_copy_to_clipboard import st_copy_to_clipboard
 from google import genai
 from google.genai import types
 from PIL import Image
@@ -8,13 +9,13 @@ import time
 
 st.set_page_config(page_title="TikTok AI Video Suite Pro", page_icon="🎬", layout="wide")
 
-# CSS tối ưu di động và làm đậm tiêu đề
+# CSS tối ưu di động và định dạng tiêu đề
 st.markdown("""
 <style>
     .main-title { font-size: 1.5rem !important; font-weight: 800; color: #1e1e1e; margin-bottom: 0.5rem; }
     .stExpander { border-radius: 8px !important; margin-bottom: 8px !important; }
     button[kind="primary"], button[kind="secondary"] { width: 100% !important; border-radius: 8px !important; }
-    .stCodeBlock { margin-top: -8px !important; margin-bottom: 12px !important; }
+    .stCodeBlock { margin-top: -6px !important; margin-bottom: 8px !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -181,7 +182,7 @@ if st.session_state.product_analysis:
         for pain in p.get('core_pain_points', []):
             st.markdown(f"- {pain}")
 
-# Hiển thị Danh sách Kịch bản dạng List
+# Hiển thị Danh sách Kịch bản dạng List Accordion
 if st.session_state.all_scripts:
     st.divider()
     st.markdown(f"### 📑 **Danh sách {len(st.session_state.all_scripts)} kịch bản sản xuất** *(Bấm để xem chi tiết)*")
@@ -205,16 +206,18 @@ if st.session_state.all_scripts:
                 st.markdown("**💬 Lời thoại lồng tiếng (100% Miền Bắc):**")
                 st.markdown(f"> *\"{scene.get('voiceover_vi', '')}\"*")
 
-                # 3. Prompt Tạo Ảnh (Có nút copy góc phải của ô code)
+                # 3. Prompt Tạo Ảnh
                 st.markdown("**🖼️ Prompt Tạo Ảnh Gốc (Imagen 3 - 9:16):**")
                 if "nối tiếp" in trans_type.lower() or not scene.get("image_prompt"):
                     st.warning("👉 **Lấy ảnh cuối của video trước làm ảnh đầu vào cho phân cảnh này.**")
                 else:
                     st.code(scene.get("image_prompt", ""), language="text")
+                    st_copy_to_clipboard(scene.get("image_prompt", ""), "📋 Copy Prompt Ảnh (Imagen 3)")
 
-                # 4. Prompt Chuyển Động Veo 3 (Có nút copy góc phải của ô code)
+                # 4. Prompt Chuyển Động Veo 3
                 st.markdown(f"**🎥 Prompt Chuyển Động Video ({trans_type} - Veo 3):**")
                 st.code(scene.get("video_prompt", ""), language="text")
+                st_copy_to_clipboard(scene.get("video_prompt", ""), "📋 Copy Prompt Video (Veo 3)")
 
                 st.markdown("---")
 
