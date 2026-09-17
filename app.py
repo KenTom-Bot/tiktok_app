@@ -9,7 +9,7 @@ import os
 import re
 import time
 
-st.set_page_config(page_title="KenTom AI Video Studio Pro", page_icon="🎬", layout="wide")
+st.set_page_config(page_title="Universal AI Video Studio Pro", page_icon="🎬", layout="wide")
 
 st.markdown("""
 <style>
@@ -177,7 +177,14 @@ QUY TẮC PHÂN CẢNH VÀ ĐẠO DIỄN:
 3. Tích hợp thoại vào Veo 3: Trong 'video_prompt', nhúng nguyên văn lời thoại tiếng Việt có dấu kèm biểu cảm gương mặt, khẩu hình và cử chỉ cơ thể.
 4. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
 """
-    if mode == "🛒 TikTok Shop & Bán Hàng":
+    if mode == "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp":
+        return base + """
+CHẾ ĐỘ: TVC QUẢNG CÁO ĐIỆN ẢNH & THƯƠNG HIỆU CAO CẤP (SẢN PHẨM & DỊCH VỤ)
+- Ngôn ngữ thị giác điện ảnh: Ánh sáng Dramatic Lighting, Rim Light, tương phản sắc nét, chuyển động máy nghệ thuật (Dolly, Slow-motion 120fps, Macro lens).
+- Trình diễn thẩm mỹ: Giọt tinh chất thẩm thấu, làn khói thơm thư giãn, góc kiến trúc resort/spa sang trọng, cận cảnh tinh xảo.
+- Kịch bản & Thoại: Không nói dài dòng kiểu review hàng chợ. Lời thoại cô đọng, giàu cảm xúc, kết thúc bằng Slogan hoặc Tagline định vị thương hiệu đẳng cấp.
+"""
+    elif mode == "🛒 TikTok Shop & Bán Hàng":
         return base + """
 CHẾ ĐỘ: TIKTOK SHOP & SẢN PHẨM CHUYỂN ĐỔI
 - Khóa chặt giải phẫu cơ khí, Hero Color, nút bấm, chất liệu vỏ từ ảnh tham chiếu hoặc văn bản mô tả.
@@ -187,7 +194,7 @@ CHẾ ĐỘ: TIKTOK SHOP & SẢN PHẨM CHUYỂN ĐỔI
     elif mode == "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan":
         return base + """
 CHẾ ĐỘ: HOME TOUR & KIẾN TRÚC CẢNH QUAN
-- Khóa chặt vật liệu (gỗ, đá marble, kính, sân vườn nhiệt đới, hồ cá koi) theo mô tả hoặc ảnh.
+- Khóa chặt vật liệu (gỗ óc chó, đá marble, kính, sân vườn nhiệt đới, hồ cá koi) theo mô tả hoặc ảnh.
 - Góc máy Imagen 3: Ultra-wide architectural interior/exterior shot, ánh sáng tự nhiên ngập tràn.
 - Động học Veo 3: Cú lướt mượt mà xuyên không gian, rèm bay khẽ, ánh nắng chiếu rọi thư thái.
 - Lời thoại: Giọng chia sẻ phong cách sống, giới thiệu công năng và không gian truyền cảm hứng.
@@ -383,9 +390,9 @@ def add_five_scripts_continuation(current_mode: str, current_style: str):
 # ==============================================================================
 st.markdown("""
 <div class="header-container">
-    <div class="header-badge">🌟 KENTOM AI VIDEO STUDIO PRO</div>
-    <div class="main-title">🎬 Hệ Thống Kịch Bản Đa Vũ Trụ Nhà Ken Tôm</div>
-    <div class="sub-title">Sản phẩm, Phim đời sống, Du lịch, Nhà đẹp, Xe cộ, Lịch sử & Hoạt hình 3D Pixar</div>
+    <div class="header-badge">🌟 UNIVERSAL AI VIDEO STUDIO PRO</div>
+    <div class="main-title">🎬 Hệ Thống Kịch Bản Đa Vũ Trụ</div>
+    <div class="sub-title">TVC Điện ảnh, Sản phẩm, Phim đời sống, Du lịch, Nhà đẹp, Xe cộ, Lịch sử & Hoạt hình 3D</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -394,6 +401,7 @@ with col_mode:
     selected_mode = st.selectbox(
         "🎯 Chọn Thể Loại Nội Dung:",
         options=[
+            "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp",
             "🛒 TikTok Shop & Bán Hàng",
             "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan",
             "🌿 Du Lịch & Phong Cảnh Đất Nước",
@@ -419,13 +427,13 @@ with col_style:
     )
 
 # ==============================================================================
-# KHU VỰC 2: ĐẦU VÀO KÉP THÔNG MINH (ẢNH + VĂN BẢN / CỐT TRUYỆN)
+# KHU VỰC 2: ĐẦU VÀO KÉP THÔNG MINH (VĂN BẢN + ẢNH)
 # ==============================================================================
 st.markdown("---")
 st.markdown("### 📥 **Dữ Liệu Đầu Vào (Nhập Văn Bản, Tải Ảnh hoặc Kết Hợp Cả Hai)**")
 
-# Gợi ý placeholder linh hoạt theo từng thể loại
 prompt_placeholders = {
+    "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp": "Mô tả sản phẩm/dịch vụ TVC: Spa trị liệu cao cấp, khu nghỉ dưỡng ven biển, đồng hồ xa xỉ, tagline thương hiệu mong muốn...",
     "🛒 TikTok Shop & Bán Hàng": "Mô tả sản phẩm, tính năng độc nhất (USP), chương trình khuyến mãi hoặc đối tượng sử dụng...",
     "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan": "Mô tả căn nhà: Biệt thự đồi thông Đà Lạt, căn hộ penthouse tối giản, nhà vườn phong cách Indochine, hồ cá koi...",
     "🌿 Du Lịch & Phong Cảnh Đất Nước": "Nhập tên địa danh hoặc ý tưởng: Vịnh Hạ Long lúc hoàng hôn, Mù Cang Chải mùa lúa chín, Tràng An Ninh Bình...",
@@ -437,7 +445,7 @@ prompt_placeholders = {
 }
 
 input_text = st.text_area(
-    f"✍️ Tóm tắt ý tưởng, cốt truyện, tên địa danh, dòng xe hoặc mô tả chi tiết:",
+    f"✍️ Tóm tắt ý tưởng, cốt truyện, tên địa danh, dòng xe hoặc mô tả TVC/dịch vụ chi tiết:",
     placeholder=prompt_placeholders.get(selected_mode, "Nhập thông tin mô tả tại đây..."),
     height=100
 )
@@ -455,7 +463,6 @@ if uploaded_files:
     for idx, img in enumerate(images):
         cols[idx % 4].image(img, caption=f"Ảnh {idx+1}", use_container_width=True)
 
-# Kiểm tra người dùng đã nhập ít nhất 1 trong 2 nguồn dữ liệu
 can_generate = bool(input_text.strip()) or bool(images)
 
 if st.button("🚀 Bắt Đầu Bóc Tách DNA Nội Dung & Lên 5 Kịch Bản Gốc", type="primary", use_container_width=True, disabled=not can_generate):
@@ -468,23 +475,22 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Nội Dung & Lên 5 Kịch Bản 
         YÊU CẦU:
         1. 'content_analysis':
            - category_or_genre: Thể loại chi tiết
-           - core_subject_dna: Khóa chặt đặc tính cốt lõi (Nếu là sản phẩm: cơ khí, màu sắc, nút bấm. Nếu là nhân vật/cốt truyện: tính cách, tuổi tác, trang phục. Nếu là nhà/cảnh quan/xe: địa danh, kiến trúc, vật liệu, ánh sáng, thương hiệu xe).
-           - emotional_or_usp_hook: Thông điệp chạm cảm xúc hoặc Điểm bán hàng độc nhất (USP).
+           - core_subject_dna: Khóa chặt đặc tính cốt lõi (Nếu là TVC/Dịch vụ/Sản phẩm: thẩm mỹ thị giác, bối cảnh sang trọng, tính năng; Nếu là nhân vật/cốt truyện: tính cách, trang phục; Nếu là nhà/cảnh quan/xe: kiến trúc, vật liệu, dòng xe).
+           - emotional_or_usp_hook: Thông điệp chạm cảm xúc, Slogan TVC hoặc Điểm bán hàng độc nhất (USP).
            - visual_physics_rules: Quy chuẩn vật lý/thị giác bắt buộc cho thể loại này.
            - target_audience: Khán giả mục tiêu.
            - prompt_dna_lock: Chuỗi tiếng Anh cố định khóa chặt chủ thể để đưa vào mọi prompt Imagen 3 và Veo 3.
         2. 'script_outlines': ĐÚNG 5 Ý TƯỞNG KỊCH BẢN GỐC (id: 1 đến 5):
-           - id: 1 đến 5
-           - title: Tên kịch bản hấp dẫn, sâu sắc
-           - setting_style: Bối cảnh không gian chính
-           - angle: Góc tiếp cận
-           - target_hook: Ý tưởng câu hook mở đầu 3-4s
-           - recommended_scenes_count: Phân bổ nhịp cảnh CHỈ DÙNG 4s, 6s, 8s (ví dụ: '4 cảnh (4s-6s-8s-8s)', '3 cảnh (4s-6s-8s)')
-           - voice_profile: {{gender: 'Nam'/'Nữ', age_range: 'Độ tuổi', tone: 'Âm điệu miền Bắc'}}
+               - id: 1 đến 5
+               - title: Tên kịch bản hấp dẫn, sâu sắc
+               - setting_style: Bối cảnh không gian chính
+               - angle: Góc tiếp cận
+               - target_hook: Ý tưởng câu hook mở đầu 3-4s
+               - recommended_scenes_count: Phân bổ nhịp cảnh CHỈ DÙNG 4s, 6s, 8s (ví dụ: '4 cảnh (4s-6s-8s-8s)', '3 cảnh (4s-6s-8s)')
+               - voice_profile: {{gender: 'Nam'/'Nữ', age_range: 'Độ tuổi', tone: 'Âm điệu miền Bắc'}}
         """
         try:
             sys_inst = get_system_instructions(selected_mode, selected_style)
-            # Nếu có ảnh thì gửi Multimodal (ảnh + text), nếu không có ảnh thì gửi Text-Only
             api_payload = [*images, prompt] if images else [prompt]
             data = generate_with_smart_retry(api_payload, sys_inst)
             if isinstance(data, list) and len(data) > 0:
@@ -508,7 +514,7 @@ if st.session_state.content_analysis and isinstance(st.session_state.content_ana
     with c1:
         st.markdown(f"**Chuyên mục:** {ca.get('category_or_genre', 'N/A')}")
         st.markdown(f"**Khóa nhận diện cốt lõi (DNA):** {ca.get('core_subject_dna', 'N/A')}")
-        st.markdown(f"**Điểm chạm cảm xúc / USP:** {ca.get('emotional_or_usp_hook', 'N/A')}")
+        st.markdown(f"**Điểm chạm cảm xúc / Slogan / USP:** {ca.get('emotional_or_usp_hook', 'N/A')}")
     with c2:
         st.markdown(f"**Quy chuẩn vật lý & thị giác:** {ca.get('visual_physics_rules', 'N/A')}")
         st.markdown(f"**Khán giả mục tiêu:** {ca.get('target_audience', 'N/A')}")
