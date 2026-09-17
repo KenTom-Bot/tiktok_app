@@ -511,7 +511,7 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận K�
         except Exception as e:
             st.error(f"Lỗi khởi tạo hệ thống: {e}")
 
-# Hiển thị Bóc tách DNA chi tiết đa tầng (Gọn gàng trong cùng 1 ô, định dạng rõ ràng)
+# Hiển thị Bóc tách DNA chi tiết đa tầng (Sử dụng Container và Markdown thuần, chống lỗi HTML thô tuyệt đối)
 if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
     st.divider()
     st.markdown(f"### 🔍 **Phân Tích DNA Chi Tiết Đa Tầng — [{selected_mode.upper()}]**")
@@ -524,31 +524,27 @@ if st.session_state.content_analysis and isinstance(st.session_state.content_ana
     physics_text = format_analysis_field(ca.get('visual_physics_rules', 'N/A'))
     prompt_lock_text = format_analysis_field(ca.get('prompt_dna_lock', 'N/A'))
 
-    # Gom toàn bộ nội dung vào một khung duy nhất (cùng 1 ô) với bố cục phân tách rõ ràng
-    dna_card_html = f"""
-    <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-        <div style="font-weight: 800; color: #1e293b; font-size: 1.15rem; margin-bottom: 6px;">🏭 1. Thông số Cơ khí & Phụ kiện đi kèm:</div>
-        <div style="color: #334155; margin-bottom: 14px; font-size: 0.95rem; line-height: 1.5;">{mech_text}</div>
+    with st.container(border=True):
+        st.markdown("##### 🏭 **1. Thông số Cơ khí & Phụ kiện đi kèm:**")
+        st.write(mech_text, unsafe_allow_html=True)
+        st.markdown("---")
         
-        <div style="font-weight: 800; color: #b91c1c; font-size: 1.15rem; margin-bottom: 6px;">🎯 2. Ma trận 3 Tầng Nỗi đau Khách hàng:</div>
-        <div style="color: #334155; margin-bottom: 14px; font-size: 0.95rem; line-height: 1.5;">{pain_text}</div>
+        st.markdown("##### 🎯 **2. Ma trận 3 Tầng Nỗi đau Khách hàng:**")
+        st.write(pain_text, unsafe_allow_html=True)
+        st.markdown("---")
 
-        <div style="font-weight: 800; color: #15803d; font-size: 1.15rem; margin-bottom: 6px;">💡 3. Mong muốn cốt lõi & USP:</div>
-        <div style="color: #334155; margin-bottom: 14px; font-size: 0.95rem; line-height: 1.5;">
-            <b>Mong muốn:</b> {desire_text}<br>
-            <b>USP / Slogan:</b> {usp_text}
-        </div>
+        st.markdown("##### 💡 **3. Mong muốn cốt lõi & USP:**")
+        st.markdown(f"**- Mong muốn:** {desire_text}")
+        st.markdown(f"**- USP / Slogan:** {usp_text}")
+        st.markdown("---")
 
-        <div style="font-weight: 800; color: #1e40af; font-size: 1.15rem; margin-bottom: 6px;">⚙️ 4. Quy chuẩn Vật lý & Chuỗi khóa thị giác (Visual DNA Lock):</div>
-        <div style="color: #334155; margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5;"><b>Vật lý:</b> {physics_text}</div>
-    </div>
-    """
-    st.markdown(dna_card_html, unsafe_allow_html=True)
-    
-    # Riêng phần đoạn mã prompt lock dài, hiển thị bằng block code chuẩn của Streamlit để dễ copy
+        st.markdown("##### ⚙️ **4. Quy chuẩn Vật lý:**")
+        st.write(physics_text, unsafe_allow_html=True)
+
+    # Chuỗi khóa thị giác hiển thị riêng bên dưới để dễ copy
     st.markdown("##### 📌 **Chuỗi khóa thị giác (Visual DNA Lock - Dùng cho Imagen 3 & Veo 3):**")
     st.code(prompt_lock_text, language="text")
-
+    
 # ==============================================================================
 # GIAI ĐOẠN 1: KHI CHƯA TẠO CHI TIẾT KỊCH BẢN NÀO
 # ==============================================================================
