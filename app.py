@@ -116,35 +116,35 @@ IV. ĐẠO DIỄN GIỌNG ĐỌC & TÍCH HỢP PROMPT VEO 3:
 """
 
 def generate_with_smart_retry(contents, system_inst, max_tokens=8192):
-    primary_models = ["gemini-3.6-flash", "gemini-2.5-flash"]
+    """Sử dụng duy nhất model gemini-3.6-flash với cơ chế auto-retry khi bận"""
+    model_name = "gemini-3.6-flash"
+    max_attempts = 5
     last_err = None
 
-    for m in primary_models:
-        for attempt in range(3):
-            try:
-                response = client.models.generate_content(
-                    model=m,
-                    contents=contents,
-                    config=types.GenerateContentConfig(
-                        system_instruction=system_inst,
-                        response_mime_type="application/json",
-                        max_output_tokens=max_tokens,
-                        temperature=0.7,
-                    ),
-                )
-                return clean_and_parse_json(response.text)
-            except Exception as e:
-                last_err = e
-                err_msg = str(e)
-                if "503" in err_msg or "UNAVAILABLE" in err_msg or "high demand" in err_msg:
-                    time.sleep(2 * (attempt + 1))
-                    continue
-                else:
-                    break
+    for attempt in range(max_attempts):
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_inst,
+                    response_mime_type="application/json",
+                    max_output_tokens=max_tokens,
+                    temperature=0.7,
+                ),
+            )
+            return clean_and_parse_json(response.text)
+        except Exception as e:
+            last_err = e
+            err_msg = str(e)
+            if "503" in err_msg or "UNAVAILABLE" in err_msg or "high demand" in err_msg or "ResourceExhausted" in err_msg:
+                time.sleep(3 * (attempt + 1))
+                continue
+            else:
+                break
     raise last_err
 
 def create_scene_details_for_id(target_id: int):
-    """Hàm tạo chi tiết cho một kịch bản theo ID"""
     outline = next((sc for sc in st.session_state.script_outlines if sc.get("id") == target_id), None)
     if not outline:
         return
@@ -340,7 +340,6 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         st.markdown("#### 🔥 **Nhân Bản Kịch Bản Win Thành 5 Bản (A/B Test)**")
         st.caption("Chọn 1 kịch bản win đã tạo chi tiết bên dưới để AI nhân bản thành 5 biến thể mở đầu (Hook) và bối cảnh khác nhau.")
         
-        # Checklist chọn kịch bản đã tạo để nhân bản
         generated_ids = list(st.session_state.generated_details.keys())
         if generated_ids:
             options_dict = {
