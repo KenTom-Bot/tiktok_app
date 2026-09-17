@@ -384,7 +384,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str):
 st.markdown("""
 <div class="header-container">
     <div class="header-badge">🌟 KENTOM AI VIDEO STUDIO PRO</div>
-    <div class="main-title">🎬 Hệ Thống Kịch Bản Đa Vũ Trụ</div>
+    <div class="main-title">🎬 Hệ Thống Kịch Bản Đa Vũ Trụ Nhà Ken Tôm</div>
     <div class="sub-title">Sản phẩm, Phim đời sống, Du lịch, Nhà đẹp, Xe cộ, Lịch sử & Hoạt hình 3D Pixar</div>
 </div>
 """, unsafe_allow_html=True)
