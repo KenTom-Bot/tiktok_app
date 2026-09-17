@@ -1,86 +1,100 @@
-import io
-import json
-import os
-import subprocess
+import streamlit as st
 from google import genai
 from google.genai import types
 from PIL import Image
-import streamlit as st
+import json
+import os
+import time
 
-# CẤU HÌNH GIAO DIỆN WEB
-st.set_page_config(
-    page_title='TikTok Shop AI Video Generator', page_icon='🎬', layout='wide'
-)
-st.title('🎬 Hệ Thống Tự Động Sản Xuất Video TikTok Shop với Veo 3')
-st.caption(
-    'Tải ảnh sản phẩm lên -> Tự động phân tích giải phẫu, lập kịch bản, tạo'
-    ' ảnh Master và render video 35-40s.'
-)
+st.set_page_config(page_title="TikTok AI Video Generator", page_icon="🎬", layout="wide")
 
-# KẾT NỐI GEMINI API
-gemini_key = st.secrets.get('GEMINI_API_KEY', '')
-if not gemini_key:
-  st.warning('⚠️ Vui lòng cấu hình GEMINI_API_KEY trong mục Secrets của App!')
+# Lấy API Key từ Secrets hoặc biến môi trường
+api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY"))
 
-client = genai.Client(api_key=gemini_key) if gemini_key else None
+if not api_key:
+    st.error("Chưa cấu hình GEMINI_API_KEY trong Advanced settings -> Secrets.")
+    st.stop()
+
+client = genai.Client(api_key=api_key)
 
 SYSTEM_INSTRUCTIONS = """
-BẠN LÀ CHUYÊN GIA BIÊN TẬP KỊCH BẢN TIKTOK SHOP & KỸ SƯ PROMPT AI (IMAGE & VEO 3 VIDEO) ĐẠT CHUẨN CHUYỂN ĐỔI CAO.
-NHIỆM VỤ: Chuyển đổi thông tin, hình ảnh giải phẫu sản phẩm thành gói sản xuất video ngắn TikTok Shop (35-40s) hoàn chỉnh, trực quan, tuân thủ chính sách và tối ưu cho công cụ tạo ảnh cùng Veo 3 Image-to-Video. Áp dụng chuẩn xác cho 100% mọi nhóm sản phẩm vật lý.
+BẠN LÀ CHUYÊN GIA SẢN XUẤT VIDEO REVIEW TIKTOK SHOP & VIRTUAL DIRECTOR CHO VEO 3.
+Tuân thủ tuyệt đối các nguyên tắc:
+1. Chính sách TikTok Shop: Tuyệt đối không nhắc giá số cụ thể, chỉ dùng từ đời thường ('vài chục', 'cốc trà đá', 'deal hời góc trái'). Không cam kết tuyệt đối (chữa dứt điểm, vĩnh viễn, 100%).
+2. Ngành hàng nhạy cảm:
+   - Trẻ em: Phụ huynh luôn xuất hiện thao tác, cấm trẻ em một mình.
+   - Sức khỏe/Người già: Tránh từ y tế, hướng tới thư giãn hoặc con cái báo hiếu cha mẹ.
+   - Bộ lọc an toàn: Cấm cận cảnh vết thương, mụn viêm, răng sâu, cử chỉ đau đớn dữ dội.
+3. Đồng nhất giải phẫu & nhân vật:
+   - Khóa cứng màu sắc chủ đạo (Hero Color), kết cấu cơ khí, cổng cắm, nhãn mác.
+   - Thao tác tay: Tối đa 1 bàn tay người lớn xuất hiện từ cạnh viền, chống mọc thêm tay.
+   - Màn hình sạch: Không gắn phụ đề nổi, logo đè, watermark vào prompt video.
+4. Voiceover: Giọng phát thanh viên miền Bắc chuẩn Hà Nội, âm sắc đồng nhất, tốc độ 1.15x, tự nhiên.
 
-I. NGUYÊN TẮC CHÍNH SÁCH & BỘ LỌC AN TOÀN:
-- Không nói giá số trực tiếp (dùng từ: vài chục, bằng cốc trà đá, deal hời góc trái).
-- Cấm từ tuyệt đối: cam kết, chữa dứt điểm, vĩnh viễn, rẻ nhất, 100%.
-- Trẻ em: Luôn để phụ huynh/người lớn thao tác, cấm trẻ em xuất hiện đơn độc.
-- Sức khỏe & Người già: Cấm từ ngữ y tế (chữa bệnh, điều trị, dứt điểm). Dùng từ trải nghiệm: hỗ trợ thư giãn, nhẹ nhõm, đỡ mỏi hẳn. Nhân vật người già hoặc con cái trưởng thành mua báo hiếu.
-- Bộ lọc an toàn: Cấm cử chỉ đau đớn dữ dội (ôm đầu quằn quại, ôm lưng nhăn nhó). Cấm cận cảnh mụn viêm, răng sâu, vết cắt đứt tay.
-
-II. QUY CHUẨN KỸ THUẬT:
-- Khóa màu sắc & vật liệu (Hero Color), khóa cứng cấu trúc cơ học nút bấm, cổng cắm, quai xách.
-- Bảo toàn nguyên vẹn 100% tem họa tiết, chữ in trên thân vỏ, phụ kiện và lớp đệm bên trong.
-- CẤM mọi loại chữ phụ đề nổi (no on-screen text overlays, no subtitles, no video graphics, no watermarks, no icons).
-- Chống mọc tay thừa: Cảnh tương tác chỉ định 'A single adult hand enters from the side'.
-
-BẮT BUỘC ĐẦU RA LÀ ĐỊNH DẠNG JSON THUẦN TÚY CÓ CẤU TRÚC SAU:
+Định dạng trả về duy nhất: Chuỗi JSON hợp lệ không bọc markdown:
 {
-  "scenario_name": "Tên kịch bản",
-  "hero_color": "Chuỗi từ khóa tiếng Anh khóa màu sắc",
-  "hardware_lock": "Chuỗi từ khóa tiếng Anh khóa nút bấm/cơ khí",
-  "shots": [
+  "product_analysis": {
+    "category": "Tên ngành hàng",
+    "hero_color": "Mã/Tên màu chính",
+    "key_features": ["Đặc điểm 1", "Đặc điểm 2", "Đặc điểm 3"]
+  },
+  "scenes": [
     {
-      "shot_id": 1,
-      "type": "HARD_CUT",
-      "duration": 6,
-      "master_image_prompt": "Prompt tiếng Anh 9:16 tạo ảnh Master Shot độc lập không có tay thừa",
-      "veo_prompt": "Prompt tiếng Anh mô tả chuyển động camera cho Veo 3. Voiceover Track: Exactly the same native Northern Vietnamese narrator voice (standard Hanoi broadcast accent, consistent timbre and 1.15x pace). Flawless Vietnamese pronunciation with natural emphatic stress on key words: 'lời thoại tiếng Việt viết thường có dấu', synced natural speech cadence, authentic ambient sounds."
+      "scene_number": 1,
+      "duration": "8s",
+      "visual_prompt": "Mô tả chi tiết góc quay, ánh sáng, thao tác điện ảnh cho Veo 3...",
+      "voiceover_vi": "Lời bình thoại tiếng Việt chuẩn miền Bắc..."
     },
     {
-      "shot_id": 2,
-      "type": "CONTINUITY",
-      "duration": 6,
-      "master_image_prompt": "",
-      "veo_prompt": "Prompt tiếng Anh chuyển động nối tiếp cho Veo 3. Voiceover Track: Exactly the same native Northern Vietnamese narrator voice (standard Hanoi broadcast accent, consistent timbre and 1.15x pace). Flawless Vietnamese pronunciation with natural emphatic stress on key words: 'lời thoại tiếng Việt viết thường có dấu', synced natural speech cadence, authentic ambient sounds."
+      "scene_number": 2,
+      "duration": "8s",
+      "visual_prompt": "...",
+      "voiceover_vi": "..."
+    },
+    {
+      "scene_number": 3,
+      "duration": "8s",
+      "visual_prompt": "...",
+      "voiceover_vi": "..."
+    },
+    {
+      "scene_number": 4,
+      "duration": "8s",
+      "visual_prompt": "...",
+      "voiceover_vi": "..."
     }
   ]
 }
 """
 
+st.title("🎬 Hệ Thống Tự Động Sản Xuất Video TikTok Shop với Veo 3")
+st.write("Tải lên các góc ảnh sản phẩm để AI bóc tách giải phẫu và tạo kịch bản video chuẩn chính sách.")
 
-def analyze_product_to_json(image):
-  import time
+uploaded_files = st.file_uploader(
+    "Tải các góc ảnh sản phẩm lên đây (Mặt trước, mặt sau, chi tiết, bao bì):",
+    type=["jpg", "jpeg", "png"],
+    accept_multiple_files=True
+)
 
+if uploaded_files:
+    images = [Image.open(f) for f in uploaded_files]
+    cols = st.columns(min(len(images), 4))
+    for idx, img in enumerate(images):
+        cols[idx % 4].image(img, caption=f"Góc ảnh {idx+1}", use_container_width=True)
+
+    if st.button("🚀 Bắt Đầu Tạo Video Tự Động"):
+        with st.spinner(f"Đang bóc tách giải phẫu {len(images)} góc ảnh và lập kịch bản tự động..."):
             max_retries = 3
+            script_data = None
+            last_err = None
+
             for attempt in range(max_retries):
                 try:
                     response = client.models.generate_content(
                         model="gemini-3.6-flash",
                         contents=[
                             *images,
-                            (
-                                "Hãy đối chiếu toàn bộ các góc ảnh này để bóc tách giải phẫu"
-                                " sản phẩm chi tiết nhất và xuất gói kịch bản hoàn chỉnh"
-                                " định dạng JSON."
-                            ),
+                            "Hãy đối chiếu toàn bộ các góc ảnh này để bóc tách giải phẫu sản phẩm chi tiết nhất và xuất gói kịch bản hoàn chỉnh định dạng JSON."
                         ],
                         config=types.GenerateContentConfig(
                             system_instruction=SYSTEM_INSTRUCTIONS,
@@ -90,60 +104,28 @@ def analyze_product_to_json(image):
                     script_data = json.loads(response.text)
                     break
                 except Exception as e:
+                    last_err = e
                     if "503" in str(e) and attempt < max_retries - 1:
-                        time.sleep(3)  # Chờ 3 giây rồi tự động gửi lại
+                        time.sleep(3)
                         continue
                     else:
-                        raise e
+                        break
 
+            if script_data:
+                st.success("✅ Đã bóc tách giải phẫu và lên kịch bản thành công!")
+                
+                # Hiển thị thông tin giải phẫu
+                st.subheader("🔍 Kết quả bóc tách sản phẩm")
+                analysis = script_data.get("product_analysis", {})
+                st.write(f"**Ngành hàng:** {analysis.get('category', 'N/A')}")
+                st.write(f"**Màu sắc nhận diện (Hero Color):** {analysis.get('hero_color', 'N/A')}")
+                st.write("**Đặc điểm nổi bật:**", ", ".join(analysis.get("key_features", [])))
 
-# GIAO DIỆN NGƯỜI DÙNG
-uploaded_files = st.file_uploader(
-        "Tải các góc ảnh sản phẩm lên đây (Mặt trước, mặt sau, chi tiết, bao"
-        " bì):",
-        type=["jpg", "jpeg", "png"],
-        accept_multiple_files=True,
-    )
-if uploaded_files and client:
-  images = [Image.open(f) for f in uploaded_files]
-
-  cols = st.columns(min(len(images), 4))
-  for idx, img in enumerate(images):
-    cols[idx % 4].image(img, caption=f"Góc ảnh {idx+1}", use_container_width=True)
-
-  if st.button("🚀 Bắt Đầu Tạo Video Tự Động"):
-    with st.spinner(
-        f"Đang bóc tách giải phẫu {len(images)} góc ảnh và lập kịch bản tự"
-        " động..."
-    ):
-      try:
-        # Gửi toàn bộ danh sách ảnh để Gemini phân tích chi tiết toàn diện
-        response = client.models.generate_content(
-            model="gemini-3.6-flash",
-            contents=[
-                *images,
-                (
-                    "Hãy đối chiếu toàn bộ các góc ảnh này để bóc tách giải"
-                    " phẫu sản phẩm chi tiết nhất và xuất gói kịch bản hoàn"
-                    " chỉnh định dạng JSON."
-                ),
-            ],
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_INSTRUCTIONS,
-                response_mime_type="application/json",
-            ),
-        )
-        script_data = json.loads(response.text)
-        st.success(
-            f"🎉 Đã lập xong kịch bản: {script_data.get('scenario_name')}"
-        )
-
-        with st.expander('Xem chi tiết các Shot và Prompt chuẩn hóa'):
-          st.json(script_data)
-
-        st.info(
-            'Hệ thống đã sẵn sàng điều phối Imagen và Veo để xuất video hoàn'
-            ' chỉnh!'
-        )
-      except Exception as e:
-        st.error(f'Đã xảy ra lỗi: {e}')
+                # Hiển thị từng phân cảnh kịch bản
+                st.subheader("📋 Kịch bản 4 phân cảnh (32-35s)")
+                for sc in script_data.get("scenes", []):
+                    with st.expander(f"Phân cảnh {sc.get('scene_number')} ({sc.get('duration')})", expanded=True):
+                        st.markdown(f"**Prompt cho Veo 3:** `{sc.get('visual_prompt')}`")
+                        st.markdown(f"**Lời thoại miền Bắc:** *\"{sc.get('voiceover_vi')}\"*")
+            else:
+                st.error(f"Đã xảy ra lỗi: {last_err}")
