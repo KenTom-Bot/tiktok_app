@@ -116,7 +116,6 @@ IV. ĐẠO DIỄN GIỌNG ĐỌC & TÍCH HỢP PROMPT VEO 3:
 """
 
 def generate_with_smart_retry(contents, system_inst, max_tokens=8192):
-    """Sử dụng duy nhất model gemini-3.6-flash với cơ chế auto-retry khi bận"""
     model_name = "gemini-3.6-flash"
     max_attempts = 5
     last_err = None
@@ -160,7 +159,7 @@ def create_scene_details_for_id(target_id: int):
         - Giọng đọc: {vp.get('gender', 'Nữ')} miền Bắc, tuổi {vp.get('age_range', '25-30')}
 
         QUY ĐỊNH THỜI LƯỢNG & BỐI CẢNH TỪNG CẢNH:
-        - Mỗi scene bắt buộc có trường 'scene_setting': Mô tả ngắn gọn bối cảnh không gian cụ thể cho cảnh này (ví dụ: 'Băng chuyền xưởng đóng gói', 'Showroom đèn chiếu sang trọng', 'Góc làm việc cá nhân').
+        - Mỗi scene bắt buộc có trường 'scene_setting': Mô tả ngắn gọn bối cảnh không gian cụ thể cho cảnh này.
         - 'duration' của mỗi cảnh CHỈ ĐƯỢC LÀ một trong các mốc: '4s', '6s', '8s', '10s'.
         - CHỦ YẾU SỬ DỤNG: '4s' (Hook/chuyển cảnh), '6s' và '8s' (demo tính năng, cơ khí, bối cảnh xưởng/showroom, thao tác thực tế).
         - MỐC '10s': TOÀN BỘ KỊCH BẢN TỐI ĐA CHỈ ĐƯỢC XUẤT HIỆN 1 ĐẾN 2 CẢNH.
@@ -288,6 +287,31 @@ if st.session_state.script_outlines:
                     st.session_state.active_script_id = sc_id
                     st.rerun()
 
+    # NÚT MỞ RỘNG THÊM 5 KỊCH BẢN ĐẶT NGAY DƯỚI DANH SÁCH
+    st.markdown("---")
+    st.markdown("#### ➕ **Mở Rộng Thêm Kịch Bản Mới Khác Biệt**")
+    if st.button("➕ Tạo Thêm 5 Kịch Bản Mới Khác Biệt", key="btn_add_more_main", use_container_width=True):
+        with st.spinner("Đang tư duy thêm 5 góc tiếp cận mới lạ..."):
+            cur_len = len(st.session_state.script_outlines)
+            prompt_more = f"""
+            Dựa trên sản phẩm này, hãy tạo thêm ĐÚNG 5 Ý TƯỞNG KỊCH BẢN MỚI HOÀN TOÀN không trùng lặp với {cur_len} kịch bản trước:
+            - id: {cur_len + 1} đến {cur_len + 5}
+            - title: Tên kịch bản giật tít, hấp dẫn
+            - setting_style: Bối cảnh chính
+            - angle: Góc độ mới lạ
+            - target_hook: Ý tưởng hook 3-4s
+            - recommended_scenes_count: Phân bổ nhịp cảnh
+            - voice_profile: Giọng miền Bắc đồng nhất
+            - Xuất JSON gồm key 'script_outlines' chứa 5 ý tưởng này.
+            """
+            try:
+                more_data = generate_with_smart_retry([*images, prompt_more], SYSTEM_INSTRUCTIONS)
+                st.session_state.script_outlines.extend(more_data.get("script_outlines", []))
+                st.success("✅ Đã bổ sung thêm 5 kịch bản mới vào danh sách!")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Lỗi tạo thêm: {e}")
+
 # HIỂN THỊ KỊCH BẢN CHI TIẾT ĐANG CHỌN
 if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
     st.divider()
@@ -393,28 +417,3 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                     st.write("")
         else:
             st.success("🎉 Bạn đã tạo chi tiết cho toàn bộ các kịch bản trong danh sách!")
-
-    # NÚT MỞ RỘNG THÊM 5 KỊCH BẢN MỚI Ở DƯỚI CÙNG
-    st.markdown("---")
-    st.markdown("#### ➕ **Mở Rộng Thêm Kịch Bản Mới Khác Biệt**")
-    if st.button("➕ Tạo Thêm 5 Kịch Bản Mới Khác Biệt", use_container_width=True):
-        with st.spinner("Đang tư duy thêm 5 góc tiếp cận mới lạ..."):
-            cur_len = len(st.session_state.script_outlines)
-            prompt_more = f"""
-            Dựa trên sản phẩm này, hãy tạo thêm ĐÚNG 5 Ý TƯỞNG KỊCH BẢN MỚI HOÀN TOÀN không trùng lặp với {cur_len} kịch bản trước:
-            - id: {cur_len + 1} đến {cur_len + 5}
-            - title: Tên kịch bản giật tít, hấp dẫn
-            - setting_style: Bối cảnh chính
-            - angle: Góc độ mới lạ
-            - target_hook: Ý tưởng hook 3-4s
-            - recommended_scenes_count: Phân bổ nhịp cảnh
-            - voice_profile: Giọng miền Bắc đồng nhất
-            - Xuất JSON gồm key 'script_outlines' chứa 5 ý tưởng này.
-            """
-            try:
-                more_data = generate_with_smart_retry([*images, prompt_more], SYSTEM_INSTRUCTIONS)
-                st.session_state.script_outlines.extend(more_data.get("script_outlines", []))
-                st.success("✅ Đã bổ sung thêm 5 kịch bản mới vào danh sách!")
-                st.rerun()
-            except Exception as e:
-                st.error(f"Lỗi tạo thêm: {e}")
