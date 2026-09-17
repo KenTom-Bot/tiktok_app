@@ -10,11 +10,42 @@ import time
 
 st.set_page_config(page_title="TikTok AI Video Suite Pro", page_icon="🎬", layout="wide")
 
+# CSS tối ưu giao diện: Màu sắc nổi bật, font chữ sắc nét, tương thích di động
 st.markdown("""
 <style>
     .main-title { font-size: 1.55rem !important; font-weight: 800; color: #1e1e1e; margin-bottom: 0.5rem; }
     .stExpander { border-radius: 8px !important; margin-bottom: 8px !important; }
-    button[kind="primary"], button[kind="secondary"] { width: 100% !important; border-radius: 8px !important; }
+    
+    /* Thiết lập nút bấm nổi bật */
+    div[data-testid="stButton"] > button {
+        width: 100% !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        border: none !important;
+        transition: all 0.25s ease-in-out !important;
+    }
+
+    /* Style nổi bật cho nút Tạo chi tiết kịch bản này (Secondary button) */
+    div[data-testid="stButton"] > button[kind="secondary"] {
+        background: linear-gradient(135deg, #ff4b4b 0%, #ff7300 100%) !important;
+        color: #ffffff !important;
+        box-shadow: 0 3px 8px rgba(255, 75, 75, 0.35) !important;
+        padding: 0.55rem 1rem !important;
+    }
+    div[data-testid="stButton"] > button[kind="secondary"]:hover {
+        background: linear-gradient(135deg, #e63946 0%, #e85d04 100%) !important;
+        box-shadow: 0 5px 14px rgba(255, 75, 75, 0.5) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* Style cho các nút Primary */
+    div[data-testid="stButton"] > button[kind="primary"] {
+        background: linear-gradient(135deg, #e63946 0%, #d90429 100%) !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 10px rgba(230, 57, 70, 0.4) !important;
+        padding: 0.6rem 1rem !important;
+    }
+
     .stCodeBlock { margin-top: -6px !important; margin-bottom: 4px !important; }
     .badge-pending { color: #d97706; font-weight: 700; background: #fef3c7; padding: 2px 8px; border-radius: 4px; }
     .badge-ready { color: #15803d; font-weight: 700; background: #dcfce7; padding: 2px 8px; border-radius: 4px; }
@@ -41,6 +72,7 @@ if "active_script_id" not in st.session_state:
     st.session_state.active_script_id = None
 
 def safe_copy_button(text_to_copy: str, button_label: str = "📋 Copy Prompt"):
+    """Nút sao chép độc lập bằng Base64 chống vỡ ký tự trên di động và PC"""
     b64_content = base64.b64encode(text_to_copy.encode('utf-8')).decode('utf-8')
     btn_id = f"copy_btn_{abs(hash(text_to_copy)) % 1000000}"
     html_code = f"""
@@ -58,22 +90,24 @@ def safe_copy_button(text_to_copy: str, button_label: str = "📋 Copy Prompt"):
                 }}, 2000);
             }});
         ' style="
-            background-color: #ff4b4b;
+            background: linear-gradient(135deg, #ff4b4b 0%, #ff7300 100%);
             color: white;
             border: none;
             padding: 8px 16px;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 700;
             border-radius: 6px;
             cursor: pointer;
             width: 100%;
             max-width: 280px;
+            box-shadow: 0 2px 6px rgba(255, 75, 75, 0.3);
         ">{button_label}</button>
     </div>
     """
     components.html(html_code, height=48)
 
 def clean_and_parse_json(text_content: str):
+    """Làm sạch và bóc tách chuỗi JSON chuẩn xác"""
     cleaned = text_content.strip()
     if cleaned.startswith("```json"):
         cleaned = cleaned[7:]
@@ -87,8 +121,8 @@ SYSTEM_INSTRUCTIONS = """
 BẠN LÀ BẬC THẦY SẢN XUẤT VIDEO VIRAL VÀ TĂNG CHUYỂN ĐỔI TIKTOK SHOP, TỔNG ĐẠO DIỄN VIRTUAL CHO IMAGEN 3 VÀ VEO 3.
 
 I. CHÍNH SÁCH TIKTOK SHOP & AN TOÀN NỘI DUNG:
-1. Giá bán: Tuyệt đối không nhắc giá số cụ thể. Chỉ dùng từ đời thường tự nhiên ('vài chục', 'cốc trà đá', 'bát phở', 'deal hời góc trái').
-2. Từ ngữ cấm: Cấm hoàn toàn các cam kết tuyệt đối ('chữa dứt điểm', 'vĩnh viễn', '100%', 'khỏi hẳn').
+1. Giá bán: Tuyệt đối không nhắc giá số cụ thể. Chỉ dùng từ ngữ đời thường ('vài chục', 'cốc trà đá', 'bát phở', 'deal hời góc trái').
+2. Từ ngữ cấm: Cấm hoàn toàn cam kết tuyệt đối ('chữa dứt điểm', 'vĩnh viễn', '100%', 'khỏi hẳn').
 3. Đối tượng trẻ em: Phụ huynh luôn xuất hiện thao tác trực tiếp, cấm để trẻ em một mình trước ống kính.
 4. Sức khỏe/Người lớn tuổi: Hướng vào cảm giác thư giãn, nhẹ nhõm hoặc con cái báo hiếu cha mẹ. Cấm cận cảnh mụn nhọt, vết thương, răng sâu, cử chỉ đau đớn dữ dội.
 
@@ -116,6 +150,7 @@ IV. ĐẠO DIỄN GIỌNG ĐỌC & TÍCH HỢP PROMPT VEO 3:
 """
 
 def generate_with_smart_retry(contents, system_inst, max_tokens=8192):
+    """Sử dụng duy nhất model gemini-3.6-flash với cơ chế auto-retry khi máy chủ bận"""
     model_name = "gemini-3.6-flash"
     max_attempts = 5
     last_err = None
@@ -144,6 +179,7 @@ def generate_with_smart_retry(contents, system_inst, max_tokens=8192):
     raise last_err
 
 def create_scene_details_for_id(target_id: int):
+    """Hàm tạo chi tiết phân cảnh cho một kịch bản theo ID"""
     outline = next((sc for sc in st.session_state.script_outlines if sc.get("id") == target_id), None)
     if not outline:
         return
@@ -265,13 +301,13 @@ if st.session_state.product_analysis:
 if st.session_state.script_outlines:
     st.divider()
     st.markdown(f"### 📋 **Danh sách {len(st.session_state.script_outlines)} ý tưởng kịch bản tối ưu chuyển đổi**")
-    st.write("Bấm **'Tạo chi tiết kịch bản này'** để AI tự động phân bổ nhịp cảnh (chủ yếu 4s, 6s, 8s; mốc 10s tối đa 1-2 cảnh).")
+    st.write("Bấm **'✨ Tạo chi tiết kịch bản này'** để AI tự động phân bổ nhịp cảnh (chủ yếu 4s, 6s, 8s; mốc 10s tối đa 1-2 cảnh).")
 
     for outline in st.session_state.script_outlines:
         sc_id = outline.get("id")
         is_generated = sc_id in st.session_state.generated_details
         
-        col_info, col_act = st.columns([3, 1])
+        col_info, col_act = st.columns([3, 1.2])
         with col_info:
             status_badge = '<span class="badge-ready">ĐÃ CÓ CHI TIẾT</span>' if is_generated else '<span class="badge-pending">CHƯA TẠO CHI TIẾT</span>'
             pacing_badge = f'<span class="badge-dynamic">{outline.get("recommended_scenes_count", "Động học")}</span>'
@@ -290,7 +326,7 @@ if st.session_state.script_outlines:
     # NÚT MỞ RỘNG THÊM 5 KỊCH BẢN ĐẶT NGAY DƯỚI DANH SÁCH
     st.markdown("---")
     st.markdown("#### ➕ **Mở Rộng Thêm Kịch Bản Mới Khác Biệt**")
-    if st.button("➕ Tạo Thêm 5 Kịch Bản Mới Khác Biệt", key="btn_add_more_main", use_container_width=True):
+    if st.button("➕ Tạo Thêm 5 Kịch Bản Mới Khác Biệt", key="btn_add_more_main", type="primary", use_container_width=True):
         with st.spinner("Đang tư duy thêm 5 góc tiếp cận mới lạ..."):
             cur_len = len(st.session_state.script_outlines)
             prompt_more = f"""
