@@ -57,13 +57,6 @@ st.markdown("""
         margin-bottom: 16px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
-    .dna-box {
-        background: #f8fafc;
-        border: 1px solid #cbd5e1;
-        border-radius: 10px;
-        padding: 16px;
-        margin-bottom: 14px;
-    }
     .card-title-win { color: #dc2626; font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
     .card-title-add { color: #d97706; font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
     .card-title-unmade { color: #2563eb; font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
@@ -182,56 +175,24 @@ def optimize_image_for_api(image: Image.Image, max_dimension: int = 896, quality
     return Image.open(buffer)
 
 def format_analysis_field(field_val) -> str:
-    """Tự động định dạng và ngắt dòng rõ ràng theo các ý chính"""
+    """Tự động định dạng và ngắt dòng rõ ràng theo các ý chính để tránh lỗi HTML thô"""
     if isinstance(field_val, dict):
         return "<br>".join([f"• <b>{k.replace('_', ' ').title()}:</b> {v}" for k, v in field_val.items()])
     elif isinstance(field_val, list):
         return "<br>".join([f"• {item}" for item in field_val])
     
     text = str(field_val)
-    # Tự động tách dòng và thêm dấu gạch đầu dòng cho các từ khóa chính
     keywords = ["Chức năng:", "Tài chính:", "Cảm xúc:", "Chức năng", "Tài chính", "Cảm xúc", "1.", "2.", "3."]
     for kw in keywords:
         if kw in text and not text.startswith(kw):
             text = text.replace(kw, f"<br>• <b>{kw}</b>")
     return text
 
-# Hiển thị Bóc tách DNA chi tiết đa tầng (Đã căn chỉnh xuống dòng từng ý)
-if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
-    st.divider()
-    st.markdown(f"### 🔍 **Phân Tích DNA Chi Tiết Đa Tầng — [{selected_mode.upper()}]**")
-    ca = st.session_state.content_analysis
-    
-    mech_text = format_analysis_field(ca.get('mechanical_and_accessories', 'N/A'))
-    pain_text = format_analysis_field(ca.get('customer_pain_points', 'N/A'))
-    desire_text = format_analysis_field(ca.get('core_desires', 'N/A'))
-    usp_text = format_analysis_field(ca.get('emotional_or_usp_hook', 'N/A'))
-    physics_text = format_analysis_field(ca.get('visual_physics_rules', 'N/A'))
-    prompt_lock_text = format_analysis_field(ca.get('prompt_dna_lock', 'N/A'))
-
-    with st.container(border=True):
-        st.markdown("##### 🏭 **1. Thông số Cơ khí & Phụ kiện đi kèm:**")
-        st.markdown(f"<div style='line-height: 1.6;'>{mech_text}</div>", unsafe_allow_html=True)
-        st.markdown("---")
-        
-        st.markdown("##### 🎯 **2. Ma trận 3 Tầng Nỗi đau Khách hàng:**")
-        st.markdown(f"<div style='line-height: 1.6;'>{pain_text}</div>", unsafe_allow_html=True)
-        st.markdown("---")
-
-        st.markdown("##### 💡 **3. Mong muốn cốt lõi & USP:**")
-        st.markdown(f"• **Mong muốn:** {desire_text}")
-        st.markdown(f"• **USP / Slogan:** {usp_text}")
-        st.markdown("---")
-
-        st.markdown("##### ⚙️ **4. Quy chuẩn Vật lý:**")
-        st.markdown(f"<div style='line-height: 1.6;'>{physics_text}</div>", unsafe_allow_html=True)
-
-    st.markdown("##### 📌 **Chuỗi khóa thị giác (Visual DNA Lock - Dùng cho Imagen 3 & Veo 3):**")
-    st.code(prompt_lock_text, language="text")
-    
+def get_system_instructions(mode: str, style: str) -> str:
+    base = r"""
 BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
-PHONG CÁCH KẾT XUẤT THỊ GIÁC (VISUAL RENDERING STYLE): {style.upper()}.
-MỌI PROMPT IMAGEN 3 VÀ VEO 3 PHẢI TUÂN THEO ĐÚNG PHONG CÁCH NÀY.
+PHONG CÁCH KẾT XUẤT THỊ GIÁC: """ + style.upper() + r"""
+MỌI PROMPT PHẢI TUÂN THEO ĐÚNG PHONG CÁCH NÀY.
 
 QUY TẮC PHÂN CẢNH VÀ ĐẠO DIỄN:
 1. THỜI LƯỢNG MỖI CẢNH: CHỈ ĐƯỢC DÙNG 3 MỐC: 4s, 6s, 8s. TUYỆT ĐỐI CẤM DÙNG MỐC 10 GIÂY.
@@ -240,7 +201,7 @@ QUY TẮC PHÂN CẢNH VÀ ĐẠO DIỄN:
 4. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
 """
     if mode == "🛒 TikTok Shop & Bán Hàng":
-        return base + """
+        return base + r"""
 CHẾ ĐỘ: TIKTOK SHOP & SẢN PHẨM CHUYỂN ĐỔI
 - Khóa chặt giải phẫu cơ khí: Màu sắc Hero Color, chất liệu (nhám matte, nhựa ABS, kim loại), vị trí nút bấm, cổng sạc, danh sách phụ kiện đi kèm.
 - Ma trận nỗi đau & mong muốn: Bóc tách rõ 3 tầng nỗi đau (Chức năng, Tài chính, Cảm xúc) và mong muốn cốt lõi của khách hàng.
@@ -249,7 +210,7 @@ CHẾ ĐỘ: TIKTOK SHOP & SẢN PHẨM CHUYỂN ĐỔI
 - 5 Kịch bản gốc bắt buộc tuân thủ 5 ma trận: 1. Phân xưởng/Kho hàng, 2. Showroom/Cửa hàng, 3. Deal xưởng/Trợ giá, 4. Nỗi đau đời sống, 5. Stress-test độ bền.
 """
     elif mode == "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp":
-        return base + """
+        return base + r"""
 CHẾ ĐỘ: TVC QUẢNG CÁO ĐIỆN ẢNH & THƯƠNG HIỆU CAO CẤP
 - Ngôn ngữ thị giác điện ảnh: Ánh sáng Dramatic Lighting, Rim Light, tương phản sắc nét, chuyển động máy nghệ thuật.
 - Lời thoại cô đọng, giàu cảm xúc, kết thúc bằng Slogan hoặc Tagline định vị thương hiệu đẳng cấp.
@@ -260,7 +221,7 @@ CHẾ ĐỘ CHUYÊN BIỆT: {mode}
 - Khóa chặt không gian, bối cảnh, đặc tính cốt lõi và nhịp động học chân thật.
 """
 
-def generate_with_smart_retry(contents, system_inst, max_tokens=16384): # Tăng token để không bị cắt cụt JSON
+def generate_with_smart_retry(contents, system_inst, max_tokens=16384):
     model_name = "gemini-3.6-flash"
     max_attempts = 6
     last_err = None
@@ -532,7 +493,6 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận K�
                 st.error("⚠️ Dữ liệu trả về từ mô hình không đúng định dạng JSON cấu trúc. Vui lòng bấm lại nút chạy!")
                 st.stop()
 
-            # Linh hoạt bắt khóa dữ liệu (tránh trường hợp model sinh lệch tên key)
             analysis_data = data.get("content_analysis") or data.get("analysis") or data.get("dna_analysis")
             outlines_data = data.get("script_outlines") or data.get("scripts") or data.get("outlines")
 
@@ -550,7 +510,7 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận K�
         except Exception as e:
             st.error(f"Lỗi khởi tạo hệ thống: {e}")
 
-# Hiển thị Bóc tách DNA chi tiết đa tầng (Sử dụng Container và Markdown thuần, chống lỗi HTML thô tuyệt đối)
+# Hiển thị Bóc tách DNA chi tiết đa tầng (Gọn gàng trong 1 ô container, có xuống dòng ngắt ý)
 if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
     st.divider()
     st.markdown(f"### 🔍 **Phân Tích DNA Chi Tiết Đa Tầng — [{selected_mode.upper()}]**")
@@ -565,25 +525,24 @@ if st.session_state.content_analysis and isinstance(st.session_state.content_ana
 
     with st.container(border=True):
         st.markdown("##### 🏭 **1. Thông số Cơ khí & Phụ kiện đi kèm:**")
-        st.write(mech_text, unsafe_allow_html=True)
+        st.markdown(f"<div style='line-height: 1.6;'>{mech_text}</div>", unsafe_allow_html=True)
         st.markdown("---")
         
         st.markdown("##### 🎯 **2. Ma trận 3 Tầng Nỗi đau Khách hàng:**")
-        st.write(pain_text, unsafe_allow_html=True)
+        st.markdown(f"<div style='line-height: 1.6;'>{pain_text}</div>", unsafe_allow_html=True)
         st.markdown("---")
 
         st.markdown("##### 💡 **3. Mong muốn cốt lõi & USP:**")
-        st.markdown(f"**- Mong muốn:** {desire_text}")
-        st.markdown(f"**- USP / Slogan:** {usp_text}")
+        st.markdown(f"• **Mong muốn:** {desire_text}")
+        st.markdown(f"• **USP / Slogan:** {usp_text}")
         st.markdown("---")
 
         st.markdown("##### ⚙️ **4. Quy chuẩn Vật lý:**")
-        st.write(physics_text, unsafe_allow_html=True)
+        st.markdown(f"<div style='line-height: 1.6;'>{physics_text}</div>", unsafe_allow_html=True)
 
-    # Chuỗi khóa thị giác hiển thị riêng bên dưới để dễ copy
     st.markdown("##### 📌 **Chuỗi khóa thị giác (Visual DNA Lock - Dùng cho Imagen 3 & Veo 3):**")
     st.code(prompt_lock_text, language="text")
-    
+
 # ==============================================================================
 # GIAI ĐOẠN 1: KHI CHƯA TẠO CHI TIẾT KỊCH BẢN NÀO
 # ==============================================================================
