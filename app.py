@@ -244,7 +244,7 @@ CHẾ ĐỘ CHUYÊN BIỆT: {mode}
 """
 
 def generate_with_smart_retry(contents, system_inst, max_tokens=16384):
-    model_name = "gemini-3.6-flash"
+    model_name = "gemini-2.5-flash"
     max_attempts = 6
     last_err = None
 
