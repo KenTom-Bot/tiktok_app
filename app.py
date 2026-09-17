@@ -67,21 +67,34 @@ BẮT BUỘC ĐẦU RA LÀ ĐỊNH DẠNG JSON THUẦN TÚY CÓ CẤU TRÚC SAU:
 
 
 def analyze_product_to_json(image):
-  response = client.models.generate_content(
-      model='gemini-2.5-flash',
-      contents=[
-          image,
-          (
-              'Hãy phân tích sản phẩm này và xuất gói kịch bản hoàn chỉnh định'
-              ' dạng JSON.'
-          ),
-      ],
-      config=types.GenerateContentConfig(
-          system_instruction=SYSTEM_INSTRUCTIONS,
-          response_mime_type='application/json',
-      ),
-  )
-  return json.loads(response.text)
+  import time
+
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    response = client.models.generate_content(
+                        model="gemini-3.6-flash",
+                        contents=[
+                            *images,
+                            (
+                                "Hãy đối chiếu toàn bộ các góc ảnh này để bóc tách giải phẫu"
+                                " sản phẩm chi tiết nhất và xuất gói kịch bản hoàn chỉnh"
+                                " định dạng JSON."
+                            ),
+                        ],
+                        config=types.GenerateContentConfig(
+                            system_instruction=SYSTEM_INSTRUCTIONS,
+                            response_mime_type="application/json",
+                        ),
+                    )
+                    script_data = json.loads(response.text)
+                    break
+                except Exception as e:
+                    if "503" in str(e) and attempt < max_retries - 1:
+                        time.sleep(3)  # Chờ 3 giây rồi tự động gửi lại
+                        continue
+                    else:
+                        raise e
 
 
 # GIAO DIỆN NGƯỜI DÙNG
@@ -106,7 +119,7 @@ if uploaded_files and client:
       try:
         # Gửi toàn bộ danh sách ảnh để Gemini phân tích chi tiết toàn diện
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-3.6-flash",
             contents=[
                 *images,
                 (
