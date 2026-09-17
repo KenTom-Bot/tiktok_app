@@ -57,13 +57,6 @@ st.markdown("""
         margin-bottom: 16px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
-    .dna-box {
-        background: #f8fafc;
-        border: 1px solid #cbd5e1;
-        border-radius: 10px;
-        padding: 16px;
-        margin-bottom: 14px;
-    }
     .card-title-win { color: #dc2626; font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
     .card-title-add { color: #d97706; font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
     .card-title-unmade { color: #2563eb; font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
@@ -180,6 +173,14 @@ def optimize_image_for_api(image: Image.Image, max_dimension: int = 896, quality
     img.save(buffer, format="JPEG", quality=quality, optimize=True)
     buffer.seek(0)
     return Image.open(buffer)
+
+def format_analysis_field(field_val) -> str:
+    """Hàm chuyển đổi linh hoạt dict/list thành chuỗi văn bản sạch để tránh lỗi in raw HTML"""
+    if isinstance(field_val, dict):
+        return "<br>".join([f"<b>{k.replace('_', ' ').title()}:</b> {v}" for k, v in field_val.items()])
+    elif isinstance(field_val, list):
+        return "<br>".join([str(item) for item in field_val])
+    return str(field_val)
 
 def get_system_instructions(mode: str, style: str) -> str:
     base = f"""
@@ -451,7 +452,7 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận K�
         "{input_text.strip() if input_text.strip() else 'Không có mô tả văn bản, phân tích hoàn toàn từ ảnh.'}"
 
         YÊU CẦU CẤU TRÚC JSON:
-        1. 'content_analysis' (Phải tách bạch chi tiết):
+        1. 'content_analysis' (Phải tách bạch chi tiết dạng chuỗi văn bản string thuần túy, tuyệt đối không dùng object lồng nhau):
            - category_or_genre: Thể loại & Ngành hàng chi tiết
            - mechanical_and_accessories: Mô tả chi tiết kết cấu cơ khí (Màu Hero Color, chất liệu vỏ matte/ABS/kim loại, vị trí cổng sạc, nút bấm) và danh sách phụ kiện đi kèm (đầu hút, ống nối...).
            - customer_pain_points: 3 tầng nỗi đau (Chức năng, Tài chính, Cảm xúc) của khách hàng đối với sản phẩm này.
@@ -488,26 +489,33 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận K�
         except Exception as e:
             st.error(f"Lỗi khởi tạo: {e}")
 
-# Hiển thị Bóc tách DNA chi tiết đa tầng
+# Hiển thị Bóc tách DNA chi tiết đa tầng (Đã fix lỗi in raw HTML)
 if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
     st.divider()
     st.markdown(f"### 🔍 **Phân Tích DNA Chi Tiết Đa Tầng — [{selected_mode.upper()}]**")
     ca = st.session_state.content_analysis
     
+    mech_text = format_analysis_field(ca.get('mechanical_and_accessories', 'N/A'))
+    pain_text = format_analysis_field(ca.get('customer_pain_points', 'N/A'))
+    desire_text = format_analysis_field(ca.get('core_desires', 'N/A'))
+    usp_text = format_analysis_field(ca.get('emotional_or_usp_hook', 'N/A'))
+    physics_text = format_analysis_field(ca.get('visual_physics_rules', 'N/A'))
+    prompt_lock_text = format_analysis_field(ca.get('prompt_dna_lock', 'N/A'))
+
     st.markdown(f"""
     <div class="dna-box">
         <div style="font-weight: 800; color: #1e293b; font-size: 1.1rem; margin-bottom: 8px;">🏭 1. Thông số Cơ khí & Phụ kiện đi kèm:</div>
-        <div style="color: #334155; margin-bottom: 12px;">{ca.get('mechanical_and_accessories', 'N/A')}</div>
+        <div style="color: #334155; margin-bottom: 12px;">{mech_text}</div>
         
         <div style="font-weight: 800; color: #b91c1c; font-size: 1.1rem; margin-bottom: 8px;">🎯 2. Ma trận 3 Tầng Nỗi đau Khách hàng:</div>
-        <div style="color: #334155; margin-bottom: 12px;">{ca.get('customer_pain_points', 'N/A')}</div>
+        <div style="color: #334155; margin-bottom: 12px;">{pain_text}</div>
 
         <div style="font-weight: 800; color: #15803d; font-size: 1.1rem; margin-bottom: 8px;">💡 3. Mong muốn cốt lõi & USP:</div>
-        <div style="color: #334155; margin-bottom: 12px;"><b>Mong muốn:</b> {ca.get('core_desires', 'N/A')}<br><b>USP / Slogan:</b> {ca.get('emotional_or_usp_hook', 'N/A')}</div>
+        <div style="color: #334155; margin-bottom: 12px;"><b>Mong muốn:</b> {desire_text}<br><b>USP / Slogan:</b> {usp_text}</div>
 
         <div style="font-weight: 800; color: #1e40af; font-size: 1.1rem; margin-bottom: 8px;">⚙️ 4. Quy chuẩn Vật lý & Chuỗi khóa thị giác (Visual DNA Lock):</div>
-        <div style="color: #334155; margin-bottom: 6px;"><b>Vật lý:</b> {ca.get('visual_physics_rules', 'N/A')}</div>
-        <div><b>Prompt Lock:</b> <code>{ca.get('prompt_dna_lock', 'N/A')}</code></div>
+        <div style="color: #334155; margin-bottom: 6px;"><b>Vật lý:</b> {physics_text}</div>
+        <div><b>Prompt Lock:</b> <code>{prompt_lock_text}</code></div>
     </div>
     """, unsafe_allow_html=True)
 
