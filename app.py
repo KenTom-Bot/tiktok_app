@@ -86,10 +86,9 @@ def analyze_product_to_json(image):
 
 # GIAO DIỆN NGƯỜI DÙNG
 uploaded_file = st.file_uploader(
-    'Tải ảnh sản phẩm của bạn lên đây (Mọi ngành hàng):',
-    type=['jpg', 'jpeg', 'png'],
+    "Tải ảnh sản phẩm của bạn lên đây (Mọi ngành hàng):",
+    type=["jpg", "jpeg", "png"],
 )
-
 if uploaded_file and client:
   image = Image.open(uploaded_file)
   st.image(image, caption='Ảnh sản phẩm gốc', width=300)
