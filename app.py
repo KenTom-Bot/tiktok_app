@@ -524,22 +524,37 @@ if st.session_state.content_analysis and isinstance(st.session_state.content_ana
     physics_text = format_analysis_field(ca.get('visual_physics_rules', 'N/A'))
     prompt_lock_text = format_analysis_field(ca.get('prompt_dna_lock', 'N/A'))
 
-    st.markdown(f"""
-    <div class="dna-box">
-        <div style="font-weight: 800; color: #1e293b; font-size: 1.1rem; margin-bottom: 8px;">🏭 1. Thông số Cơ khí & Phụ kiện đi kèm:</div>
-        <div style="color: #334155; margin-bottom: 12px;">{mech_text}</div>
+    # Hiển thị Bóc tách DNA chi tiết đa tầng (Chuẩn hóa thuần Markdown, chống lỗi HTML thô)
+if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
+    st.divider()
+    st.markdown(f"### 🔍 **Phân Tích DNA Chi Tiết Đa Tầng — [{selected_mode.upper()}]**")
+    ca = st.session_state.content_analysis
+    
+    mech_text = format_analysis_field(ca.get('mechanical_and_accessories', 'N/A'))
+    pain_text = format_analysis_field(ca.get('customer_pain_points', 'N/A'))
+    desire_text = format_analysis_field(ca.get('core_desires', 'N/A'))
+    usp_text = format_analysis_field(ca.get('emotional_or_usp_hook', 'N/A'))
+    physics_text = format_analysis_field(ca.get('visual_physics_rules', 'N/A'))
+    prompt_lock_text = format_analysis_field(ca.get('prompt_dna_lock', 'N/A'))
+
+    with st.container(border=True):
+        st.markdown("##### 🏭 **1. Thông số Cơ khí & Phụ kiện đi kèm:**")
+        st.write(mech_text, unsafe_allow_html=True)
+        st.markdown("---")
         
-        <div style="font-weight: 800; color: #b91c1c; font-size: 1.1rem; margin-bottom: 8px;">🎯 2. Ma trận 3 Tầng Nỗi đau Khách hàng:</div>
-        <div style="color: #334155; margin-bottom: 12px;">{pain_text}</div>
+        st.markdown("##### 🎯 **2. Ma trận 3 Tầng Nỗi đau Khách hàng:**")
+        st.write(pain_text, unsafe_allow_html=True)
+        st.markdown("---")
 
-        <div style="font-weight: 800; color: #15803d; font-size: 1.1rem; margin-bottom: 8px;">💡 3. Mong muốn cốt lõi & USP:</div>
-        <div style="color: #334155; margin-bottom: 12px;"><b>Mong muốn:</b> {desire_text}<br><b>USP / Slogan:</b> {usp_text}</div>
+        st.markdown("##### 💡 **3. Mong muốn cốt lõi & USP:**")
+        st.markdown(f"**- Mong muốn:** {desire_text}")
+        st.markdown(f"**- USP / Slogan:** {usp_text}")
+        st.markdown("---")
 
-        <div style="font-weight: 800; color: #1e40af; font-size: 1.1rem; margin-bottom: 8px;">⚙️ 4. Quy chuẩn Vật lý & Chuỗi khóa thị giác (Visual DNA Lock):</div>
-        <div style="color: #334155; margin-bottom: 6px;"><b>Vật lý:</b> {physics_text}</div>
-        <div><b>Prompt Lock:</b> <code>{prompt_lock_text}</code></div>
-    </div>
-    """, unsafe_allow_html=True)
+        st.markdown("##### ⚙️ **4. Quy chuẩn Vật lý & Chuỗi khóa thị giác (Visual DNA Lock):**")
+        st.markdown(f"**- Vật lý:** {physics_text}")
+        st.markdown("**- Prompt Lock:**")
+        st.code(prompt_lock_text, language="text")
 
 # ==============================================================================
 # GIAI ĐOẠN 1: KHI CHƯA TẠO CHI TIẾT KỊCH BẢN NÀO
