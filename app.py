@@ -9,7 +9,7 @@ import os
 import re
 import time
 
-st.set_page_config(page_title="Universal AI Video Studio Pro", page_icon="🎬", layout="wide")
+st.set_page_config(page_title="KenTom AI Video Studio Pro", page_icon="🎬", layout="wide")
 
 st.markdown("""
 <style>
