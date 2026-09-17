@@ -221,7 +221,7 @@ CHẾ ĐỘ CHUYÊN BIỆT: {mode}
 - Khóa chặt không gian, bối cảnh, đặc tính cốt lõi và nhịp động học chân thật.
 """
 
-def generate_with_smart_retry(contents, system_inst, max_tokens=8192):
+def generate_with_smart_retry(contents, system_inst, max_tokens=16384): # Tăng token để không bị cắt cụt JSON
     model_name = "gemini-3.6-flash"
     max_attempts = 6
     last_err = None
@@ -457,25 +457,28 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận K�
         THÔNG TIN TỪ NGƯỜI DÙNG:
         "{input_text.strip() if input_text.strip() else 'Không có mô tả văn bản, phân tích hoàn toàn từ ảnh.'}"
 
-        YÊU CẦU CẤU TRÚC JSON:
-        1. 'content_analysis' (Phải tách bạch chi tiết dạng chuỗi văn bản string thuần túy, tuyệt đối không dùng object lồng nhau):
-           - category_or_genre: Thể loại & Ngành hàng chi tiết
-           - mechanical_and_accessories: Mô tả chi tiết kết cấu cơ khí (Màu Hero Color, chất liệu vỏ matte/ABS/kim loại, vị trí cổng sạc, nút bấm) và danh sách phụ kiện đi kèm (đầu hút, ống nối...).
-           - customer_pain_points: 3 tầng nỗi đau (Chức năng, Tài chính, Cảm xúc) của khách hàng đối với sản phẩm này.
-           - core_desires: Mong muốn cốt lõi của khách hàng.
-           - emotional_or_usp_hook: Slogan / Điểm bán hàng độc nhất (USP).
-           - visual_physics_rules: Quy chuẩn vật lý siêu thực (hút xoáy chân không, hơi sương, đàn hồi...).
-           - target_audience: Chân dung khán giả mục tiêu.
-           - prompt_dna_lock: Chuỗi tiếng Anh cố định khóa chặt chủ thể đưa vào Imagen 3 & Veo 3.
-
-        2. 'script_outlines': ĐÚNG 5 Ý TƯỞNG KỊCH BẢN GỐC TUÂN THỦ 5 MA TRẬN (id: 1 đến 5):
-           - id: 1 đến 5 (1: Phân xưởng/Kho hàng, 2: Showroom/Cửa hàng, 3: Deal xưởng/Trợ giá, 4: Nỗi đau đời sống, 5: Stress-test độ bền)
-           - title: Tên kịch bản giật tít, sâu sắc
-           - setting_style: Bối cảnh không gian cụ thể (Xưởng, Showroom, Phòng khách...)
-           - angle: Góc tiếp cận (Thuộc 1 trong 5 ma trận trên)
-           - target_hook: Ý tưởng câu hook mở đầu 3-4s đánh trúng nỗi đau/mong muốn
-           - recommended_scenes_count: Phân bổ nhịp cảnh CHỈ DÙNG 4s, 6s, 8s
-           - voice_profile: {{gender: 'Nam'/'Nữ', age_range: 'Độ tuổi', tone: 'Âm điệu miền Bắc'}}
+        YÊU CẦU CẤU TRÚC JSON (Bắt buộc trả về đúng các key sau):
+        - "content_analysis": {{
+            "category_or_genre": "...",
+            "mechanical_and_accessories": "...",
+            "customer_pain_points": "...",
+            "core_desires": "...",
+            "emotional_or_usp_hook": "...",
+            "visual_physics_rules": "...",
+            "target_audience": "...",
+            "prompt_dna_lock": "..."
+          }}
+        - "script_outlines": [
+            {{
+              "id": 1,
+              "title": "...",
+              "setting_style": "...",
+              "angle": "...",
+              "target_hook": "...",
+              "recommended_scenes_count": "...",
+              "voice_profile": {{"gender": "...", "age_range": "...", "tone": "..."}}
+            }}
+          ] (Đúng 5 kịch bản từ id 1 đến 5)
         """
         try:
             sys_inst = get_system_instructions(selected_mode, selected_style)
@@ -485,15 +488,28 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận K�
             data = generate_with_smart_retry(api_payload, sys_inst)
             if isinstance(data, list) and len(data) > 0:
                 data = data[0]
-            st.session_state.content_analysis = data.get("content_analysis", {})
-            st.session_state.all_scripts = data.get("script_outlines", [])
+            
+            if not isinstance(data, dict):
+                st.error("⚠️ Dữ liệu trả về từ mô hình không đúng định dạng JSON cấu trúc. Vui lòng bấm lại nút chạy!")
+                st.stop()
+
+            # Linh hoạt bắt khóa dữ liệu (tránh trường hợp model sinh lệch tên key)
+            analysis_data = data.get("content_analysis") or data.get("analysis") or data.get("dna_analysis")
+            outlines_data = data.get("script_outlines") or data.get("scripts") or data.get("outlines")
+
+            if not analysis_data or not outlines_data:
+                st.error(f"⚠️ Cấu trúc JSON thiếu trường dữ liệu quan trọng. Phản hồi nhận được: {list(data.keys())}")
+                st.stop()
+
+            st.session_state.content_analysis = analysis_data
+            st.session_state.all_scripts = outlines_data
             st.session_state.cloned_scripts = []
             st.session_state.expanded_scripts = []
             st.session_state.generated_details = {}
             st.session_state.active_script_id = None
             st.rerun()
         except Exception as e:
-            st.error(f"Lỗi khởi tạo: {e}")
+            st.error(f"Lỗi khởi tạo hệ thống: {e}")
 
 # Hiển thị Bóc tách DNA chi tiết đa tầng (Đã fix lỗi in raw HTML)
 if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
