@@ -82,7 +82,7 @@ BẠN LÀ CHUYÊN GIA SẢN XUẤT VIDEO REVIEW TIKTOK SHOP ĐỈNH CAO, ĐẠO 
 Mỗi kịch bản gồm 4 phân cảnh (8s/phân cảnh, tổng thời lượng 32-35s). Định dạng trả về duy nhất là JSON hợp lệ.
 """
 
-st.title("🎬 Hệ Thống Sản Xuất Kịch Bản TikTok Shop Đa Năng (Veo 3 & Imagen 3)")
+st.title("🎬 PHẦN MỀM PHÂN TÍCH SẢN PHẨM VÀ TẠO KỊCH BẢN VIDEO")
 st.write("Tự động phân tích sản phẩm, xuất 5 kịch bản chuyển đổi cao, hỗ trợ nhân bản kịch bản win và gọi thêm kịch bản liên tục.")
 
 uploaded_files = st.file_uploader(
