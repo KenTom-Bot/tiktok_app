@@ -473,7 +473,7 @@ if uploaded_files:
 can_generate = bool(input_text.strip()) or bool(images)
 
 if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận Kịch Bản", type="primary", use_container_width=True, disabled=not can_generate):
-    with st.spinner(f"Đang phân tích sản phảm, insight khách hàng và lên kịch bản cho '{selected_mode}'..."):
+    with st.spinner(f"Đang phân tích sản phẩm, insight khách hàng và lên kịch bản cho '{selected_mode}'..."):
         prompt = f"""
         Phân tích chuyên sâu dữ liệu đầu vào cho thể loại '{selected_mode}' theo phong cách '{selected_style}' và xuất JSON chuẩn xác:
         THÔNG TIN TỪ NGƯỜI DÙNG:
