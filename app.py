@@ -14,7 +14,6 @@ st.set_page_config(page_title="TikTok AI Video Suite Pro", page_icon="🎬", lay
 # CSS tối ưu giao diện: Tiêu đề lớn căn giữa bắt mắt, nút bấm gradient, tương thích Mobile 100%
 st.markdown("""
 <style>
-    /* Khung Header căn giữa và hiệu ứng nổi bật */
     .header-container {
         text-align: center;
         padding: 1.2rem 1rem 1.8rem 1rem;
@@ -53,7 +52,6 @@ st.markdown("""
 
     .stExpander { border-radius: 8px !important; margin-bottom: 8px !important; }
     
-    /* Thiết lập nút bấm nổi bật */
     div[data-testid="stButton"] > button {
         width: 100% !important;
         border-radius: 8px !important;
@@ -62,7 +60,6 @@ st.markdown("""
         transition: all 0.25s ease-in-out !important;
     }
 
-    /* Style nổi bật cho nút Tạo chi tiết kịch bản này (Secondary button) */
     div[data-testid="stButton"] > button[kind="secondary"] {
         background: linear-gradient(135deg, #ff4b4b 0%, #ff7300 100%) !important;
         color: #ffffff !important;
@@ -75,7 +72,6 @@ st.markdown("""
         transform: translateY(-1px) !important;
     }
 
-    /* Style cho các nút Primary */
     div[data-testid="stButton"] > button[kind="primary"] {
         background: linear-gradient(135deg, #e63946 0%, #d90429 100%) !important;
         color: #ffffff !important;
@@ -115,7 +111,6 @@ if "active_script_id" not in st.session_state:
     st.session_state.active_script_id = None
 
 def safe_copy_button(text_to_copy: str, button_label: str = "📋 Copy Prompt"):
-    """Nút sao chép độc lập bằng Base64 chống vỡ ký tự trên di động và PC"""
     b64_content = base64.b64encode(text_to_copy.encode('utf-8')).decode('utf-8')
     btn_id = f"copy_btn_{abs(hash(text_to_copy)) % 1000000}"
     html_code = f"""
@@ -150,7 +145,6 @@ def safe_copy_button(text_to_copy: str, button_label: str = "📋 Copy Prompt"):
     components.html(html_code, height=48)
 
 def clean_and_parse_json(text_content: str):
-    """Làm sạch và bóc tách chuỗi JSON chuẩn xác, tự động chuẩn hóa dạng dict"""
     cleaned = text_content.strip()
     if cleaned.startswith("```json"):
         cleaned = cleaned[7:]
@@ -159,8 +153,6 @@ def clean_and_parse_json(text_content: str):
     if cleaned.endswith("```"):
         cleaned = cleaned[:-3]
     parsed = json.loads(cleaned.strip())
-    
-    # Nếu AI trả về bọc trong list [ {...} ], tự động giải nén ra dict
     if isinstance(parsed, list) and len(parsed) > 0:
         parsed = parsed[0]
     return parsed
@@ -168,40 +160,35 @@ def clean_and_parse_json(text_content: str):
 SYSTEM_INSTRUCTIONS = """
 BẠN LÀ BẬC THẦY SẢN XUẤT VIDEO VIRAL VÀ TĂNG CHUYỂN ĐỔI TIKTOK SHOP, TỔNG ĐẠO DIỄN VIRTUAL CHO IMAGEN 3 VÀ VEO 3.
 
-I. CHÍNH SÁCH TIKTOK SHOP & AN TOÀN NỘI DUNG TUYỆT ĐỐI:
-1. Giá bán: Tuyệt đối không nhắc giá số cụ thể. Chỉ dùng từ ngữ đời thường tự nhiên ('vài chục', 'cốc trà đá', 'bát phở', 'deal hời góc trái giỏ hàng').
-2. Từ ngữ cấm: Cấm hoàn toàn cam kết tuyệt đối ('chữa dứt điểm', 'vĩnh viễn', '100%', 'khỏi hẳn', 'cam kết hiệu quả tức thì').
-3. Trẻ em: Phụ huynh luôn xuất hiện thao tác trực tiếp, cấm để trẻ em một mình trước ống kính.
-4. Sức khỏe/Người lớn tuổi: Hướng vào cảm giác thư giãn, nhẹ nhõm hoặc con cái báo hiếu cha mẹ. Cấm cận cảnh mụn nhọt, vết thương hở, răng sâu, cử chỉ đau đớn dữ dội.
-5. Mỹ phẩm/Chăm sóc da: Tập trung vào kết cấu kem mềm mịn, da căng bóng tự nhiên dưới ánh sáng studio, cấm phóng đại trước/sau phi thực tế.
+I. GIAO THỨC KHÓA CỨNG GIẢI PHẪU SẢN PHẨM (PRODUCT DNA LOCK):
+1. Nhận diện cấu tạo chính xác:
+   - Thân vỏ, tỷ lệ kích thước công thái học, màu sắc nhận diện (Hero Color) và chất liệu bề mặt (nhám mờ matte, bóng bóng chrome...).
+   - Vị trí cơ học chính xác: Đầu hút/thổi, hộp chứa bụi trong suốt (dust chamber), vị trí lõi lọc HEPA có thể tháo rời, công tắc trượt/bấm, đèn báo LED và cổng sạc (Type-C / DC).
+   - KHÓA CỨNG VÀO PROMPT: Mỗi 'image_prompt' và 'video_prompt' BẮT BUỘC chứa chuỗi mô tả cơ khí cố định ('product_dna_prompt') trích xuất từ ảnh để đảm bảo sản phẩm trong ảnh và video hoàn toàn đồng nhất với thực tế, không bị AI biến dạng hoặc đổi kiểu dáng.
+2. Thao tác tay thực tế: Chỉ tối đa 1 bàn tay người lớn cầm nắm chuẩn công thái học tại báng cầm, ngón cái gạt công tắc dứt khoát. CẤM biến dạng, cấm mọc thừa ngón tay.
 
-II. ĐỘ CHUẨN XÁC VẬT LÝ & CƠ KHÍ SẢN PHẨM:
-1. Giải phẫu chi tiết: Khóa chặt hình dạng, màu nhận diện chủ đạo (Hero Color), bề mặt nhám/bóng, vị trí và số lượng nút công tắc, lẫy khóa, cổng sạc, phụ kiện đi kèm theo đúng các ảnh tham chiếu.
-2. Thao tác tay thực tế: Cầm đúng trọng tâm, ngón cái gạt công tắc, ngàm xoay theo chiều kim đồng hồ chuẩn công thái học. Chỉ tối đa 1 bàn tay người lớn tương tác tự nhiên, chống mọc thừa tay.
-3. KHÍ ĐỘNG HỌC THỰC TẾ (MÁY THỔI, HÚT, SẤY):
-   - Tuyệt đối cấm tạo luồng gió thành tia laser, tia lửa, khói đặc hay vệt nước chảy ma mị.
-   - Luồng gió bắt buộc là 'invisible high-velocity transparent air stream' (luồng khí trong suốt áp lực cao).
-   - Thể hiện sức mạnh luồng gió qua phản lực môi trường: bụi mịn bay tung tóe tức thì, mảnh rác giấy tờ bay phần phật rõ rệt.
+II. VẬT LÝ HÚT & THỔI SIÊU THỰC (REALISTIC SUCTION & BLOWING DYNAMICS):
+1. VẬT LÝ HÚT BỤI (SUCTION DYNAMICS):
+   - Khi đầu hút lướt qua bề mặt (ghế da ô tô, thảm nỉ, khe bàn phím), các hạt bụi mịn, mẩu vụn bánh, sợi tóc bị LỰC HÚT CHÂN KHÔNG XOÁY VÀ KÉO THẲNG VÀO BÊN TRONG ĐẦU HÚT ('crumbs and dust particles visibly sucked and ingested directly into the clear nozzle and dust chamber').
+   - Hộp chứa bụi trong suốt thấy rõ luồng xoáy chứa bụi và vụn rác xoáy tròn bên trong.
+   - TUYỆT ĐỐI CẤM: Bụi bị thổi tung ngược ra ngoài khi đang hút, cấm dùng tia sáng, vệt nước ma mị hay chùm khói viễn tưởng.
+2. VẬT LÝ THỔI KHÍ (BLOWING DYNAMICS):
+   - Luồng khí vô hình áp suất cao ('invisible high-velocity transparent airflow'). Sức gió được biểu thị qua phản lực môi trường: lá khô, bụi, tàn tro bắn văng ra xa tức thì.
 
-III. BỐI CẢNH UY TÍN & ĐỘNG HỌC PHÂN CẢNH (PACING):
-1. Bối cảnh: Với kịch bản review, siêu sale, deal hời, hãy đưa bối cảnh vào PHÂN XƯỞNG SẢN XUẤT TẤP NẬP, KHO PALLET HÀNG HÓA hoặc SHOWROOM ÁNH SÁNG HIỆN ĐẠI để tối đa uy tín.
-2. QUY CHUẨN THỜI LƯỢNG NGHIÊM NGẶT:
-   - Số phân cảnh: Tự động quyết định từ 3 đến 6 cảnh cho phù hợp nội dung.
-   - Thời lượng từng cảnh: BẮT BUỘC CHỈ DÙNG 3 MỐC: 4s, 6s, 8s.
-   - TUYỆT ĐỐI CẤM SỬ DỤNG MỐC 10 GIÂY Ở BẤT KỲ ĐÂU.
-   - Phân bổ: 
-     + 4s: Hook 3-4s đầu giữ chân, bắt cận góc máy hoặc chuyển cảnh lướt nhanh.
-     + 6s & 8s: Biểu diễn tính năng, thao tác tháo lắp cơ học, tác động môi trường, bối cảnh xưởng/showroom và chốt deal kêu gọi hành động (CTA).
+III. CHÍNH SÁCH TIKTOK SHOP & AN TOÀN NỘI DUNG:
+1. Giá bán: Cấm nhắc giá số cụ thể. Chỉ dùng từ ngữ đời thường ('vài chục', 'cốc trà đá', 'bát phở', 'deal hời góc giỏ hàng').
+2. Từ ngữ cấm: Cấm hoàn toàn cam kết tuyệt đối ('chữa dứt điểm', 'vĩnh viễn', '100%', 'khỏi hẳn').
+3. Đối tượng trẻ em: Phụ huynh luôn xuất hiện thao tác trực tiếp, cấm để trẻ em một mình trước ống kính.
+4. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
 
-IV. ĐẠO DIỄN GIỌNG ĐỌC & TÍCH HỢP PROMPT VEO 3:
-1. Giọng đọc: 100% tiếng Việt miền Bắc chuẩn Hà Nội, nêu rõ Giới tính (Nam/Nữ) và Độ tuổi phù hợp tình huống, đồng nhất suốt các cảnh.
-2. Tích hợp thoại vào Veo 3: Trong 'video_prompt', nhúng nguyên văn lời thoại tiếng Việt có dấu kèm chỉ đạo biểu cảm gương mặt, khẩu hình và cử chỉ nhấn nhá cơ thể.
-3. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
-4. Chuyển cảnh: Xác định rõ 'Cắt cảnh (Hard Cut)' hoặc 'Cảnh nối tiếp (Continuous Motion)'. Nếu là nối tiếp thì 'image_prompt' để rỗng ("").
+IV. NHỊP ĐỘ PHÂN CẢNH & ĐẠO DIỄN GIỌNG ĐỌC:
+1. Số phân cảnh: Tự động quyết định 3 đến 6 cảnh.
+2. Thời lượng từng cảnh: BẮT BUỘC CHỈ DÙNG 3 MỐC: 4s, 6s, 8s. TUYỆT ĐỐI CẤM DÙNG MỐC 10 GIÂY.
+3. Giọng đọc: 100% tiếng Việt miền Bắc chuẩn Hà Nội, nêu rõ Giới tính (Nam/Nữ) và Độ tuổi phù hợp tình huống, đồng nhất suốt các cảnh.
+4. Tích hợp thoại vào Veo 3: Trong 'video_prompt', nhúng nguyên văn lời thoại tiếng Việt có dấu kèm chỉ đạo biểu cảm gương mặt, khẩu hình và cử chỉ nhấn nhá cơ thể.
 """
 
 def generate_with_smart_retry(contents, system_inst, max_tokens=8192):
-    """Cơ chế gọi API tự động retry thông minh xử lý triệt để 503 và 429"""
     model_name = "gemini-3.6-flash"
     max_attempts = 6
     last_err = None
@@ -222,16 +209,15 @@ def generate_with_smart_retry(contents, system_inst, max_tokens=8192):
         except Exception as e:
             last_err = e
             err_msg = str(e)
-            
             if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
                 wait_match = re.search(r"retry in (\d+\.?\d*)s", err_msg)
                 wait_sec = int(float(wait_match.group(1))) + 2 if wait_match else 35
-                with st.spinner(f"⏳ Đang chạm giới hạn tạm thời. Hệ thống tự động chờ {wait_sec}s rồi tiếp tục..."):
+                with st.spinner(f"⏳ Chạm hạn mức tạm thời. Đang chờ {wait_sec}s rồi tiếp tục..."):
                     time.sleep(wait_sec)
                 continue
             elif "503" in err_msg or "UNAVAILABLE" in err_msg or "high demand" in err_msg:
                 delay = 3 * (attempt + 1)
-                with st.spinner(f"🔄 Máy chủ đang bận đột biến. Tự động kết nối lại lần {attempt + 1}/{max_attempts} sau {delay}s..."):
+                with st.spinner(f"🔄 Máy chủ bận. Tự động kết nối lại lần {attempt + 1}/{max_attempts} sau {delay}s..."):
                     time.sleep(delay)
                 continue
             else:
@@ -239,17 +225,18 @@ def generate_with_smart_retry(contents, system_inst, max_tokens=8192):
     raise last_err
 
 def create_scene_details_for_id(target_id: int):
-    """Hàm tạo chi tiết phân cảnh cho một kịch bản theo ID (Chỉ 4s, 6s, 8s)"""
-    outline = next((sc for sc in st.session_state.script_outlines if sc.get("id") == target_id), None)
+    outline = next((sc for sc in st.session_state.script_outlines if isinstance(sc, dict) and sc.get("id") == target_id), None)
     if not outline:
         return
     
-    with st.spinner(f"Đang phân bổ nhịp cảnh (4s, 6s, 8s) và dựng prompt chi tiết cho '{outline.get('title')}'..."):
+    with st.spinner(f"Đang khóa cứng thông số cơ khí và dựng prompt chi tiết cho '{outline.get('title')}'..."):
         vp = outline.get("voice_profile", {})
+        if not isinstance(vp, dict):
+            vp = {}
         p_info = json.dumps(st.session_state.product_analysis, ensure_ascii=False) if st.session_state.product_analysis else ""
         
         prompt_detail = f"""
-        Dựa trên thông số phân tích cơ khí sản phẩm:
+        Dựa trên thông số phân tích cơ khí và cấu tạo sản phẩm đã khóa chặt:
         {p_info}
 
         Ý tưởng kịch bản cần dựng chi tiết:
@@ -259,14 +246,17 @@ def create_scene_details_for_id(target_id: int):
         - Hook: {outline.get('target_hook')}
         - Giọng đọc: {vp.get('gender', 'Nữ')} miền Bắc, tuổi {vp.get('age_range', '25-30')}
 
-        QUY ĐỊNH THỜI LƯỢNG NGHIÊM NGẶT (TUYỆT ĐỐI BỎ MỐC 10 GIÂY):
-        - BẮT BUỘC trả về ĐỐI TƯỢNG JSON (dict), KHÔNG được bọc trong danh sách (list).
-        - Mỗi scene bắt buộc có trường 'scene_setting': Mô tả ngắn gọn bối cảnh không gian cụ thể cho cảnh này.
-        - 'duration' của mỗi cảnh CHỈ ĐƯỢC LÀ một trong 3 mốc: '4s', '6s', '8s'. TUYỆT ĐỐI CẤM DÙNG '10s'.
-        - Máy thổi/hút: Luồng khí là không khí trong suốt áp lực cao, không tia lửa/vệt sáng. Thể hiện lực qua bụi bay tung tóe, giấy bay phần phật.
-        - 'video_prompt': Tích hợp nguyên văn lời thoại tiếng Việt có dấu và biểu cảm diễn xuất, hành vi cơ thể.
+        QUY ĐỊNH KỸ THUẬT NGHIÊM NGẶT:
+        1. 'image_prompt' (Imagen 3, 9:16):
+           - Khóa chặt hình dạng, báng cầm, màu sắc, vị trí nút bấm, hộp chứa bụi và phụ kiện đúng như cấu tạo thực tế.
+           - Nếu là Cảnh nối tiếp (Continuous Motion): Để rỗng ("").
+        2. 'video_prompt' (Veo 3):
+           - VẬT LÝ HÚT BỤI CHUẨN XÁC: Mô tả rõ ràng bụi mịn, vụn rác, tóc được lực hút chân không hút xoáy thẳng vào bên trong đầu hút và hộp chứa bụi trong suốt. Không để bụi bay lung tung.
+           - VẬT LÝ THỔI KHÍ: Luồng khí vô hình trong suốt áp lực cao, thổi bay mảnh rác/bụi ra xa.
+           - Tích hợp nguyên văn lời thoại tiếng Việt có dấu, khẩu hình ăn khớp và biểu cảm diễn xuất tự nhiên.
+        3. THỜI LƯỢNG: 'duration' của mỗi cảnh CHỈ ĐƯỢC LÀ '4s', '6s' hoặc '8s'. CẤM DÙNG '10s'.
 
-        Định dạng JSON chuẩn:
+        Định dạng JSON chuẩn (BẮT BUỘC là 1 Dict, không bọc mảng list):
         {{
           "id": {target_id},
           "title": "{outline.get('title')}",
@@ -281,22 +271,20 @@ def create_scene_details_for_id(target_id: int):
               "transition_type": "Cắt cảnh (Hard Cut)",
               "voice_director_vn": "Chỉ đạo diễn xuất giọng đọc tiếng Việt",
               "voiceover_vi": "Lời thoại tiếng Việt miền Bắc",
-              "image_prompt": "Prompt Imagen 3 9:16 (để rỗng nếu là Cảnh nối tiếp)",
-              "video_prompt": "Prompt Veo 3 chi tiết thao tác cơ học, bối cảnh xưởng/showroom, khí động học trong suốt, tích hợp thoại tiếng Việt"
+              "image_prompt": "Prompt Imagen 3 9:16 khóa cấu tạo cơ khí chi tiết (để rỗng nếu là Cảnh nối tiếp)",
+              "video_prompt": "Prompt Veo 3 chi tiết thao tác vật lý hút/thổi chân thực, tích hợp thoại tiếng Việt"
             }}
           ]
         }}
         """
         try:
             detail_data = generate_with_smart_retry([prompt_detail], SYSTEM_INSTRUCTIONS)
-            # Kiểm tra an toàn định dạng
             if isinstance(detail_data, list) and len(detail_data) > 0:
                 detail_data = detail_data[0]
             if not isinstance(detail_data, dict):
-                st.error("Dữ liệu trả về không đúng định dạng. Vui lòng thử lại!")
+                st.error("Dữ liệu trả về chưa đúng định dạng. Vui lòng bấm thử lại!")
                 return
-
-            # Đảm bảo có voice_profile
+            
             if "voice_profile" not in detail_data or not isinstance(detail_data["voice_profile"], dict):
                 detail_data["voice_profile"] = vp
 
@@ -306,12 +294,42 @@ def create_scene_details_for_id(target_id: int):
         except Exception as e:
             st.error(f"Lỗi tạo chi tiết: {e}")
 
-# KHU VỰC TIÊU ĐỀ CHÍNH CĂN GIỮA NỔI BẬT
+def add_five_more_scripts():
+    """Hàm bổ sung thêm 5 ý tưởng kịch bản mới không gửi kèm ảnh để tối ưu tốc độ và tránh 503"""
+    with st.spinner("Đang tư duy thêm 5 góc tiếp cận kịch bản mới lạ..."):
+        cur_len = len(st.session_state.script_outlines)
+        p_info = json.dumps(st.session_state.product_analysis, ensure_ascii=False) if st.session_state.product_analysis else "Sản phẩm đang phân tích"
+        
+        prompt_more = f"""
+        Dựa trên thông số phân tích cơ khí đã khóa:
+        {p_info}
+
+        Hãy tạo thêm ĐÚNG 5 Ý TƯỞNG KỊCH BẢN MỚI HOÀN TOÀN không trùng lặp với {cur_len} kịch bản trước:
+        - id: {cur_len + 1} đến {cur_len + 5}
+        - title: Tên kịch bản giật tít, hấp dẫn
+        - setting_style: Bối cảnh chính (Phân xưởng sản xuất, kho hàng, showroom, không gian thực tế)
+        - angle: Góc độ mới lạ
+        - target_hook: Ý tưởng hook 3-4s
+        - recommended_scenes_count: Phân bổ nhịp cảnh CHỈ DÙNG 4s, 6s, 8s (tuyệt đối không dùng 10s)
+        - voice_profile: Giọng miền Bắc đồng nhất
+        - Xuất JSON gồm key 'script_outlines' chứa 5 ý tưởng này.
+        """
+        try:
+            more_data = generate_with_smart_retry([prompt_more], SYSTEM_INSTRUCTIONS)
+            if isinstance(more_data, list) and len(more_data) > 0:
+                more_data = more_data[0]
+            st.session_state.script_outlines.extend(more_data.get("script_outlines", []))
+            st.success("✅ Đã bổ sung thêm 5 tình huống kịch bản mới vào danh sách!")
+            st.rerun()
+        except Exception as e:
+            st.error(f"Lỗi tạo thêm: {e}")
+
+# KHU VỰC HEADER CHÍNH CĂN GIỮA
 st.markdown("""
 <div class="header-container">
     <div class="header-badge">🚀 VEO 3 & IMAGEN 3 AUTOMATION PRO</div>
     <div class="main-title">🎬 Hệ Thống Kịch Bản TikTok Shop Đa Năng</div>
-    <div class="sub-title">Tự động phân tích sản phẩm, tối ưu nhịp độ (4s, 6s, 8s) và tạo kịch bản viral chuyển đổi cao</div>
+    <div class="sub-title">Khóa chuẩn cấu tạo cơ khí, vật lý hút/thổi siêu thực & nhịp độ động (4s, 6s, 8s)</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -328,25 +346,27 @@ if uploaded_files:
         cols[idx % 4].image(img, caption=f"Góc {idx+1}", use_container_width=True)
 
     if st.button("🚀 Bắt Đầu Phân Tích Cơ Khí & Đề Xuất 5 Ý Tưởng Kịch Bản", type="primary", use_container_width=True):
-        with st.spinner("Đang bóc tách chi tiết cơ khí và phân tích góc tiếp cận viral..."):
+        with st.spinner("Đang bóc tách giải phẫu cơ khí, nguyên lý hút/thổi và lên ý tưởng viral..."):
             prompt = """
             Phân tích toàn diện sản phẩm từ ảnh và xuất JSON:
             1. 'product_analysis':
                - category: Ngành hàng chi tiết
                - target_audience: Chân dung khách hàng mục tiêu
                - core_pain_points: 3 nỗi đau lớn nhất của khách
-               - hero_color: Màu nhận diện chủ đạo và chất liệu bề mặt
-               - mechanical_details: Chi tiết chính xác về vị trí công tắc, số nút bấm, ngàm xoay, cổng cắm, cơ chế hoạt động thực tế
-               - included_accessories: Danh sách phụ kiện bóc tách được từ ảnh
-               - aerodynamics_or_action_notes: Lưu ý vật lý đặc thù (luồng khí trong suốt, lực cắm khớp)
+               - hero_color: Màu nhận diện chủ đạo và chất liệu bề mặt (ví dụ: 'Màu xám nòng súng matte, viền cam chrome, hộp chứa bụi nhựa ABS trong suốt')
+               - structure_and_functions: Cấu tạo và chức năng cốt lõi (ví dụ: 'Thân máy dạng súng lục công thái học, đầu hút dẹt có thể tháo rời, cổng sạc Type-C ở chuôi cầm, lõi lọc HEPA có thể giặt')
+               - mechanical_details: Vị trí chính xác của công tắc nguồn, khớp xoay hộp bụi, cổng sạc, các đầu chuyển đổi
+               - included_accessories: Danh sách các đầu hút/thổi/dây cáp nhận diện được từ ảnh
+               - suction_and_aerodynamics_notes: Nguyên lý hút bụi thực tế (bụi bị hút thẳng vào miệng hút/khoang chứa) và thổi khí vô hình
+               - product_dna_prompt: Một đoạn mô tả tiếng Anh chuẩn xác về ngoại hình sản phẩm để nhúng vào prompt tạo ảnh và video
                - key_usp: Điểm bán hàng độc nhất (USP)
-            2. 'script_outlines': ĐÚNG 5 Ý TƯỞNG KỊCH BẢN (chỉ phác thảo khung):
+            2. 'script_outlines': ĐÚNG 5 Ý TƯỞNG KỊCH BẢN:
                - id: 1 đến 5
                - title: Tên kịch bản giật tít, hấp dẫn
                - setting_style: Bối cảnh chính (Phân xưởng sản xuất, Kho hàng tấp nập, Showroom, Không gian thực tế)
-               - angle: Góc tiếp cận chuyển đổi (Deal xưởng/Siêu Sale, Giải quyết nỗi đau, Demo tính năng ASMR, So sánh trước sau, Unboxing bảo hành)
+               - angle: Góc tiếp cận chuyển đổi
                - target_hook: Ý tưởng câu hook 3-4s đầu
-               - recommended_scenes_count: Phân bổ nhịp cảnh đề xuất CHỈ DÙNG 4s, 6s, 8s (TUYỆT ĐỐI KHÔNG DÙNG 10s, ví dụ: '4 cảnh (4s-6s-8s-8s)', '4 cảnh (4s-6s-6s-8s)', '3 cảnh (4s-6s-8s)')
+               - recommended_scenes_count: Phân bổ nhịp cảnh CHỈ DÙNG 4s, 6s, 8s (TUYỆT ĐỐI KHÔNG DÙNG 10s, ví dụ: '4 cảnh (4s-6s-8s-8s)', '3 cảnh (4s-6s-8s)')
                - voice_profile: {gender: 'Nam'/'Nữ', age_range: 'Độ tuổi', tone: 'Âm điệu miền Bắc'}
             """
             try:
@@ -364,23 +384,22 @@ if uploaded_files:
 # Hiển thị Phân tích sản phẩm
 if st.session_state.product_analysis and isinstance(st.session_state.product_analysis, dict):
     st.divider()
-    st.markdown("### 🔍 **Phân tích sản phẩm chi tiết & Cơ khí thực tế**")
+    st.markdown("### 🔍 **Phân tích cấu tạo cơ khí & Khóa nhận diện sản phẩm**")
     p = st.session_state.product_analysis
     c1, c2 = st.columns(2)
     with c1:
         st.markdown(f"**Ngành hàng:** {p.get('category', 'N/A')}")
         st.markdown(f"**Màu nhận diện & Bề mặt:** {p.get('hero_color', 'N/A')}")
-        st.markdown(f"**Lợi thế độc nhất (USP):** {p.get('key_usp', 'N/A')}")
-        st.markdown(f"**Chân dung khách hàng:** {p.get('target_audience', 'N/A')}")
+        st.markdown(f"**Cấu tạo & Chức năng:** {p.get('structure_and_functions', 'N/A')}")
         st.markdown(f"**Chi tiết cơ khí & Nút bấm:** {p.get('mechanical_details', 'N/A')}")
+        st.markdown(f"**Lợi thế độc nhất (USP):** {p.get('key_usp', 'N/A')}")
     with c2:
         st.markdown(f"**Phụ kiện đi kèm:** {', '.join(p.get('included_accessories', [])) if isinstance(p.get('included_accessories'), list) else p.get('included_accessories', 'N/A')}")
-        st.markdown(f"**Lưu ý vật lý thao tác:** {p.get('aerodynamics_or_action_notes', 'N/A')}")
-        st.markdown("**Nỗi đau khách hàng:**")
-        for pain in p.get('core_pain_points', []):
-            st.markdown(f"- {pain}")
+        st.markdown(f"**Vật lý hút & thổi thực tế:** {p.get('suction_and_aerodynamics_notes', 'N/A')}")
+        st.markdown(f"**Chân dung khách hàng:** {p.get('target_audience', 'N/A')}")
+        st.markdown(f"**Khóa nhận diện sản phẩm (Product DNA):** `{p.get('product_dna_prompt', 'N/A')}`")
 
-# Hiển thị Danh sách các Kịch bản đề xuất
+# Danh sách kịch bản đề xuất ban đầu
 if st.session_state.script_outlines:
     st.divider()
     st.markdown(f"### 📋 **Danh sách {len(st.session_state.script_outlines)} ý tưởng kịch bản tối ưu chuyển đổi**")
@@ -408,44 +427,17 @@ if st.session_state.script_outlines:
                     st.session_state.active_script_id = sc_id
                     st.rerun()
 
-    # NÚT MỞ RỘNG THÊM 5 KỊCH BẢN
+    # Nút mở rộng thêm 5 kịch bản dưới danh sách chính
     st.markdown("---")
     st.markdown("#### ➕ **Mở Rộng Thêm Kịch Bản Mới Khác Biệt**")
     if st.button("➕ Tạo Thêm 5 Kịch Bản Mới Khác Biệt", key="btn_add_more_main", type="primary", use_container_width=True):
-        with st.spinner("Đang tư duy thêm 5 góc tiếp cận mới lạ..."):
-            cur_len = len(st.session_state.script_outlines)
-            p_info = json.dumps(st.session_state.product_analysis, ensure_ascii=False) if st.session_state.product_analysis else "Sản phẩm đang phân tích"
-            
-            prompt_more = f"""
-            Dựa trên thông số phân tích sản phẩm này:
-            {p_info}
+        add_five_more_scripts()
 
-            Hãy tạo thêm ĐÚNG 5 Ý TƯỞNG KỊCH BẢN MỚI HOÀN TOÀN không trùng lặp với {cur_len} kịch bản trước:
-            - id: {cur_len + 1} đến {cur_len + 5}
-            - title: Tên kịch bản giật tít, hấp dẫn
-            - setting_style: Bối cảnh chính (Phân xưởng sản xuất, kho hàng, showroom...)
-            - angle: Góc độ mới lạ
-            - target_hook: Ý tưởng hook 3-4s
-            - recommended_scenes_count: Phân bổ nhịp cảnh CHỈ DÙNG 4s, 6s, 8s (tuyệt đối không dùng 10s)
-            - voice_profile: Giọng miền Bắc đồng nhất
-            - Xuất JSON gồm key 'script_outlines' chứa 5 ý tưởng này.
-            """
-            try:
-                more_data = generate_with_smart_retry([prompt_more], SYSTEM_INSTRUCTIONS)
-                if isinstance(more_data, list) and len(more_data) > 0:
-                    more_data = more_data[0]
-                st.session_state.script_outlines.extend(more_data.get("script_outlines", []))
-                st.success("✅ Đã bổ sung thêm 5 kịch bản mới vào danh sách!")
-                st.rerun()
-            except Exception as e:
-                st.error(f"Lỗi tạo thêm: {e}")
-
-# HIỂN THỊ KỊCH BẢN CHI TIẾT ĐANG CHỌN (ĐÃ BỌC BẢO VỆ CHỐNG ATTRIBUTEERROR)
+# HIỂN THỊ KỊCH BẢN CHI TIẾT ĐANG CHỌN
 if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
     st.divider()
     active_script = st.session_state.generated_details[st.session_state.active_script_id]
     
-    # Kiểm tra an toàn nếu active_script bị dạng list hoặc non-dict
     if isinstance(active_script, list) and len(active_script) > 0:
         active_script = active_script[0]
         st.session_state.generated_details[st.session_state.active_script_id] = active_script
@@ -466,20 +458,16 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
             dur = scene.get("duration", "6s")
             st.markdown(f"#### **📍 Phân cảnh {sc_num} ({dur}) — [ {trans_type} ]**")
 
-            # 0. Bối cảnh từng cảnh
             scene_setting_desc = scene.get("scene_setting", active_script.get("setting_style", "Không gian sản phẩm"))
             st.markdown(f"🏛️ **Bối cảnh phân cảnh:** *{scene_setting_desc}*")
 
-            # 1. Đạo diễn giọng đọc
             st.markdown("**🎙️ Đạo diễn giọng đọc:**")
             st.write(scene.get("voice_director_vn", ""))
 
-            # 2. Lời thoại
             st.markdown("**💬 Lời thoại lồng tiếng (100% Miền Bắc):**")
             st.markdown(f"> *\"{scene.get('voiceover_vi', '')}\"*")
 
-            # 3. Prompt Tạo Ảnh (Imagen 3)
-            st.markdown("**🖼️ Prompt Tạo Ảnh Gốc (Imagen 3 - 9:16):**")
+            st.markdown("**🖼️ Prompt Tạo Ảnh Gốc (Imagen 3 - 9:16 - Khóa Chi Tiết Thực Tế):**")
             if "nối tiếp" in str(trans_type).lower() or not scene.get("image_prompt"):
                 st.warning("👉 **Lấy ảnh cuối của video trước làm ảnh đầu vào cho phân cảnh này.**")
             else:
@@ -487,21 +475,20 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                 st.code(img_p, language="text")
                 safe_copy_button(img_p, "📋 Copy Prompt Ảnh (Imagen 3)")
 
-            # 4. Prompt Chuyển Động Video (Veo 3)
-            st.markdown(f"**🎥 Prompt Chuyển Động Video ({trans_type} - Veo 3):**")
+            st.markdown(f"**🎥 Prompt Chuyển Động Video (Veo 3 - Vật Lý Hút/Thổi Chuẩn):**")
             vid_p = scene.get("video_prompt", "")
             st.code(vid_p, language="text")
             safe_copy_button(vid_p, "📋 Copy Prompt Video (Veo 3)")
 
             st.markdown("---")
 
-        # KHU VỰC NHẮC LẠI KỊCH BẢN CHƯA TẠO & NHÂN BẢN KỊCH BẢN WIN
+        # KHU VỰC BƯỚC TIẾP THEO: NHÂN BẢN & KHAI THÁC CÁC TÌNH HUỐNG KHÁC
         st.markdown("### ⚡ **Bước Tiếp Theo: Nhân Bản Win & Khai Thác Kịch Bản Khác**")
         col_win, col_unmade = st.columns(2)
 
         with col_win:
-            st.markdown("#### 🔥 **Nhân Bản Kịch Bản Win Thành 5 Bản (A/B Test)**")
-            st.caption("Chọn 1 kịch bản win đã tạo chi tiết bên dưới để AI nhân bản thành 5 biến thể mở đầu (Hook) và bối cảnh khác nhau.")
+            st.markdown("#### 🔥 **Nhân Bản Kịch Bản Win (A/B Test)**")
+            st.caption("Chọn 1 kịch bản win đã tạo chi tiết để AI nhân bản thành 5 biến thể mở đầu (Hook) và bối cảnh khác nhau.")
             
             generated_ids = list(st.session_state.generated_details.keys())
             if generated_ids:
@@ -541,6 +528,11 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                             st.rerun()
                         except Exception as e:
                             st.error(f"Lỗi nhân bản: {e}")
+
+                # BỔ SUNG NÚT GỌI THÊM TÌNH HUỐNG DƯỚI BUTTON NHÂN BẢN THEO YÊU CẦU
+                st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
+                if st.button("➕ Tạo Thêm 5 Tình Huống Kịch Bản Mới", key="btn_add_more_bottom", use_container_width=True):
+                    add_five_more_scripts()
             else:
                 st.info("Chưa có kịch bản chi tiết nào để nhân bản.")
 
