@@ -106,7 +106,7 @@ if uploaded_files and client:
       try:
         # Gửi toàn bộ danh sách ảnh để Gemini phân tích chi tiết toàn diện
         response = client.models.generate_content(
-            model="gemini-3.6-flash",
+            model="gemini-2.0-flash",
             contents=[
                 *images,
                 (
