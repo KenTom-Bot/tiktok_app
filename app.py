@@ -10,7 +10,7 @@ import re
 import time
 import io
 
-st.set_page_config(page_title="Universal AI Video Studio Pro", page_icon="🎬", layout="wide")
+st.set_page_config(page_title="KenTom AI Video Studio Pro", page_icon="🎬", layout="wide")
 
 st.markdown("""
 <style>
@@ -396,9 +396,9 @@ def add_five_scripts_continuation(current_mode: str, current_style: str):
 # ==============================================================================
 st.markdown("""
 <div class="header-container">
-    <div class="header-badge">🌟 UNIVERSAL AI VIDEO STUDIO PRO</div>
-    <div class="main-title">🎬 Hệ Thống Kịch Bản Đa Vũ Trụ</div>
-    <div class="sub-title">TikTok Shop Chuyên Sâu, TVC Điện Ảnh, Phim Đời Sống, Du Lịch, Nhà Đẹp & Xe Cộ</div>
+    <div class="header-badge">🌟 KENTOM AI VIDEO STUDIO PRO</div>
+    <div class="main-title">🎬 Xây Dựng Kịch Bản Đa Vũ Trụ</div>
+    <div class="sub-title">TikTok Shop Chuyên Sâu, TVC Điện Ảnh, Phim Đời Sống, Du Lịch,Văn Hóa - Tâm Linh, Nhà Đẹp & Xe Cộ</div>
 </div>
 """, unsafe_allow_html=True)
 
