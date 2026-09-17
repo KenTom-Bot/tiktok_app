@@ -149,8 +149,9 @@ IV. ĐẠO DIỄN GIỌNG ĐỌC & TÍCH HỢP PROMPT VEO 3:
 4. Chuyển cảnh: Xác định rõ 'Cắt cảnh (Hard Cut)' hoặc 'Cảnh nối tiếp (Continuous Motion)'. Nếu là nối tiếp thì 'image_prompt' để rỗng ("").
 """
 
+import re
+
 def generate_with_smart_retry(contents, system_inst, max_tokens=8192):
-    """Sử dụng duy nhất model gemini-3.6-flash với cơ chế auto-retry khi máy chủ bận"""
     model_name = "gemini-3.6-flash"
     max_attempts = 5
     last_err = None
@@ -171,8 +172,19 @@ def generate_with_smart_retry(contents, system_inst, max_tokens=8192):
         except Exception as e:
             last_err = e
             err_msg = str(e)
-            if "503" in err_msg or "UNAVAILABLE" in err_msg or "high demand" in err_msg or "ResourceExhausted" in err_msg:
-                time.sleep(3 * (attempt + 1))
+            
+            # Xử lý khi chạm giới hạn Rate limit 429 hoặc quá tải 503
+            if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
+                # Tìm số giây Google yêu cầu chờ trong thông báo lỗi (mặc định 40s)
+                wait_match = re.search(r"retry in (\d+\.?\d*)s", err_msg)
+                wait_sec = int(float(wait_match.group(1))) + 2 if wait_match else 40
+                
+                with st.spinner(f"⏳ Đang chạm giới hạn tạm thời của Google. Hệ thống tự động chờ {wait_sec}s rồi tiếp tục..."):
+                    time.sleep(wait_sec)
+                continue
+                
+            elif "503" in err_msg or "UNAVAILABLE" in err_msg or "high demand" in err_msg:
+                time.sleep(4 * (attempt + 1))
                 continue
             else:
                 break
@@ -232,7 +244,7 @@ def create_scene_details_for_id(target_id: int):
             st.error(f"Lỗi tạo chi tiết: {e}")
 
 st.markdown('<div class="main-title">🎬 Hệ Thống Kịch Bản TikTok Shop Đa Năng</div>', unsafe_allow_html=True)
-st.write("Tự động bóc tách cơ khí, tối ưu nhịp độ (4s, 6s, 8s, 10s) và tạo kịch bản viral chuyển đổi cao.")
+st.write("Tự động bóc tách sản phẩm, tối ưu nhịp độ và tạo kịch bản viral chuyển đổi cao.")
 
 uploaded_files = st.file_uploader(
     "Tải các góc ảnh sản phẩm (Mặt trước, mặt sau, bao bì, phụ kiện):",
@@ -246,8 +258,8 @@ if uploaded_files:
     for idx, img in enumerate(images):
         cols[idx % 4].image(img, caption=f"Góc {idx+1}", use_container_width=True)
 
-    if st.button("🚀 Bắt Đầu Phân Tích Cơ Khí & Đề Xuất 5 Ý Tưởng Kịch Bản", type="primary", use_container_width=True):
-        with st.spinner("Đang bóc tách chi tiết cơ khí và phân tích góc tiếp cận viral..."):
+    if st.button("🚀 Bắt Đầu Phân Tích Sản Phẩm & Đề Xuất 5 Ý Tưởng Kịch Bản", type="primary", use_container_width=True):
+        with st.spinner("Đang bóc tách chi tiết sản phẩm và phân tích góc tiếp cận viral..."):
             prompt = """
             Phân tích toàn diện sản phẩm từ ảnh và xuất JSON:
             1. 'product_analysis':
