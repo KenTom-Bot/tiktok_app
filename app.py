@@ -372,8 +372,8 @@ with col_mode:
     selected_mode = st.selectbox(
         "🎯 Chọn Thể Loại Nội Dung:",
         options=[
-            "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp",
             "🛒 TikTok Shop & Bán Hàng",
+            "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp",
             "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan",
             "🌿 Du Lịch & Phong Cảnh Đất Nước",
             "🚗 Xe Cộ & Trải Nghiệm Lái",
@@ -404,8 +404,8 @@ st.markdown("---")
 st.markdown("### 📥 **Dữ Liệu Đầu Vào (Nhập Văn Bản, Tải Ảnh hoặc Kết Hợp Cả Hai)**")
 
 prompt_placeholders = {
-    "🛒 TikTok Shop & Bán Hàng": "Mô tả sản phẩm, tính năng độc nhất (USP), chương trình khuyến mãi hoặc đối tượng sử dụng...",
     "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp": "Mô tả sản phẩm/dịch vụ TVC: Spa trị liệu cao cấp, khu nghỉ dưỡng ven biển, đồng hồ xa xỉ...",
+    "🛒 TikTok Shop & Bán Hàng": "Mô tả sản phẩm, tính năng độc nhất (USP), chương trình khuyến mãi hoặc đối tượng sử dụng...",
     "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan": "Mô tả căn nhà: Biệt thự đồi thông Đà Lạt, căn hộ penthouse tối giản, nhà vườn phong cách Indochine...",
     "🌿 Du Lịch & Phong Cảnh Đất Nước": "Nhập tên địa danh hoặc ý tưởng: Vịnh Hạ Long lúc hoàng hôn, Mù Cang Chải mùa lúa chín...",
     "🚗 Xe Cộ & Trải Nghiệm Lái": "Nhập dòng xe & bối cảnh: Porsche 911 GT3 RS màu xanh Shark Blue, xe lướt trên cung đèo ven biển...",
