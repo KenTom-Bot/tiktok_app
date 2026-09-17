@@ -85,20 +85,42 @@ def analyze_product_to_json(image):
 
 
 # GIAO DIỆN NGƯỜI DÙNG
-uploaded_file = st.file_uploader(
-    "Tải ảnh sản phẩm của bạn lên đây (Mọi ngành hàng):",
-    type=["jpg", "jpeg", "png"],
-)
-if uploaded_file and client:
-  image = Image.open(uploaded_file)
-  st.image(image, caption='Ảnh sản phẩm gốc', width=300)
+uploaded_files = st.file_uploader(
+        "Tải các góc ảnh sản phẩm lên đây (Mặt trước, mặt sau, chi tiết, bao"
+        " bì):",
+        type=["jpg", "jpeg", "png"],
+        accept_multiple_files=True,
+    )
+if uploaded_files and client:
+  images = [Image.open(f) for f in uploaded_files]
 
-  if st.button('🚀 Bắt Đầu Tạo Video Tự Động'):
+  cols = st.columns(min(len(images), 4))
+  for idx, img in enumerate(images):
+    cols[idx % 4].image(img, caption=f"Góc ảnh {idx+1}", use_container_width=True)
+
+  if st.button("🚀 Bắt Đầu Tạo Video Tự Động"):
     with st.spinner(
-        'Đang bóc tách giải phẫu sản phẩm và lập kịch bản tự động...'
+        f"Đang bóc tách giải phẫu {len(images)} góc ảnh và lập kịch bản tự"
+        " động..."
     ):
       try:
-        script_data = analyze_product_to_json(image)
+        # Gửi toàn bộ danh sách ảnh để Gemini phân tích chi tiết toàn diện
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[
+                *images,
+                (
+                    "Hãy đối chiếu toàn bộ các góc ảnh này để bóc tách giải"
+                    " phẫu sản phẩm chi tiết nhất và xuất gói kịch bản hoàn"
+                    " chỉnh định dạng JSON."
+                ),
+            ],
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_INSTRUCTIONS,
+                response_mime_type="application/json",
+            ),
+        )
+        script_data = json.loads(response.text)
         st.success(
             f"🎉 Đã lập xong kịch bản: {script_data.get('scenario_name')}"
         )
