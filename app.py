@@ -182,14 +182,53 @@ def optimize_image_for_api(image: Image.Image, max_dimension: int = 896, quality
     return Image.open(buffer)
 
 def format_analysis_field(field_val) -> str:
+    """Tự động định dạng và ngắt dòng rõ ràng theo các ý chính"""
     if isinstance(field_val, dict):
-        return "<br>".join([f"<b>{k.replace('_', ' ').title()}:</b> {v}" for k, v in field_val.items()])
+        return "<br>".join([f"• <b>{k.replace('_', ' ').title()}:</b> {v}" for k, v in field_val.items()])
     elif isinstance(field_val, list):
-        return "<br>".join([str(item) for item in field_val])
-    return str(field_val)
+        return "<br>".join([f"• {item}" for item in field_val])
+    
+    text = str(field_val)
+    # Tự động tách dòng và thêm dấu gạch đầu dòng cho các từ khóa chính
+    keywords = ["Chức năng:", "Tài chính:", "Cảm xúc:", "Chức năng", "Tài chính", "Cảm xúc", "1.", "2.", "3."]
+    for kw in keywords:
+        if kw in text and not text.startswith(kw):
+            text = text.replace(kw, f"<br>• <b>{kw}</b>")
+    return text
 
-def get_system_instructions(mode: str, style: str) -> str:
-    base = f"""
+# Hiển thị Bóc tách DNA chi tiết đa tầng (Đã căn chỉnh xuống dòng từng ý)
+if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
+    st.divider()
+    st.markdown(f"### 🔍 **Phân Tích DNA Chi Tiết Đa Tầng — [{selected_mode.upper()}]**")
+    ca = st.session_state.content_analysis
+    
+    mech_text = format_analysis_field(ca.get('mechanical_and_accessories', 'N/A'))
+    pain_text = format_analysis_field(ca.get('customer_pain_points', 'N/A'))
+    desire_text = format_analysis_field(ca.get('core_desires', 'N/A'))
+    usp_text = format_analysis_field(ca.get('emotional_or_usp_hook', 'N/A'))
+    physics_text = format_analysis_field(ca.get('visual_physics_rules', 'N/A'))
+    prompt_lock_text = format_analysis_field(ca.get('prompt_dna_lock', 'N/A'))
+
+    with st.container(border=True):
+        st.markdown("##### 🏭 **1. Thông số Cơ khí & Phụ kiện đi kèm:**")
+        st.markdown(f"<div style='line-height: 1.6;'>{mech_text}</div>", unsafe_allow_html=True)
+        st.markdown("---")
+        
+        st.markdown("##### 🎯 **2. Ma trận 3 Tầng Nỗi đau Khách hàng:**")
+        st.markdown(f"<div style='line-height: 1.6;'>{pain_text}</div>", unsafe_allow_html=True)
+        st.markdown("---")
+
+        st.markdown("##### 💡 **3. Mong muốn cốt lõi & USP:**")
+        st.markdown(f"• **Mong muốn:** {desire_text}")
+        st.markdown(f"• **USP / Slogan:** {usp_text}")
+        st.markdown("---")
+
+        st.markdown("##### ⚙️ **4. Quy chuẩn Vật lý:**")
+        st.markdown(f"<div style='line-height: 1.6;'>{physics_text}</div>", unsafe_allow_html=True)
+
+    st.markdown("##### 📌 **Chuỗi khóa thị giác (Visual DNA Lock - Dùng cho Imagen 3 & Veo 3):**")
+    st.code(prompt_lock_text, language="text")
+    
 BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
 PHONG CÁCH KẾT XUẤT THỊ GIÁC (VISUAL RENDERING STYLE): {style.upper()}.
 MỌI PROMPT IMAGEN 3 VÀ VEO 3 PHẢI TUÂN THEO ĐÚNG PHONG CÁCH NÀY.
