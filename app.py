@@ -49,6 +49,23 @@ st.markdown("""
         letter-spacing: 0.5px;
         border: 1px solid #fca5a5;
     }
+    
+    /* --- PHÓNG TO TIÊU ĐỀ VÀ KHUNG CHỌN (SELECTBOX) --- */
+    div[data-testid="stSelectbox"] label p {
+        font-size: 1.15rem !important;
+        font-weight: 800 !important;
+        color: #1e293b !important;
+    }
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+        font-size: 1.1rem !important;
+        font-weight: 700 !important;
+        min-height: 52px !important;
+        background-color: #ffffff !important;
+        border: 2px solid #cbd5e1 !important;
+        border-radius: 10px !important;
+    }
+    /* ------------------------------------------------ */
+
     .custom-card {
         background: #ffffff;
         border: 1.5px solid #e2e8f0;
@@ -175,7 +192,7 @@ def optimize_image_for_api(image: Image.Image, max_dimension: int = 896, quality
     return Image.open(buffer)
 
 def format_analysis_field(field_val) -> str:
-    """Tự động định dạng và ngắt dòng rõ ràng theo các ý chính để tránh lỗi HTML thô"""
+    """Tự động định dạng và ngắt dòng rõ ràng theo các ý chính"""
     if isinstance(field_val, dict):
         return "<br>".join([f"• <b>{k.replace('_', ' ').title()}:</b> {v}" for k, v in field_val.items()])
     elif isinstance(field_val, list):
@@ -196,11 +213,11 @@ MỌI PROMPT PHẢI TUÂN THEO ĐÚNG PHONG CÁCH NÀY.
 
 QUY TẮC ĐẠO DIỄN & LỜI THOẠI BẮT BUỘC:
 1. THỜI LƯỢNG MỖI CẢNH: CHỈ ĐƯỢC DÙNG 3 MỐC: 4s, 6s, 8s. TUYỆT ĐỐI CẤM DÙNG MỐC 10 GIÂY.
-2. 100% CÁC PHÂN CẢNH ĐỀU PHẢI CÓ LỜI THOẠI (VOICEOVER): Tuyệt đối không để cảnh nào bị trống thoại, đảm bảo mạch truyền tải thông tin liên tục, hấp dẫn.
-3. QUY CHUẨN ĐỊNH MỨC TỪ VỰNG THEO THỜI LƯỢNG (Để nhân vật/voice đọc khớp hoàn hảo, không bị hụt hơi hay quá dài):
-   - Cảnh 4s: Lời thoại tối đa 10 - 12 từ (Câu ngắn, gãy gọn, tập trung vào điểm nhấn).
+2. 100% CÁC PHÂN CẢNH ĐỀU PHẢI CÓ LỜI THOẠI (VOICEOVER): Đảm bảo mạch truyền tải thông tin liên tục, hấp dẫn.
+3. QUY CHUẨN ĐỊNH MỨC TỪ VỰNG THEO THỜI LƯỢNG (Khớp hoàn hảo nhịp đọc thực tế, 1s = ~2.5 - 3 từ):
+   - Cảnh 4s: Lời thoại tối đa 10 - 12 từ (Câu ngắn, gãy gọn, tập trung điểm nhấn).
    - Cảnh 6s: Lời thoại từ 15 - 18 từ (Mô tả hành động hoặc nỗi đau vừa đủ).
-   - Cảnh 8s: Lời thoại từ 22 - 25 từ (Giải thích tính năng sâu hoặc kêu gọi hành động).
+   - Cảnh 8s: Lời thoại từ 22 - 25 từ (Giải thích tính năng sâu hoặc CTA).
 4. Giọng đọc: 100% tiếng Việt miền Bắc chuẩn Hà Nội, nêu rõ Giới tính và Độ tuổi phù hợp, đồng nhất suốt các cảnh.
 5. Tích hợp thoại vào Veo 3: Trong 'video_prompt', nhúng nguyên văn lời thoại tiếng Việt có dấu kèm biểu cảm gương mặt, khẩu hình và cử chỉ cơ thể khớp với thời lượng.
 6. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
@@ -293,7 +310,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         QUY ĐỊNH KỸ THUẬT:
         1. 'image_prompt' (Imagen 3, 9:16): Tuân thủ phong cách {current_style}, khóa nhận diện nhân vật/bối cảnh/sản phẩm chuẩn xác. Để rỗng ("") nếu là Cảnh nối tiếp.
         2. 'video_prompt' (Veo 3): Động học siêu thực đúng thể loại, nhúng nguyên văn lời thoại tiếng Việt có dấu, khẩu hình và biểu cảm tự nhiên.
-        3. THỜI LƯỢNG: 'duration' của mỗi cảnh CHỈ ĐƯỢC LÀ '4s', '6s' hoặc '8s'. TUYỆT ĐỐI CẤM DÙNG '10s'.
+        3. THỜI LƯỢNG: 'duration' của mỗi cảnh CHỈ ĐƯỢC LÀ '4s', '6s' hoặc '8s' (TUYỆT ĐỐI CẤM 10s). Lời thoại phải khớp hoàn hảo nhịp đọc (1s = ~3 từ).
 
         Định dạng JSON chuẩn (BẮT BUỘC là 1 Dict):
         {{
@@ -606,7 +623,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
             st.markdown("**🎙️ Đạo diễn giọng đọc:**")
             st.write(scene.get("voice_director_vn", ""))
 
-            st.markdown("**💬 Lời thoại lồng tiếng (100% Miền Bắc):**")
+            st.markdown("**💬 Lời thoại lồng tiếng (100% Miền Bắc - Chuẩn nhịp thời lượng):**")
             st.markdown(f"> *\"{scene.get('voiceover_vi', '')}\"*")
 
             st.markdown(f"**🖼️ Prompt Tạo Ảnh Gốc (Imagen 3 - 9:16 - {selected_style}):**")
