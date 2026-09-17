@@ -180,14 +180,14 @@ QUY TẮC PHÂN CẢNH VÀ ĐẠO DIỄN:
     if mode == "🛒 TikTok Shop & Bán Hàng":
         return base + """
 CHẾ ĐỘ: TIKTOK SHOP & SẢN PHẨM CHUYỂN ĐỔI
-- Khóa chặt giải phẫu cơ khí, Hero Color, nút bấm, chất liệu vỏ từ ảnh tham chiếu.
+- Khóa chặt giải phẫu cơ khí, Hero Color, nút bấm, chất liệu vỏ từ ảnh tham chiếu hoặc văn bản mô tả.
 - Vật lý siêu thực: Bụi bị hút xoáy thẳng vào khoang chứa trong suốt; hơi sương siêu mịn; vải co giãn hồi form ngay.
 - Chính sách: Cấm giá cụ thể, cấm từ ngữ tuyệt đối ('100%', 'khỏi hẳn'), trẻ em luôn có phụ huynh đồng hành.
 """
     elif mode == "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan":
         return base + """
 CHẾ ĐỘ: HOME TOUR & KIẾN TRÚC CẢNH QUAN
-- Khóa chặt vật liệu (gỗ, đá marble, kính, sân vườn nhiệt đới, hồ cá koi).
+- Khóa chặt vật liệu (gỗ, đá marble, kính, sân vườn nhiệt đới, hồ cá koi) theo mô tả hoặc ảnh.
 - Góc máy Imagen 3: Ultra-wide architectural interior/exterior shot, ánh sáng tự nhiên ngập tràn.
 - Động học Veo 3: Cú lướt mượt mà xuyên không gian, rèm bay khẽ, ánh nắng chiếu rọi thư thái.
 - Lời thoại: Giọng chia sẻ phong cách sống, giới thiệu công năng và không gian truyền cảm hứng.
@@ -195,9 +195,16 @@ CHẾ ĐỘ: HOME TOUR & KIẾN TRÚC CẢNH QUAN
     elif mode == "🌿 Du Lịch & Phong Cảnh Đất Nước":
         return base + """
 CHẾ ĐỘ: REVIEW DU LỊCH & ĐẠI CẢNH QUAN
-- Khóa địa danh, nét văn hóa đặc trưng, thời điểm ánh sáng hoàng hôn/bình minh (Golden Hour).
+- Khóa địa danh cụ thể (dù qua ảnh hay văn bản tên địa danh), nét văn hóa đặc trưng, thời điểm ánh sáng hoàng hôn/bình minh (Golden Hour).
 - Góc máy: Flycam drone sweeping shot, đại cảnh núi sông, ruộng bậc thang hùng vĩ.
 - Lời thoại: Giọng thuyết minh truyền cảm, tự hào, khơi gợi khát khao trải nghiệm khám phá.
+"""
+    elif mode == "🚗 Xe Cộ & Trải Nghiệm Lái":
+        return base + """
+CHẾ ĐỘ: REVIEW XE CỘ & HÀNH TRÌNH
+- Khóa chặt dòng xe, kiểu dáng đèn LED, màu sơn bóng bẩy, chi tiết vô lăng và nội thất bọc da.
+- Động học: Tracking shot bám sát đuôi xe khi ôm cua, góc máy lướt mượt qua nắp capo, đường trường ngoạn mục.
+- Lời thoại: Đĩnh đạc, phấn khích, đậm chất đam mê tốc độ và kỹ thuật cơ khí.
 """
     elif mode == "🍲 Ẩm Thực & Trải Nghiệm Đời Sống":
         return base + """
@@ -209,7 +216,7 @@ CHẾ ĐỘ: FOOD TOUR & VĂN HÓA ẨM THỰC
     elif mode == "📖 Đời Sống & Bài Học Giáo Dục":
         return base + """
 CHẾ ĐỘ: PHIM NGẮN ĐỜI SỐNG & BÀI HỌC GIÁO DỤC
-- Khóa tạo hình nhân vật (Character DNA): Tuổi tác, trang phục, khuôn mặt, biểu cảm đồng nhất giữa các cảnh.
+- Khóa tạo hình nhân vật (Character DNA): Tuổi tác, trang phục, khuôn mặt, biểu cảm đồng nhất giữa các cảnh dựa trên cốt truyện được cung cấp.
 - Cốt truyện 3 hồi: Mở đầu -> Xung đột/Thử thách ứng xử -> Thấu hiểu & Bài học ý nghĩa.
 - Động học: Tương tác người với người (ôm, lau nước mắt, cúi đầu biết ơn), ánh mắt truyền tải nội tâm.
 - Lời thoại: Ấm áp, xúc động, đúc kết giá trị sống nhân văn, gia đình, tình bạn.
@@ -291,7 +298,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         - Giọng đọc: {vp.get('gender', 'Nữ')} miền Bắc, tuổi {vp.get('age_range', '25-30')}
 
         QUY ĐỊNH KỸ THUẬT:
-        1. 'image_prompt' (Imagen 3, 9:16): Tuân thủ phong cách {current_style}, khóa nhận diện nhân vật/bối cảnh/sản phẩm chuẩn xác. Để rỗng ("") nếu là Cảnh nối tiếp.
+        1. 'image_prompt' (Imagen 3, 9:16): Tuân thủ phong cách {current_style}, khóa nhận diện nhân vật/bối cảnh/sản phẩm/xe/nhà chuẩn xác. Để rỗng ("") nếu là Cảnh nối tiếp.
         2. 'video_prompt' (Veo 3): Động học siêu thực đúng thể loại, nhúng nguyên văn lời thoại tiếng Việt có dấu, khẩu hình và biểu cảm tự nhiên.
         3. THỜI LƯỢNG: 'duration' của mỗi cảnh CHỈ ĐƯỢC LÀ '4s', '6s' hoặc '8s'. TUYỆT ĐỐI CẤM DÙNG '10s'.
 
@@ -378,7 +385,7 @@ st.markdown("""
 <div class="header-container">
     <div class="header-badge">🌟 UNIVERSAL AI VIDEO STUDIO PRO</div>
     <div class="main-title">🎬 Hệ Thống Kịch Bản Đa Vũ Trụ</div>
-    <div class="sub-title">Sản phẩm, Phim đời sống, Phong cảnh, Nhà đẹp, Lịch sử & Hoạt hình 3D Pixar</div>
+    <div class="sub-title">Sản phẩm, Phim đời sống, Du lịch, Nhà đẹp, Xe cộ, Lịch sử & Hoạt hình 3D Pixar</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -390,6 +397,7 @@ with col_mode:
             "🛒 TikTok Shop & Bán Hàng",
             "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan",
             "🌿 Du Lịch & Phong Cảnh Đất Nước",
+            "🚗 Xe Cộ & Trải Nghiệm Lái",
             "🍲 Ẩm Thực & Trải Nghiệm Đời Sống",
             "📖 Đời Sống & Bài Học Giáo Dục",
             "🏛️ Lịch Sử & Tín Ngưỡng Di Sản",
@@ -411,55 +419,85 @@ with col_style:
     )
 
 # ==============================================================================
-# KHU VỰC 2: TẢI ẢNH THAM CHIẾU & PHÂN TÍCH
+# KHU VỰC 2: ĐẦU VÀO KÉP THÔNG MINH (ẢNH + VĂN BẢN / CỐT TRUYỆN)
 # ==============================================================================
 st.markdown("---")
+st.markdown("### 📥 **Dữ Liệu Đầu Vào (Nhập Văn Bản, Tải Ảnh hoặc Kết Hợp Cả Hai)**")
+
+# Gợi ý placeholder linh hoạt theo từng thể loại
+prompt_placeholders = {
+    "🛒 TikTok Shop & Bán Hàng": "Mô tả sản phẩm, tính năng độc nhất (USP), chương trình khuyến mãi hoặc đối tượng sử dụng...",
+    "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan": "Mô tả căn nhà: Biệt thự đồi thông Đà Lạt, căn hộ penthouse tối giản, nhà vườn phong cách Indochine, hồ cá koi...",
+    "🌿 Du Lịch & Phong Cảnh Đất Nước": "Nhập tên địa danh hoặc ý tưởng: Vịnh Hạ Long lúc hoàng hôn, Mù Cang Chải mùa lúa chín, Tràng An Ninh Bình...",
+    "🚗 Xe Cộ & Trải Nghiệm Lái": "Nhập dòng xe & bối cảnh: Porsche 911 GT3 RS màu xanh Shark Blue, xe lướt trên cung đèo ven biển hoàng hôn...",
+    "🍲 Ẩm Thực & Trải Nghiệm Đời Sống": "Tên món ăn hoặc quán ăn: Phở bò tái lăn Hà Nội khói nghi ngút, ẩm thực chợ đêm Đà Lạt mùa đông...",
+    "📖 Đời Sống & Bài Học Giáo Dục": "Tóm tắt cốt truyện: Người cha đạp xích lô nuôi con gái đỗ đại học, hoặc bài học về lòng trung thực nơi công sở...",
+    "🏛️ Lịch Sử & Tín Ngưỡng Di Sản": "Chủ đề lịch sử/tâm linh: Khí thế hào hùng thời nhà Trần chống giặc, vẻ đẹp thanh tịnh chùa Một Cột...",
+    "🧘 Chữa Lành & Phong Cách Sống": "Không gian & thông điệp: Buổi sớm yên bình trong ngôi nhà gỗ Wabi-sabi, giọt sương trên lá sen, tách trà thơm..."
+}
+
+input_text = st.text_area(
+    f"✍️ Tóm tắt ý tưởng, cốt truyện, tên địa danh, dòng xe hoặc mô tả chi tiết:",
+    placeholder=prompt_placeholders.get(selected_mode, "Nhập thông tin mô tả tại đây..."),
+    height=100
+)
+
 uploaded_files = st.file_uploader(
-    "Tải ảnh tham chiếu (Sản phẩm, Nhân vật, Bản thiết kế kiến trúc, Phong cảnh hoặc Tranh minh họa):",
+    "🖼️ Tải ảnh tham chiếu (Tùy chọn - Có thể bỏ qua nếu đã nhập văn bản mô tả ở trên):",
     type=["jpg", "jpeg", "png"],
     accept_multiple_files=True
 )
 
+images = []
 if uploaded_files:
     images = [Image.open(f) for f in uploaded_files]
     cols = st.columns(min(len(images), 4))
     for idx, img in enumerate(images):
         cols[idx % 4].image(img, caption=f"Ảnh {idx+1}", use_container_width=True)
 
-    if st.button("🚀 Bắt Đầu Bóc Tách DNA Nội Dung & Lên 5 Kịch Bản Gốc", type="primary", use_container_width=True):
-        with st.spinner(f"Đang bóc tách DNA và sáng tạo kịch bản thể loại '{selected_mode}'..."):
-            prompt = f"""
-            Phân tích dữ liệu đầu vào cho thể loại '{selected_mode}' theo phong cách '{selected_style}' và xuất JSON:
-            1. 'content_analysis':
-               - category_or_genre: Thể loại chi tiết
-               - core_subject_dna: Khóa chặt đặc tính cốt lõi (Nếu là sản phẩm: cơ khí, màu sắc, nút bấm. Nếu là nhân vật/câu chuyện: tạo hình, tuổi tác, trang phục. Nếu là nhà/cảnh quan: kiến trúc, vật liệu, ánh sáng).
-               - emotional_or_usp_hook: Thông điệp chạm cảm xúc hoặc Điểm bán hàng độc nhất (USP).
-               - visual_physics_rules: Quy chuẩn vật lý/thị giác bắt buộc cho thể loại này.
-               - target_audience: Khán giả mục tiêu.
-               - prompt_dna_lock: Chuỗi tiếng Anh cố định khóa chặt chủ thể để đưa vào mọi prompt Imagen 3 và Veo 3.
-            2. 'script_outlines': ĐÚNG 5 Ý TƯỞNG KỊCH BẢN GỐC (id: 1 đến 5):
-               - id: 1 đến 5
-               - title: Tên kịch bản hấp dẫn, sâu sắc
-               - setting_style: Bối cảnh không gian chính
-               - angle: Góc tiếp cận
-               - target_hook: Ý tưởng câu hook mở đầu 3-4s
-               - recommended_scenes_count: Phân bổ nhịp cảnh CHỈ DÙNG 4s, 6s, 8s (ví dụ: '4 cảnh (4s-6s-8s-8s)', '3 cảnh (4s-6s-8s)')
-               - voice_profile: {{gender: 'Nam'/'Nữ', age_range: 'Độ tuổi', tone: 'Âm điệu miền Bắc'}}
-            """
-            try:
-                sys_inst = get_system_instructions(selected_mode, selected_style)
-                data = generate_with_smart_retry([*images, prompt], sys_inst)
-                if isinstance(data, list) and len(data) > 0:
-                    data = data[0]
-                st.session_state.content_analysis = data.get("content_analysis", {})
-                st.session_state.all_scripts = data.get("script_outlines", [])
-                st.session_state.cloned_scripts = []
-                st.session_state.expanded_scripts = []
-                st.session_state.generated_details = {}
-                st.session_state.active_script_id = None
-                st.rerun()
-            except Exception as e:
-                st.error(f"Lỗi khởi tạo: {e}")
+# Kiểm tra người dùng đã nhập ít nhất 1 trong 2 nguồn dữ liệu
+can_generate = bool(input_text.strip()) or bool(images)
+
+if st.button("🚀 Bắt Đầu Bóc Tách DNA Nội Dung & Lên 5 Kịch Bản Gốc", type="primary", use_container_width=True, disabled=not can_generate):
+    with st.spinner(f"Đang bóc tách DNA và sáng tạo kịch bản thể loại '{selected_mode}'..."):
+        prompt = f"""
+        Phân tích dữ liệu đầu vào cho thể loại '{selected_mode}' theo phong cách '{selected_style}' và xuất JSON:
+        THÔNG TIN VĂN BẢN / CỐT TRUYỆN TỪ NGƯỜI DÙNG:
+        "{input_text.strip() if input_text.strip() else 'Không có mô tả văn bản, phân tích hoàn toàn từ ảnh.'}"
+
+        YÊU CẦU:
+        1. 'content_analysis':
+           - category_or_genre: Thể loại chi tiết
+           - core_subject_dna: Khóa chặt đặc tính cốt lõi (Nếu là sản phẩm: cơ khí, màu sắc, nút bấm. Nếu là nhân vật/cốt truyện: tính cách, tuổi tác, trang phục. Nếu là nhà/cảnh quan/xe: địa danh, kiến trúc, vật liệu, ánh sáng, thương hiệu xe).
+           - emotional_or_usp_hook: Thông điệp chạm cảm xúc hoặc Điểm bán hàng độc nhất (USP).
+           - visual_physics_rules: Quy chuẩn vật lý/thị giác bắt buộc cho thể loại này.
+           - target_audience: Khán giả mục tiêu.
+           - prompt_dna_lock: Chuỗi tiếng Anh cố định khóa chặt chủ thể để đưa vào mọi prompt Imagen 3 và Veo 3.
+        2. 'script_outlines': ĐÚNG 5 Ý TƯỞNG KỊCH BẢN GỐC (id: 1 đến 5):
+           - id: 1 đến 5
+           - title: Tên kịch bản hấp dẫn, sâu sắc
+           - setting_style: Bối cảnh không gian chính
+           - angle: Góc tiếp cận
+           - target_hook: Ý tưởng câu hook mở đầu 3-4s
+           - recommended_scenes_count: Phân bổ nhịp cảnh CHỈ DÙNG 4s, 6s, 8s (ví dụ: '4 cảnh (4s-6s-8s-8s)', '3 cảnh (4s-6s-8s)')
+           - voice_profile: {{gender: 'Nam'/'Nữ', age_range: 'Độ tuổi', tone: 'Âm điệu miền Bắc'}}
+        """
+        try:
+            sys_inst = get_system_instructions(selected_mode, selected_style)
+            # Nếu có ảnh thì gửi Multimodal (ảnh + text), nếu không có ảnh thì gửi Text-Only
+            api_payload = [*images, prompt] if images else [prompt]
+            data = generate_with_smart_retry(api_payload, sys_inst)
+            if isinstance(data, list) and len(data) > 0:
+                data = data[0]
+            st.session_state.content_analysis = data.get("content_analysis", {})
+            st.session_state.all_scripts = data.get("script_outlines", [])
+            st.session_state.cloned_scripts = []
+            st.session_state.expanded_scripts = []
+            st.session_state.generated_details = {}
+            st.session_state.active_script_id = None
+            st.rerun()
+        except Exception as e:
+            st.error(f"Lỗi khởi tạo: {e}")
 
 # Hiển thị Bóc tách DNA nội dung
 if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
