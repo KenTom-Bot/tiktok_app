@@ -437,22 +437,20 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     if not outline: return
     
     product_ctx = st.session_state.get("current_input_context", "Sản phẩm hiện tại")
-    
-    # Lấy thông tin màu sắc đã phân tích từ DNA để khóa cứng
     ca_data = st.session_state.get("content_analysis", {})
     locked_color_info = ca_data.get("mechanical_and_accessories", "giữ nguyên màu sắc thực tế từ ảnh gốc") if isinstance(ca_data, dict) else "giữ nguyên màu sắc thực tế"
     
-    with st.spinner(f"🎬 Đang dựng kịch bản chi tiết cảnh quay #{target_id} (Khóa chặt màu sắc gốc)..."):
+    with st.spinner(f"🎬 Đang dựng kịch bản chi tiết cảnh quay #{target_id} (Khóa màu & Tích hợp 100% Voice vào Video Prompt)..."):
         prompt_detail = f"""
         Sản phẩm gốc & Màu sắc thực tế cần khóa chặt: "{locked_color_info}" (Mô tả chung: {product_ctx})
         Thể loại nội dung: "{current_mode}"
         Ý tưởng kịch bản: ID {target_id} - {outline.get('title')}
         Bối cảnh định hướng: {outline.get('setting_style')} | Góc tiếp cận: {outline.get('angle')} | Hook: {outline.get('target_hook')}
         
-        QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC VỀ MÀU SẮC & KHÔNG ẢO GIÁC:
+        QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC (ĐẶC BIỆT QUAN TRỌNG VỀ VOICE TRONG VIDEO PROMPT):
         1. Thời lượng mỗi cảnh 'duration' chỉ dùng đúng 3 mốc: '4s', '6s', '8s'.
-        2. KHOÁ MÀU SẮC 100%: Trong 'image_prompt' (Imagen 3), BẮT BUỘC phải giữ nguyên màu sắc gốc của sản phẩm (ví dụ: nếu sản phẩm màu trắng xám thì trong prompt phải ghi rõ 'exact white-gray color body', tuyệt đối không được để AI tự đổi sang màu xám đậm, đen hay màu khác). Cấm thay đổi cấu tạo hoặc thêm chi tiết lạ.
-        3. Bối cảnh (setting_style và scene_setting) phù hợp 100% với tình huống thực tế sử dụng của sản phẩm.
+        2. KHÓA MÀU SẮC 100%: Trong 'image_prompt' (Imagen 3), bắt buộc giữ nguyên màu sắc gốc thực tế, không đổi màu, không thêm chi tiết thừa.
+        3. 100% VIDEO PROMPT CÓ VOICE & KHẨU HÌNH: Trong 'video_prompt' (Veo 3), BẮT BUỘC phải viết rõ hành động nhân vật đang vừa thao tác cơ khí vừa cất tiếng đọc lời thoại tiếng Việt miền Bắc chuẩn xác. Phải lồng trực tiếp đoạn thoại (voiceover_vi) và chỉ đạo khẩu hình, biểu cảm gương mặt vào trong câu lệnh video prompt để Veo 3 đồng bộ âm thanh và hình ảnh.
         4. Lời thoại 100% tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s), chỉ đạo ngữ điệu rõ ràng trong 'voice_director_vn'.
         
         Xuất chuẩn 1 Dict JSON duy nhất:
@@ -470,8 +468,8 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
               "transition_type": "Hard Cut", 
               "voice_director_vn": "Chỉ đạo ngữ điệu miền Bắc", 
               "voiceover_vi": "Lời thoại miền Bắc", 
-              "image_prompt": "Prompt Imagen 3 (9:16) giữ nguyên 100% màu sắc gốc thực tế, tuyệt đối không đổi màu, không thêm chi tiết thừa", 
-              "video_prompt": "Prompt Veo 3 chuyển động cơ khí thực tế, giữ nguyên màu sản phẩm"
+              "image_prompt": "Prompt Imagen 3 (9:16) giữ nguyên 100% màu sắc gốc thực tế, không đổi màu", 
+              "video_prompt": "Prompt Veo 3 kết hợp đồng thời hành động thao tác tay, biểu cảm gương mặt và lồng trực tiếp nội dung lời thoại tiếng Việt miền Bắc khớp khẩu hình nhân vật"
             }}
           ]
         }}
