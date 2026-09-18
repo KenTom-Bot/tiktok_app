@@ -316,23 +316,39 @@ with st.sidebar:
             try:
                 file_bytes = uploaded_project_file.getvalue()
                 loaded_proj = json.loads(file_bytes.decode("utf-8"))
-                if "all_scripts" in loaded_proj:
-                    st.session_state.active_project_title = loaded_proj.get("title", "Dự án tải lên")
-                    st.session_state.content_analysis = loaded_proj.get("content_analysis")
-                    st.session_state.all_scripts = loaded_proj.get("all_scripts", [])
-                    st.session_state.cloned_scripts = loaded_proj.get("cloned_scripts", [])
-                    st.session_state.expanded_scripts = loaded_proj.get("expanded_scripts", [])
-                    st.session_state.generated_details = {int(k): v for k, v in loaded_proj.get("generated_details", {}).items()}
-                    
-                    # BỔ SUNG: Đặt lại active_script_id về None để hiển thị danh sách kịch bản ra màn hình chính
-                    st.session_state.active_script_id = None
-                    
-                    st.success("🎉 Đã khôi phục thành công dự án từ file!")
-                    st.rerun()
-                else:
-                    st.error("❌ Định dạng file JSON không hợp lệ!")
+                
+                # Bắt linh hoạt các dạng cấu trúc file JSON khác nhau từ các bản trước
+                proj_data = loaded_proj
+                if "projects_library" in loaded_proj and len(loaded_proj["projects_library"]) > 0:
+                    first_key = list(loaded_proj["projects_library"].keys())[0]
+                    proj_data = loaded_proj["projects_library"][first_key]
+                elif "all_scripts" not in loaded_proj and isinstance(loaded_proj, dict):
+                    # Nếu file chứa thẳng dữ liệu dự án
+                    proj_data = loaded_proj
+
+                # Nạp dữ liệu an toàn vào session state
+                st.session_state.active_project_title = proj_data.get("title", "Dự án tải lên")
+                st.session_state.content_analysis = proj_data.get("content_analysis")
+                
+                # Quét mọi biến thể tên key chứa danh sách kịch bản
+                scripts = proj_data.get("all_scripts", [])
+                if not scripts and "script_outlines" in proj_data:
+                    scripts = proj_data.get("script_outlines", [])
+                st.session_state.all_scripts = scripts
+                
+                st.session_state.cloned_scripts = proj_data.get("cloned_scripts", [])
+                st.session_state.expanded_scripts = proj_data.get("expanded_scripts", [])
+                
+                raw_details = proj_data.get("generated_details", {})
+                st.session_state.generated_details = {int(k): v for k, v in raw_details.items()} if raw_details else {}
+                
+                # Buộc hiển thị ra danh sách chính thay vì kẹt ở chế độ xem chi tiết
+                st.session_state.active_script_id = None
+                
+                st.success("🎉 Đã khôi phục thành công dự án từ file!")
+                st.rerun()
             except Exception as e:
-                st.error(f"❌ Lỗi đọc file: {e}")
+                st.error(f"❌ Lỗi đọc file JSON: {e}")
 
 def safe_copy_button(text_to_copy: str, button_label: str = "📋 Sao Chép Prompt"):
     b64 = base64.b64encode(text_to_copy.encode('utf-8')).decode('utf-8')
