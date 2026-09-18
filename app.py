@@ -770,9 +770,23 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
     with col_right:
         st.markdown("""
         <div class="custom-card" style="background: #f8fafc;">
-            <div style="color: #0f172a; font-weight: 800; font-size: 1.1rem; margin-bottom: 10px;">📋 Danh Sách Kịch Bản Hệ Thống</div>
+            <div style="color: #0f172a; font-weight: 800; font-size: 1.1rem; margin-bottom: 10px;">📋 Kịch Bản Chưa Tạo Chi Tiết</div>
         </div>
         """, unsafe_allow_html=True)
+
+        # Lọc danh sách: Chỉ giữ lại những kịch bản CHƯA ĐƯỢC TẠO CHI TIẾT
+        pending_scripts = [item for item in all_combined_scripts_list if item.get("id") not in st.session_state.generated_details]
+
+        if not pending_scripts:
+            st.success("🎉 Tuyệt vời! Tất cả các kịch bản trong danh sách đã được tạo chi tiết thành công.")
+        else:
+            for item in pending_scripts:
+                it_id = item.get("id")
+                st.markdown(f"• **#{it_id}. {item.get('title')}** — <span class='badge-pending'>CHƯA TẠO</span>", unsafe_allow_html=True)
+                
+                if st.button("✨ Tạo chi tiết ngay", key=f"nav_sc_{it_id}", use_container_width=True):
+                    create_scene_details_for_id(it_id, selected_mode, selected_style)
+                st.markdown("<hr style='margin: 6px 0;'>", unsafe_allow_html=True)
 
         for item in all_combined_scripts_list:
             it_id = item.get("id")
