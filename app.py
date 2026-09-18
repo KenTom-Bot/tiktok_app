@@ -533,8 +533,8 @@ st.markdown("---")
 input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô tả chi tiết sản phẩm:", height=100)
 uploaded_files = st.file_uploader("🖼️ Tải ảnh tham chiếu (Tùy chọn):", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
-if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files)):
-    with st.spinner("⏳ Đang phân tích chuyên sâu cấu tạo, nút bấm, kích thước và thông số cơ khí..."):
+if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files)):
+    with st.spinner("⏳ Đang quét màu sắc thực tế từ ảnh và phân tích chuyên sâu cơ khí..."):
         try:
             st.session_state.current_input_context = input_text.strip() if input_text else "Phân tích trực tiếp từ hình ảnh đính kèm sản phẩm."
             
@@ -542,25 +542,25 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận K�
             Phân tích siêu chuyên sâu sản phẩm/chủ đề cho thể loại '{selected_mode}' theo phong cách '{selected_style}'. 
             Thông tin mô tả từ người dùng: "{st.session_state.current_input_context}"
 
-            YÊU CẦU ĐẶC BIỆT: Phải bóc tách cực kỳ chi tiết về mặt cơ khí và thiết kế vật lý của sản phẩm để phục vụ việc tạo prompt video chân thật (Veo 3):
-            1. Cấu tạo chi tiết: Vị trí, màu sắc và chất liệu của nút bấm nguồn, cổng sạc, đèn LED hiển thị pin, cấu trúc cốc chứa rác trong suốt.
-            2. Thông số vật lý: Kích thước cầm tay gọn gàng, trọng lượng nhẹ, công thái học của tay cầm.
-            3. Chi tiết phụ kiện & cách dùng: Từng đầu hút chuyên dụng, cách tháo lắp, hướng dẫn sử dụng chi tiết cho từng chế độ.
+            YÊU CẦU ĐẶC BIỆT VỀ MÀU SẮC VÀ HÌNH THỰC TẾ (RẤT QUAN TRỌNG):
+            1. Nhận diện màu sắc chuẩn xác: Nếu có hình ảnh đính kèm, phải quét và xác định chính xác tông màu thực tế của sản phẩm (ví dụ: Xám Titan nhám, Đen nhung mờ, Bạc ánh kim, Trắng sứ, v.v.). Tuyệt đối không được đoán mò hoặc dùng màu chung chung.
+            2. Cấu tạo cơ khí: Vị trí nút bấm, chất liệu nhựa ABS cao cấp, cốc chứa rác trong suốt và trọn bộ đầu phụ kiện.
+            3. Khóa thị giác (Visual DNA Lock): Định nghĩa rõ mã màu Hero Color này để toàn bộ các prompt ảnh (Imagen 3) và video (Veo 3) sau này sinh ra phải khớp 100% với sản phẩm thật ngoài đời.
 
             BẮT BUỘC TRẢ VỀ ĐỊNH DẠNG JSON CHUẨN GỒM CÁC KEY SAU:
             {{
               "content_analysis": {{
-                "mechanical_and_accessories": "Mô tả siêu chi tiết: Cấu tạo thân máy, vị trí nút bấm, cổng sạc, đèn báo pin, trọng lượng, kích thước cầm nắm và trọn bộ đầu phụ kiện kèm hướng dẫn sử dụng.",
-                "customer_pain_points": "Phân tích 3 tầng nỗi đau của khách hàng (Chức năng, Tài chính - giá hời tại xưởng, Cảm xúc).",
-                "core_desires": "Mong muốn cốt lõi và khao khát lớn nhất.",
+                "mechanical_and_accessories": "Mô tả chuẩn xác màu sắc thực tế (Hero Color), chất liệu nhám/bóng, vị trí nút bấm, cổng sạc, trọng lượng và trọn bộ đầu phụ kiện.",
+                "customer_pain_points": "Phân tích 3 tầng nỗi đau của khách hàng (Chức năng làm sạch, Tài chính - giá hời tại xưởng, Cảm xúc).",
+                "core_desires": "Mong muốn cốt lõi và khao khát sở hữu thiết bị tiện ích.",
                 "emotional_or_usp_hook": "Slogan, USP độc quyền hoặc câu hook giật gân chốt đơn.",
                 "visual_physics_rules": "Quy chuẩn vật lý khi chuyển động (lực hút lốc xoáy Vortex, bụi mịn bị hút bay).",
-                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ toàn bộ video, mô tả rõ màu sắc Hero Color và ánh sáng showroom/xưởng."
+                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ, bắt buộc ghim chính xác màu sắc thực tế (Hero Color) và ánh sáng showroom/xưởng."
               }},
               "script_outlines": [
                 {{
                   "id": 1,
-                  "title": "Tên kịch bản 1 (Tập trung thao tác nút bấm & lực hút xưởng)",
+                  "title": "Tên kịch bản 1 (Tập trung thao tác nút bấm & màu sắc thực tế)",
                   "setting_style": "Bối cảnh xưởng/kho/showroom",
                   "angle": "Góc tiếp cận chuyển đổi",
                   "target_hook": "Câu mở đầu giật gân",
@@ -618,7 +618,7 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận K�
             st.session_state.content_analysis = res.get("content_analysis")
             st.session_state.all_scripts = res.get("script_outlines", [])
             st.session_state.cloned_scripts, st.session_state.expanded_scripts, st.session_state.generated_details, st.session_state.active_script_id = [], [], {}, None
-            st.success("✅ Phân tích chi tiết cơ khí và phụ kiện thành công!")
+            st.success("✅ Đã quét màu sắc thực tế và phân tích DNA thành công!")
             st.rerun()
         except Exception as e:
             st.error(f"❌ Lỗi thực thi: {e}")
