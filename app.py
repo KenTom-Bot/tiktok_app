@@ -384,15 +384,17 @@ def get_system_instructions(mode: str, style: str) -> str:
 BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
 PHONG CÁCH KẾT XUẤT THỊ GIÁC: {style.upper()}
 
-QUY TẮC KHÓA SẢN PHẨM & TÍNH CHÂN THẬT (VISUAL DNA LOCK):
-1. KHÓA TỈ LỆ & MÀU SẮC THỰC TẾ: Trong mọi 'image_prompt' và 'video_prompt', BẮT BUỘC phải neo giữ chính xác màu sắc chủ đạo (Hero Color), chất liệu (nhựa ABS cao cấp, nhôm xám titan, cốc trong suốt), tỷ lệ kích thước cầm tay gọn gàng và trọng lượng thực tế của sản phẩm. Không được phép để AI tự sinh ra hình dáng sai lệch so với mô tả gốc.
+QUY TẮC ĐẠO DIỄN BỐI CẢNH & LỜI THOẠI LINH HOẠT (100% PHÙ HỢP TÌNH HUỐNG):
+1. BỐI CẢNH THỰC TẾ & ĐA DẠNG: Bối cảnh (setting_style) phải biến đổi linh hoạt theo đúng bản chất sản phẩm và thể loại nội dung:
+   - Nếu là TikTok Shop thiên về xả kho, deal sốc, giá xưởng: Đặt tại Kho hàng, Phân xưởng, Showroom (với lời thoại 'kho bên em', 'xưởng sản xuất trực tiếp').
+   - Nếu là Mẹ & Bé, Đời sống, Chữa lành: Đặt tại không gian gia đình ấm cúng (phòng ngủ, phòng khách, ban công, góc học tập).
+   - Nếu là Du lịch, Xe cộ, Trải nghiệm: Đặt tại ngoại cảnh thiên nhiên, đường phố, nội thất ô tô.
 2. THỜI LƯỢNG MỖI CẢNH: CHỈ DÙNG 3 MỐC: 4s, 6s, 8s (CẤM MỐC 10 GIÂY).
-3. BỐI CẢNH KÍCH CẦU: Ưu tiên bối cảnh xưởng sản xuất, kho hàng tổng hoặc showroom trưng bày trực tiếp. Nhấn mạnh giá tận gốc không qua trung gian.
-4. BIỂU CẢM & THAO TÁC CƠ KHÍ: Miêu tả chi tiết vị trí nút bấm nguồn, cổng sạc, thao tác tháo lắp 6 đầu phụ kiện, kết hợp biểu cảm gương mặt tự tin, hào hứng của nhân vật.
-5. LỜI THOẠI (VOICEOVER): 100% tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s). Màn hình sạch (không text overlay, không sub nổi, không logo, không watermark).
+3. BIỂU CẢM & THAO TÁC CƠ KHÍ: Miêu tả chi tiết vị trí nút bấm, cổng sạc, thao tác thực tế kết hợp biểu cảm gương mặt tự tin, hào hứng của nhân vật.
+4. LỜI THOẠI (VOICEOVER): 100% tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s). Màn hình sạch (không text overlay, không sub nổi, không logo, không watermark).
 """
     if mode == "🛒 TikTok Shop & Bán Hàng":
-        return base + "\n- BẮT BUỘC ĐƯA THÔNG SỐ CƠ KHÍ THỰC TẾ VÀO PROMPT ĐỂ ẢNH VÀ VIDEO KHỚP 100% VỚI SẢN PHẨM NGOÀI ĐỜI THỰC."
+        return base + "\n- Riêng thể loại TikTok Shop bán hàng giá hời: Linh hoạt giữa kho xưởng (khi nói về deal/giá) và không gian sử dụng thực tế (khi test tính năng)."
     return base
 def call_gemini_api(contents, system_inst):
     for attempt in range(4):
@@ -440,18 +442,21 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     
     product_ctx = st.session_state.get("current_input_context", "Sản phẩm hiện tại")
     
-    with st.spinner(f"🎬 Đang dựng kịch bản chi tiết cảnh quay #{target_id} (Khóa chặt xưởng & giá xốc)..."):
+    with st.spinner(f"🎬 Đang dựng kịch bản chi tiết cảnh quay #{target_id} (Phù hợp 100% tình huống thực tế)..."):
         prompt_detail = f"""
         Sản phẩm gốc: "{product_ctx}"
-        Ý tưởng kịch bản: ID {target_id} - {outline.get('title')} ({current_mode})
+        Thể loại nội dung: "{current_mode}"
+        Ý tưởng kịch bản: ID {target_id} - {outline.get('title')}
         Bối cảnh định hướng: {outline.get('setting_style')} | Góc tiếp cận: {outline.get('angle')} | Hook: {outline.get('target_hook')}
         
         QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC:
         1. Thời lượng mỗi cảnh 'duration' chỉ dùng đúng 3 mốc: '4s', '6s', '8s' (CẤM DÙNG 10s).
-        2. Bối cảnh bắt buộc xuất hiện tại XƯỞNG SẢN XUẤT, KHO HÀNG TỔNG hoặc SHOWROOM TRƯNG BÀY (nhấn mạnh kho xưởng không qua trung gian).
-        3. Lồng ghép yếu tố GIÁ TẬN GỐC TẠI KHO, DEAL GIẢM GIÁ SỐC ngay trong lời thoại và hình ảnh.
-        4. Miêu tả cực kỳ chi tiết biểu cảm gương mặt nhân vật và cử chỉ tay thao tác trực tiếp với sản phẩm, nút bấm, phụ kiện.
-        5. Lời thoại 100% tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s), chỉ đạo ngữ điệu rõ ràng trong 'voice_director_vn'.
+        2. Bối cảnh (setting_style và scene_setting) PHẢI PHÙ HỢP 100% VỚI TÌNH HUỐNG THỰC TẾ CỦA SẢN PHẨM:
+           - Tuyệt đối không gượng ép đưa tất cả vào kho xưởng. 
+           - Nếu sản phẩm dùng trong ô tô/gia đình thì bối cảnh là nội thất xe ô tô hoặc phòng khách/phòng ngủ thực tế.
+           - Chỉ dùng kho xưởng/showroom khi nội dung kịch bản là xả kho, báo giá tận xưởng.
+        3. Miêu tả cực kỳ chi tiết biểu cảm gương mặt nhân vật và cử chỉ tay thao tác trực tiếp với sản phẩm, nút bấm, phụ kiện.
+        4. Lời thoại 100% tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s), chỉ đạo ngữ điệu rõ ràng trong 'voice_director_vn'.
         
         Xuất chuẩn 1 Dict JSON duy nhất:
         {{
@@ -464,11 +469,11 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
             {{
               "scene_number": 1, 
               "duration": "4s", 
-              "scene_setting": "Bối cảnh xưởng/kho/showroom, miêu tả chi tiết biểu cảm nhân vật và thao tác cơ khí", 
+              "scene_setting": "Bối cảnh phù hợp thực tế tình huống sử dụng, miêu tả chi tiết biểu cảm nhân vật và thao tác cơ khí", 
               "transition_type": "Hard Cut", 
-              "voice_director_vn": "Chỉ đạo ngữ điệu miền Bắc hào hứng, thuyết phục", 
+              "voice_director_vn": "Chỉ đạo ngữ điệu miền Bắc phù hợp cảm xúc tình huống", 
               "voiceover_vi": "Lời thoại miền Bắc chuẩn", 
-              "image_prompt": "Prompt Imagen 3 (9:16) siêu thực", 
+              "image_prompt": "Prompt Imagen 3 (9:16) thực tế theo đúng không gian tình huống", 
               "video_prompt": "Prompt Veo 3 tích hợp biểu cảm gương mặt, cử chỉ tay và thoại"
             }}
           ]
