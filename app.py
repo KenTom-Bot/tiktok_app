@@ -438,23 +438,22 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     
     product_ctx = st.session_state.get("current_input_context", "Sản phẩm hiện tại")
     
-    with st.spinner(f"🎬 Đang dựng kịch bản chi tiết cảnh quay #{target_id} (Phù hợp 100% tình huống thực tế)..."):
+    # Lấy thông tin màu sắc đã phân tích từ DNA để khóa cứng
+    ca_data = st.session_state.get("content_analysis", {})
+    locked_color_info = ca_data.get("mechanical_and_accessories", "giữ nguyên màu sắc thực tế từ ảnh gốc") if isinstance(ca_data, dict) else "giữ nguyên màu sắc thực tế"
+    
+    with st.spinner(f"🎬 Đang dựng kịch bản chi tiết cảnh quay #{target_id} (Khóa chặt màu sắc gốc)..."):
         prompt_detail = f"""
-        Sản phẩm gốc: "{product_ctx}"
+        Sản phẩm gốc & Màu sắc thực tế cần khóa chặt: "{locked_color_info}" (Mô tả chung: {product_ctx})
         Thể loại nội dung: "{current_mode}"
         Ý tưởng kịch bản: ID {target_id} - {outline.get('title')}
         Bối cảnh định hướng: {outline.get('setting_style')} | Góc tiếp cận: {outline.get('angle')} | Hook: {outline.get('target_hook')}
         
-        QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC:
-        1. Thời lượng mỗi cảnh 'duration' chỉ dùng đúng 3 mốc: '4s', '6s', '8s' (CẤM DÙNG 10s).
-        2. Bối cảnh (setting_style và scene_setting) PHẢI PHÙ HỢP 100% VỚI TÌNH HUỐNG THỰC TẾ CỦA SẢN PHẨM:
-           - Tuyệt đối không gượng ép đưa tất cả vào kho xưởng. 
-           - Nếu sản phẩm dùng trong ô tô/gia đình thì bối cảnh là nội thất xe ô tô hoặc phòng khách/phòng ngủ thực tế.
-           - Chỉ dùng kho xưởng/showroom khi nội dung kịch bản là xả kho, báo giá tận xưởng.
-        3. Miêu tả cực kỳ chi tiết biểu cảm gương mặt nhân vật và cử chỉ tay thao tác trực tiếp với sản phẩm, nút bấm, phụ kiện.
+        QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC VỀ MÀU SẮC & KHÔNG ẢO GIÁC:
+        1. Thời lượng mỗi cảnh 'duration' chỉ dùng đúng 3 mốc: '4s', '6s', '8s'.
+        2. KHOÁ MÀU SẮC 100%: Trong 'image_prompt' (Imagen 3), BẮT BUỘC phải giữ nguyên màu sắc gốc của sản phẩm (ví dụ: nếu sản phẩm màu trắng xám thì trong prompt phải ghi rõ 'exact white-gray color body', tuyệt đối không được để AI tự đổi sang màu xám đậm, đen hay màu khác). Cấm thay đổi cấu tạo hoặc thêm chi tiết lạ.
+        3. Bối cảnh (setting_style và scene_setting) phù hợp 100% với tình huống thực tế sử dụng của sản phẩm.
         4. Lời thoại 100% tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s), chỉ đạo ngữ điệu rõ ràng trong 'voice_director_vn'.
-        5. Trong 'image_prompt' (Imagen 3, 9:16): Miêu tả trung thực tuyệt đối đúng màu sắc, chất liệu, kích thước thực tế của sản phẩm. Tuyệt đối không thêm đèn LED rực rỡ hay chi tiết lạ. Đặt trong không gian thực tế phù hợp.
-        6. Trong 'video_prompt' (Veo 3): Chỉ miêu tả chuyển động vật lý thực tế (bấm nút nguồn cơ khí, thao tác tay, lực hút bụi). CẤM phát sinh thêm đèn sáng, tia lửa điện hay chi tiết công nghệ giả.
         
         Xuất chuẩn 1 Dict JSON duy nhất:
         {{
@@ -467,12 +466,12 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
             {{
               "scene_number": 1, 
               "duration": "4s", 
-              "scene_setting": "Bối cảnh phù hợp thực tế tình huống sử dụng, miêu tả chi tiết biểu cảm nhân vật và thao tác cơ khí", 
+              "scene_setting": "Bối cảnh phù hợp thực tế tình huống sử dụng", 
               "transition_type": "Hard Cut", 
-              "voice_director_vn": "Chỉ đạo ngữ điệu miền Bắc phù hợp cảm xúc tình huống", 
-              "voiceover_vi": "Lời thoại miền Bắc chuẩn", 
-              "image_prompt": "Prompt Imagen 3 (9:16) thực tế theo đúng không gian tình huống, đúng màu, không thêm chi tiết thừa", 
-              "video_prompt": "Prompt Veo 3 tích hợp biểu cảm gương mặt, cử chỉ tay và thoại, chuyển động cơ khí thực tế, nghiêm cấm tự sinh đèn LED hay chi tiết lạ"
+              "voice_director_vn": "Chỉ đạo ngữ điệu miền Bắc", 
+              "voiceover_vi": "Lời thoại miền Bắc", 
+              "image_prompt": "Prompt Imagen 3 (9:16) giữ nguyên 100% màu sắc gốc thực tế, tuyệt đối không đổi màu, không thêm chi tiết thừa", 
+              "video_prompt": "Prompt Veo 3 chuyển động cơ khí thực tế, giữ nguyên màu sản phẩm"
             }}
           ]
         }}
@@ -485,7 +484,6 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
             st.rerun()
         except Exception as e:
             st.error(f"Lỗi dựng chi tiết kịch bản: {e}")
-
 # ==============================================================================
 # GIAO DIỆN CHÍNH
 # ==============================================================================
