@@ -384,12 +384,12 @@ def get_system_instructions(mode: str, style: str) -> str:
 BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
 PHONG CÁCH KẾT XUẤT THỊ GIÁC: {style.upper()}
 
-🛑 QUY TẮC CHỐNG ẢO GIÁC & KHÓA SẢN PHẨM THỰC TẾ (RẤT QUAN TRỌNG):
-1. TUYỆT ĐỐI KHÔNG THÊU DỆT CHI TIẾT GIẢ: Trong 'image_prompt' và 'video_prompt', CẤM TUYỆT ĐỐI việc tự ý thêm đèn LED phát sáng (trừ khi sản phẩm thực tế có đèn báo pin nhỏ được mô tả), cấm thêm các nút bấm giả, cấm thêm khe tản nhiệt hầm hố hay bất kỳ chi tiết cơ khí nào mà sản phẩm thực tế không có. Sản phẩm phải giống y hệt ảnh/mô tả gốc.
-2. KHÓA CHUẨN MÀU SẮC & KÍCH THƯỚC: Phải lặp lại chính xác tông màu thực tế (Hero Color), chất liệu (nhựa ABS, nhôm, v.v.) và tỷ lệ kích thước cầm tay nhỏ gọn trong mọi prompt. 
-3. BỐI CẢNH LINH HOẠT THEO TÌNH HUỐNG: Bối cảnh phải phù hợp 100% với không gian sử dụng thực tế của sản phẩm (vd: máy hút bụi ô tô thì dùng ở nội thất xe, chăn ga thì dùng ở phòng ngủ, không gian chữa lành thì dùng phòng khách/ban công).
+🛑 QUY TẮC BẮT BUỘC VỀ NHÂN VẬT & TÍNH CHÂN THẬT (VIETNAMESE CHARACTER LOCK):
+1. 100% NHÂN VẬT LÀ NGƯỜI VIỆT NAM: Trong mọi 'image_prompt' và 'video_prompt', nhân vật xuất hiện (nam hoặc nữ) bắt buộc phải là người Việt Nam với gương mặt, nét đẹp Á Đông thuần túy, trang phục hiện đại, lịch sự, gần gũi phong cách người Việt. Tuyệt đối không để người nước ngoài hoặc lai Tây.
+2. KHÓA MÀU SẮC & KHÔNG ẢO GIÁC: Giữ nguyên 100% màu sắc và chất liệu thực tế của sản phẩm từ ảnh gốc. Cấm tự ý thêm đèn LED rực rỡ hay chi tiết cơ khí giả mà sản phẩm không có.
+3. VẬT LÝ HÚT/THỔI ĐÚNG CHIỀU: Mô tả rõ ràng luồng khí hút bụi đi ngược vào đầu vòi và xoáy trực tiếp vào cốc chứa rác trong suốt.
 4. THỜI LƯỢNG MỖI CẢNH: CHỈ DÙNG 3 MỐC: 4s, 6s, 8s (CẤM MỐC 10 GIÂY).
-5. LỜI THOẠI (VOICEOVER): 100% tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s). Màn hình sạch (không text overlay, không sub nổi, không logo, không watermark).
+5. VOICE & KHẨU HÌNH: 100% video prompt có lồng tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s) kèm chỉ đạo khẩu hình khớp nhân vật. Màn hình sạch (không text, không logo, không watermark).
 """
     return base
 def call_gemini_api(contents, system_inst):
@@ -438,24 +438,20 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     
     product_ctx = st.session_state.get("current_input_context", "Sản phẩm hiện tại")
     ca_data = st.session_state.get("content_analysis", {})
+    exact_color_spec = ca_data.get("mechanical_and_accessories", "Giữ nguyên màu sắc chuẩn xác từ ảnh thực tế") if isinstance(ca_data, dict) else "Giữ nguyên màu sắc"
     
-    # Lấy thông tin chi tiết cấu tạo và màu sắc từ phần phân tích DNA để neo cứng
-    exact_color_spec = "Giữ nguyên màu sắc chuẩn xác từ ảnh thực tế"
-    if isinstance(ca_data, dict):
-        exact_color_spec = ca_data.get("mechanical_and_accessories", "Giữ nguyên màu sắc chuẩn xác từ ảnh thực tế")
-    
-    with st.spinner(f"🎬 Đang dựng kịch bản chi tiết cảnh quay #{target_id} (Khóa chặt mã màu tuyệt đối)..."):
+    with st.spinner(f"🎬 Đang dựng chi tiết cảnh quay #{target_id} (Khóa nhân vật Việt Nam & Màu sắc thực tế)..."):
         prompt_detail = f"""
-        Sản phẩm gốc & MÃ MÀU THỰC TẾ BẮT BUỘC TUÂN THỦ: "{exact_color_spec}" (Ngữ cảnh: {product_ctx})
+        Sản phẩm gốc & MÃ MÀU THỰC TẾ: "{exact_color_spec}" (Ngữ cảnh: {product_ctx})
         Thể loại nội dung: "{current_mode}"
         Ý tưởng kịch bản: ID {target_id} - {outline.get('title')}
         Bối cảnh định hướng: {outline.get('setting_style')} | Góc tiếp cận: {outline.get('angle')} | Hook: {outline.get('target_hook')}
         
-        QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC VỀ MÀU SẮC (CỰC KỲ NGHIÊM NGẶT):
+        QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC:
         1. THỜI LƯỢNG MỖI CẢNH: Chỉ dùng 3 mốc: '4s', '6s', '8s'.
-        2. KHÓA CỨNG MÀU SẮC 100% (ANTI-COLOR SHIFT): Trong 'image_prompt' (Imagen 3, tỷ lệ 9:16), PHẢI viết rõ tuyệt đối sắc độ màu nguyên bản của sản phẩm (ví dụ: nếu sản phẩm có thân màu trắng xám kết hợp chi tiết xám đen/tối, phải ghi rõ: 'exact original white-gray body color with dark gray accents, strictly maintain this exact color scheme, zero color deviation'). Cấm tuyệt đối AI tự ý đổi sang màu khác.
-        3. VẬT LÝ HÚT/THỔI ĐÚNG CHIỀU: Mô tả luồng khí hút bụi đi ngược vào đầu vòi và xoáy trực tiếp vào cốc chứa rác trong suốt.
-        4. 100% VIDEO PROMPT CÓ VOICE & KHẨU HÌNH: Trong 'video_prompt', tích hợp đồng thời thao tác tay, biểu cảm gương mặt và lồng trực tiếp đoạn thoại miền Bắc.
+        2. 100% NHÂN VẬT VIỆT NAM: Trong 'image_prompt' và 'video_prompt', bắt buộc ghi rõ nhân vật là người Việt Nam trẻ trung, chuyên nghiệp, nét mặt Á Đông gần gũi.
+        3. KHÓA MÀU SẮC GỐC & VẬT LÝ HÚT BỤI: Giữ nguyên màu sắc sản phẩm gốc, không đổi màu. Mô tả hướng hút bụi xoáy trực tiếp vào cốc chứa trong suốt.
+        4. VOICE MIỀN BẮC & KHẨU HÌNH: Tích hợp đồng thời hành động, biểu cảm gương mặt và lời thoại tiếng Việt miền Bắc trong `video_prompt`.
         
         Xuất chuẩn 1 Dict JSON duy nhất:
         {{
@@ -468,18 +464,18 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
             {{
               "scene_number": 1, 
               "duration": "4s", 
-              "scene_setting": "Bối cảnh thực tế phù hợp tình huống", 
+              "scene_setting": "Bối cảnh thực tế với nhân vật người Việt Nam", 
               "transition_type": "Hard Cut", 
               "voice_director_vn": "Chỉ đạo ngữ điệu miền Bắc", 
               "voiceover_vi": "Lời thoại miền Bắc", 
-              "image_prompt": "Prompt Imagen 3 (9:16) khóa chặt tuyệt đối màu sắc gốc từ ảnh thực tế, định nghĩa rõ màu thân máy, không được phép thay đổi màu sắc dưới mọi hình thức", 
-              "video_prompt": "Prompt Veo 3 mô tả đúng hướng vật lý hút bụi vào cốc trong suốt, kết hợp lồng tiếng thoại miền Bắc khớp khẩu hình"
+              "image_prompt": "Prompt Imagen 3 (9:16) có sự xuất hiện của người mẫu/reviewer người Việt Nam, giữ nguyên màu sắc gốc sản phẩm", 
+              "video_prompt": "Prompt Veo 3 miêu tả nhân vật người Việt Nam vừa thao tác hút bụi đúng chiều vật lý vừa đọc lời thoại miền Bắc khớp khẩu hình"
             }}
           ]
         }}
         """
         try:
-            res = call_gemini_api([prompt_detail], get_system_instructions(selected_mode, selected_style))
+            res = call_gemini_api([prompt_detail], get_system_instructions(current_mode, current_style))
             if isinstance(res, list): res = res[0]
             st.session_state.generated_details[target_id] = res
             st.session_state.active_script_id = target_id
