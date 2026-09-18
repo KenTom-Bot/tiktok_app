@@ -176,7 +176,7 @@ if ADMIN_EMAIL not in st.session_state.licensed_accounts:
     save_licensed_accounts(st.session_state.licensed_accounts)
 
 # ==============================================================================
-# HÀM XỬ LÝ ĐĂNG NHẬP (HỖ TRỢ NHẤN ENTER)
+# XỬ LÝ ĐĂNG NHẬP (HỖ TRỢ ENTER)
 # ==============================================================================
 def process_login(login_val):
     input_val = login_val.strip()
@@ -245,7 +245,7 @@ with st.sidebar:
                 options=[
                     "🛒 TikTok Shop & Bán Hàng", "👶 Mẹ & Bé & Cùng Con Học", "📺 TVC Quảng Cáo & Thương Hiệu",
                     "🏡 Nhà Cửa & Kiến Trúc", "🌿 Du Lịch & Phong Cảnh", "🚗 Xe Cộ & Trải Nghiệm Lái",
-                    "🍲 Ẩm Thực & Đời Sống", "📖 Đời Sống & Giáo Dục", "🏛️ Lịch Sử & Di Sản", "🧘 Chữa Lành & Lifestyle"
+                    "🍲 Ẩm Thực & Đời Sống", "📖 Đời Sống & Giáo Dục", "🏛️ Lịch Sử & Tín Ngưỡng Di Sản", "🧘 Chữa Lành & Lifestyle"
                 ],
                 default=["🛒 TikTok Shop & Bán Hàng"]
             )
@@ -325,14 +325,6 @@ def clean_and_parse_json(text_content: str):
     if isinstance(parsed, list) and len(parsed) > 0: parsed = parsed[0]
     return parsed
 
-def optimize_image_for_api(image: Image.Image, max_dimension: int = 896, quality: int = 85) -> Image.Image:
-    img = image.convert("RGB") if image.mode != "RGB" else image.copy()
-    if max(img.size) > max_dimension: img.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
-    buffer = io.BytesIO()
-    img.save(buffer, format="JPEG", quality=quality, optimize=True)
-    buffer.seek(0)
-    return Image.open(buffer)
-
 def format_analysis_field(field_val) -> str:
     if isinstance(field_val, dict):
         return "<br>".join([f"• <b>{k.replace('_', ' ').title()}:</b> {v}" for k, v in field_val.items()])
@@ -351,7 +343,7 @@ def get_system_instructions(mode: str, style: str) -> str:
 BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
 PHONG CÁCH KẾT XUẤT THỊ GIÁC: """ + style.upper() + r"""
 QUY TẮC ĐẠO DIỄN & LỜI THOẠI BẮT BUỘC:
-1. THỜI LƯỢNG MỖI CẢNH: CHỈ DÙNG 3 MỐC: 4s, 6s, 8s. TUYỆT ĐỐI CẤM DÙNG MỐC 10 GIÂY.
+1. THỜI LƯỢNG MỖI CẢNH: CHỈ ĐƯỢC DÙNG 3 MỐC: 4s, 6s, 8s. TUYỆT ĐỐI CẤM DÙNG MỐC 10 GIÂY.
 2. 100% CÁC PHÂN CẢNH ĐỀU PHẢI CÓ LỜI THOẠI (VOICEOVER).
 3. ĐỊNH MỨC TỪ VỰNG: Cảnh 4s (10-12 từ), Cảnh 6s (15-18 từ), Cảnh 8s (22-25 từ). Giọng miền Bắc chuẩn Hà Nội.
 4. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
@@ -373,10 +365,14 @@ def generate_with_smart_retry(contents, system_inst, max_tokens=16384):
             )
             return clean_and_parse_json(response.text)
         except Exception as e:
-            if "429" in str(e): time.sleep(35)
-            elif "503" in str(e): time.sleep(3 * (attempt + 1))
-            else: raise e
-    raise Exception("Quá giới hạn thử lại.")
+            err_msg = str(e)
+            if "429" in err_msg: 
+                time.sleep(35)
+            elif "503" in err_msg: 
+                time.sleep(3 * (attempt + 1))
+            else: 
+                raise e
+    raise Exception("Quá giới hạn thử lại API.")
 
 def create_scene_details_for_id(target_id: int, current_mode: str, current_style: str):
     all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
@@ -470,26 +466,31 @@ st.markdown("---")
 input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô tả chi tiết sản phẩm:", height=100)
 uploaded_files = st.file_uploader("🖼️ Tải ảnh tham chiếu (Tùy chọn):", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
-if st.button("🚀 Bắt Đầu Phân Tích Sản Phẩm & Lên Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files)):
-    with st.spinner("Đang xử lý hình ảnh và phân tích chuyên sâu dữ liệu đầu vào..."):
-        prompt = f"Phân tích chuyên sâu cho '{selected_mode}' phong cách '{selected_style}'. Nội dung: '{input_text.strip() if input_text else 'Phân tích qua hình ảnh đính kèm.'}'."
+if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files)):
+    with st.spinner("⏳ Đang xử lý hình ảnh và phân tích chuyên sâu dữ liệu đầu vào qua Gemini API..."):
         try:
-            # Xử lý an toàn danh sách ảnh tải lên để truyền vào SDK Gemini
-            optimized_images = []
-            if uploaded_files:
-                for f in uploaded_files:
-                    img_pil = Image.open(f)
-                    optimized_images.append(optimize_image_for_api(img_pil))
+            prompt_text = f"Phân tích chuyên sâu cho '{selected_mode}' phong cách '{selected_style}'. Nội dung: '{input_text.strip() if input_text else 'Phân tích qua hình ảnh đính kèm.'}'."
             
-            api_payload = [*optimized_images, prompt] if optimized_images else [prompt]
-            res = generate_with_smart_retry(api_payload, get_system_instructions(selected_mode, selected_style))
+            # Chuẩn hóa đóng gói dữ liệu hình ảnh theo đúng chuẩn types.Part.from_bytes của SDK google-genai
+            api_contents = []
+            if uploaded_files:
+                for uploaded_file in uploaded_files:
+                    bytes_data = uploaded_file.getvalue()
+                    mime_type = uploaded_file.type if uploaded_file.type else "image/jpeg"
+                    image_part = types.Part.from_bytes(data=bytes_data, mime_type=mime_type)
+                    api_contents.append(image_part)
+            
+            api_contents.append(prompt_text)
+            
+            res = generate_with_smart_retry(api_contents, get_system_instructions(selected_mode, selected_style))
             
             st.session_state.content_analysis = res.get("content_analysis")
             st.session_state.all_scripts = res.get("script_outlines", [])
             st.session_state.cloned_scripts, st.session_state.expanded_scripts, st.session_state.generated_details, st.session_state.active_script_id = [], [], {}, None
+            st.success("✅ Phân tích thành công!")
             st.rerun()
         except Exception as e:
-            st.error(f"Lỗi xử lý API: {e}")
+            st.error(f"❌ Lỗi xử lý API: {e}")
 
 # Hiển thị DNA Phân tích với các ý ngắt dòng rõ ràng
 if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
