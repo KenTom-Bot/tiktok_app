@@ -159,6 +159,8 @@ if "generated_details" not in st.session_state: st.session_state.generated_detai
 if "active_script_id" not in st.session_state: st.session_state.active_script_id = None
 if "projects_library" not in st.session_state: st.session_state.projects_library = {}
 if "licensed_accounts" not in st.session_state: st.session_state.licensed_accounts = load_licensed_accounts()
+if "current_input_context" not in st.session_state: st.session_state.current_input_context = ""
+if "admin_toast_msg" not in st.session_state: st.session_state.admin_toast_msg = ""
 
 if ADMIN_EMAIL not in st.session_state.licensed_accounts:
     st.session_state.licensed_accounts[ADMIN_EMAIL] = {
@@ -220,10 +222,9 @@ with st.sidebar:
         st.markdown("---")
         st.markdown("### ⚙️ **Quản Lý Tài Khoản (Admin)**")
         
-        # Hiển thị thông báo trạng thái nếu có
-        if "admin_toast_msg" in st.session_state and st.session_state.admin_toast_msg:
+        if st.session_state.admin_toast_msg:
             st.success(st.session_state.admin_toast_msg)
-            st.session_state.admin_toast_msg = "" # Xóa sau khi hiển thị
+            st.session_state.admin_toast_msg = ""
 
         with st.form("add_license_form"):
             st.markdown("<b>➕ Cấp Quyền Tài Khoản Mới</b>", unsafe_allow_html=True)
@@ -254,26 +255,19 @@ with st.sidebar:
                         "contact": new_account_id.strip(), "roles": assigned_modules, "expires_at": expiry_date
                     }
                     save_licensed_accounts(st.session_state.licensed_accounts)
-                    
-                    # Lưu thông báo vào session state để hiện ngay sau khi load lại trang
                     st.session_state.admin_toast_msg = f"✅ Đã cấp quyền thành công cho tài khoản: {new_account_id.strip()}!"
                     st.rerun()
-                else:
-                    st.warning("⚠️ Vui lòng nhập Email hoặc SĐT hợp lệ!")
 
-        # Hiển thị danh sách tài khoản đã cấp và cho phép SỬA / CẬP NHẬT trực tiếp
         if st.session_state.licensed_accounts:
             with st.expander(f"📋 Danh sách tài khoản đã cấp ({len(st.session_state.licensed_accounts)})"):
                 for acc, info in list(st.session_state.licensed_accounts.items()):
                     st.markdown(f"**👤 {acc}**")
                     st.caption(f"• Quyền: {', '.join(info.get('roles', []))}<br>• Hết hạn: {info.get('expires_at')}", unsafe_allow_html=True)
-                    
-                    # Nút xóa tài khoản
                     if acc != ADMIN_EMAIL:
                         if st.button(f"🗑️ Xóa {acc}", key=f"del_acc_{acc}"):
                             del st.session_state.licensed_accounts[acc]
                             save_licensed_accounts(st.session_state.licensed_accounts)
-                            st.success(f"Đã xóa {acc}!")
+                            st.session_state.admin_toast_msg = f"Đã xóa tài khoản {acc}!"
                             st.rerun()
                     st.markdown("---")
 
@@ -284,7 +278,6 @@ with st.sidebar:
         
         col_p1, col_p2 = st.columns(2)
         with col_p1:
-            # 1. NÚT LƯU DỰ ÁN TRÊN APP
             if st.button("💾 Lưu App", use_container_width=True):
                 if st.session_state.all_scripts:
                     p_id = f"proj_{int(time.time())}"
@@ -296,28 +289,16 @@ with st.sidebar:
                     }
                     st.success("✅ Đã lưu vào bộ nhớ app!")
         with col_p2:
-            # 2. XUẤT FILE DỰ ÁN RA JSON ĐỂ TẢI VỀ MÁY
             if st.session_state.all_scripts:
                 export_data = {
-                    "title": project_title_input,
-                    "mode": st.session_state.get("selected_mode"),
-                    "style": st.session_state.get("selected_style"),
-                    "content_analysis": st.session_state.content_analysis,
-                    "all_scripts": st.session_state.all_scripts,
-                    "cloned_scripts": st.session_state.cloned_scripts,
-                    "expanded_scripts": st.session_state.expanded_scripts,
-                    "generated_details": st.session_state.generated_details
+                    "title": project_title_input, "mode": st.session_state.get("selected_mode"),
+                    "style": st.session_state.get("selected_style"), "content_analysis": st.session_state.content_analysis,
+                    "all_scripts": st.session_state.all_scripts, "cloned_scripts": st.session_state.cloned_scripts,
+                    "expanded_scripts": st.session_state.expanded_scripts, "generated_details": st.session_state.generated_details
                 }
                 json_str = json.dumps(export_data, ensure_ascii=False, indent=2)
-                st.download_button(
-                    label="📥 Tải JSON",
-                    data=json_str,
-                    file_name=f"{project_title_input.replace(' ', '_')}.json",
-                    mime="application/json",
-                    use_container_width=True
-                )
+                st.download_button(label="📥 Tải JSON", data=json_str, file_name=f"{project_title_input.replace(' ', '_')}.json", mime="application/json", use_container_width=True)
 
-        # 3. MỞ LẠI CÁC DỰ ÁN ĐÃ LƯU TRONG BỘ NHỚ APP
         if st.session_state.projects_library:
             proj_keys = list(st.session_state.projects_library.keys())
             selected_load_id = st.selectbox("📂 Chọn dự án đã lưu trong app:", options=proj_keys, format_func=lambda x: st.session_state.projects_library[x]["title"])
@@ -332,7 +313,6 @@ with st.sidebar:
                 st.success("✅ Đã mở dự án thành công!")
                 st.rerun()
 
-        # 4. TẢI FILE JSON CŨ TỪ MÁY TÍNH LÊN APP (IMPORT PROJECT)
         st.markdown("<div style='font-size: 0.85rem; color: #64748b; margin-top: 8px;'>Hoặc tải file dự án cũ từ máy tính:</div>", unsafe_allow_html=True)
         uploaded_project_file = st.file_uploader("📤 Chọn file kịch bản (.json)", type=["json"], label_visibility="collapsed")
         if uploaded_project_file is not None:
@@ -377,28 +357,21 @@ def format_analysis_field(field_val) -> str:
     text = re.sub(r'<<\.?', '', text)
     text = text.replace('<b>', '').replace('</b>', '')
     
-    # Chuẩn hóa các dấu xuống dòng thô từ LLM
     lines = text.split('\n')
     processed_lines = []
     for line in lines:
         line_clean = line.strip()
-        if not line_clean:
-            continue
-        # Tách các ý nhỏ nếu trong một dòng có chứa dạng "1.", "2.", v.v. nằm giữa câu
+        if not line_clean: continue
         sub_parts = re.split(r'(?=\s*\d+\.\s)', line_clean)
         for part in sub_parts:
             p_clean = part.strip()
-            if p_clean:
-                processed_lines.append(p_clean)
+            if p_clean: processed_lines.append(p_clean)
 
     formatted_output = []
     for line in processed_lines:
-        # Kiểm tra xem dòng có bắt đầu bằng số thứ tự (ví dụ: "1.", "2.") hoặc gạch đầu dòng không
         if re.match(r'^(\d+[\.\)]|[-•])\s*', line):
-            # Nếu là ý con, thụt lề vào trong bằng style padding-left
             formatted_output.append(f"<div style='margin-left: 20px; margin-top: 4px;'>{line}</div>")
         else:
-            # Dòng tiêu đề chính hoặc đoạn văn mở đầu
             formatted_output.append(f"<div style='margin-top: 6px;'><b>{line}</b></div>" if ":" in line and len(line) < 60 else f"<div style='margin-top: 4px;'>{line}</div>")
             
     return "".join(formatted_output) if formatted_output else text
@@ -409,12 +382,13 @@ BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
 PHONG CÁCH KẾT XUẤT THỊ GIÁC: {style.upper()}
 QUY TẮC ĐẠO DIỄN, BIỂU CẢM & LỜI THOẠI CHÂN THẬT:
 1. THỜI LƯỢNG MỖI CẢNH: CHỈ DÙNG 3 MỐC: 4s, 6s, 8s (CẤM MỐC 10 GIÂY).
-2. BIỂU CẢM VÀ HÌNH THỂ NHÂN VẬT: Trong 'video_prompt' và 'scene_setting', bắt buộc miêu tả chi tiết biểu cảm gương mặt, cử chỉ bàn tay, tương tác vật lý chân thật với sản phẩm.
-3. LỜI THOẠI & NGỮ ĐIỆU (VOICEOVER): 100% tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s).
-4. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
+2. BỐI CẢNH & KÍCH CẦU: Ưu tiên tuyệt đối bối cảnh xưởng sản xuất, kho hàng tổng, showroom trưng bày. Nhấn mạnh giá tận gốc tại xưởng, deal sốc giới hạn giờ.
+3. BIỂU CẢM VÀ HÌNH THỂ NHÂN VẬT: Trong 'video_prompt' và 'scene_setting', miêu tả chi tiết biểu cảm gương mặt (tự tin, hào hứng), cử chỉ tay thao tác trực tiếp với nút bấm, cổng sạc, phụ kiện.
+4. LỜI THOẠI & NGỮ ĐIỆU (VOICEOVER): 100% tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s).
+5. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
 """
     if mode == "🛒 TikTok Shop & Bán Hàng":
-        return base + "\n- Ưu tiên DEAL SỐC, GIÁ TẬN GỐC TẠI XƯỞNG / KHO / SHOWROOM. Biểu cảm nhân vật năng lượng cao, chốt đơn quyết liệt."
+        return base + "\n- BẮT BUỘC TẬP TRUNG MẠNH VÀO GIÁ XƯỞNG, KHÔNG QUA TRUNG GIAN, DEAL GIẢM SỐC VÀ THƯƠNG HIỆU UY TÍN."
     return base
 
 def call_gemini_api(contents, system_inst):
@@ -430,6 +404,81 @@ def call_gemini_api(contents, system_inst):
             elif "503" in str(e): time.sleep(3 * (attempt + 1))
             else: raise e
     raise Exception("Lỗi kết nối Gemini API sau nhiều lần thử.")
+
+def add_five_scripts_continuation(current_mode: str, current_style: str):
+    with st.spinner("⏳ Đang khai thác thêm 5 góc tiếp cận độc quyền bám sát sản phẩm & kho xưởng..."):
+        all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
+        cur_len = len(all_sources)
+        product_ctx = st.session_state.get("current_input_context", "Sản phẩm hiện tại")
+        
+        prompt_more = f"""
+        Dựa trên sản phẩm: "{product_ctx}" và kết quả phân tích DNA đã thực hiện cho thể loại '{current_mode}' phong cách '{current_style}'.
+        Hãy tạo thêm đúng 5 kịch bản mới (id từ {cur_len + 1} đến {cur_len + 5}) với các key: id, title, setting_style, angle, target_hook, recommended_scenes_count, voice_profile.
+        
+        QUY ĐỊNH BẮT BUỘC CHO KỊCH BẢN MỚI:
+        - Phải bám sát thực chiến sản phẩm, tập trung mạnh vào bối cảnh xưởng sản xuất, kho hàng tổng hoặc showroom trưng bày trực tiếp.
+        - Phải xoay quanh chiến lược kích cầu: Giá tận gốc tại kho, deal sốc giới hạn giờ, bóc tách triệt để tính năng cơ khí và phụ kiện.
+        Xuất JSON chuẩn với key 'script_outlines'.
+        """
+        try:
+            res = call_gemini_api([prompt_more], get_system_instructions(current_mode, current_style))
+            new_scripts = res.get("script_outlines", [])
+            for i, sc in enumerate(new_scripts): sc["id"] = cur_len + i + 1
+            st.session_state.expanded_scripts.extend(new_scripts)
+            st.success("✅ Đã bổ sung 5 kịch bản mới bám sát sản phẩm & kho xưởng!")
+            st.rerun()
+        except Exception as e:
+            st.error(f"Lỗi gọi thêm kịch bản: {e}")
+
+def create_scene_details_for_id(target_id: int, current_mode: str, current_style: str):
+    all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
+    outline = next((sc for sc in all_sources if isinstance(sc, dict) and sc.get("id") == target_id), None)
+    if not outline: return
+    
+    product_ctx = st.session_state.get("current_input_context", "Sản phẩm hiện tại")
+    
+    with st.spinner(f"🎬 Đang dựng kịch bản chi tiết cảnh quay #{target_id} (Khóa chặt xưởng & giá xốc)..."):
+        prompt_detail = f"""
+        Sản phẩm gốc: "{product_ctx}"
+        Ý tưởng kịch bản: ID {target_id} - {outline.get('title')} ({current_mode})
+        Bối cảnh định hướng: {outline.get('setting_style')} | Góc tiếp cận: {outline.get('angle')} | Hook: {outline.get('target_hook')}
+        
+        QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC:
+        1. Thời lượng mỗi cảnh 'duration' chỉ dùng đúng 3 mốc: '4s', '6s', '8s' (CẤM DÙNG 10s).
+        2. Bối cảnh bắt buộc xuất hiện tại XƯỞNG SẢN XUẤT, KHO HÀNG TỔNG hoặc SHOWROOM TRƯNG BÀY (nhấn mạnh kho xưởng không qua trung gian).
+        3. Lồng ghép yếu tố GIÁ TẬN GỐC TẠI KHO, DEAL GIẢM GIÁ SỐC ngay trong lời thoại và hình ảnh.
+        4. Miêu tả cực kỳ chi tiết biểu cảm gương mặt nhân vật và cử chỉ tay thao tác trực tiếp với sản phẩm, nút bấm, phụ kiện.
+        5. Lời thoại 100% tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s), chỉ đạo ngữ điệu rõ ràng trong 'voice_director_vn'.
+        
+        Xuất chuẩn 1 Dict JSON duy nhất:
+        {{
+          "id": {target_id}, 
+          "title": "{outline.get('title')}", 
+          "setting_style": "{outline.get('setting_style')}",
+          "voice_profile": {json.dumps(outline.get('voice_profile', {}), ensure_ascii=False)},
+          "total_estimated_duration": "24s",
+          "scenes": [
+            {{
+              "scene_number": 1, 
+              "duration": "4s", 
+              "scene_setting": "Bối cảnh xưởng/kho/showroom, miêu tả chi tiết biểu cảm nhân vật và thao tác cơ khí", 
+              "transition_type": "Hard Cut", 
+              "voice_director_vn": "Chỉ đạo ngữ điệu miền Bắc hào hứng, thuyết phục", 
+              "voiceover_vi": "Lời thoại miền Bắc chuẩn", 
+              "image_prompt": "Prompt Imagen 3 (9:16) siêu thực", 
+              "video_prompt": "Prompt Veo 3 tích hợp biểu cảm gương mặt, cử chỉ tay và thoại"
+            }}
+          ]
+        }}
+        """
+        try:
+            res = call_gemini_api([prompt_detail], get_system_instructions(current_mode, current_style))
+            if isinstance(res, list): res = res[0]
+            st.session_state.generated_details[target_id] = res
+            st.session_state.active_script_id = target_id
+            st.rerun()
+        except Exception as e:
+            st.error(f"Lỗi dựng chi tiết kịch bản: {e}")
 
 # ==============================================================================
 # GIAO DIỆN CHÍNH
@@ -451,7 +500,7 @@ with col_mode:
     selected_mode = st.selectbox("🎯 Chọn Thể Loại Nội Dung:", options=[
         "🛒 TikTok Shop & Bán Hàng", "👶 Mẹ & Bé & Cùng Con Học (Viral Parenting)", "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp",
         "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan", "🌿 Du Lịch & Phong Cảnh Đất Nước", "🚗 Xe Cộ & Trải Nghiệm Lái",
-        "🍲 Ẩm Thực & Đời Sống", "📖 Đời Sống & Bài Học Giáo Dục", "🏛️ Lịch Sử & Tín Ngưỡng Di Sản", "🧘 Chữa Lành & Phong Cách Sống"
+        "🍲 Ẩm Thực & Đời Sống", "📖 Đời Sống & Giáo Dục", "🏛️ Lịch Sử & Tín Ngưỡng Di Sản", "🧘 Chữa Lành & Phong Cách Sống"
     ])
 with col_style:
     selected_style = st.selectbox("🎨 Chọn Phong Cách Hình Ảnh:", options=[
@@ -487,30 +536,32 @@ uploaded_files = st.file_uploader("🖼️ Tải ảnh tham chiếu (Tùy chọn
 if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files)):
     with st.spinner("⏳ Đang phân tích chuyên sâu cấu tạo, nút bấm, kích thước và thông số cơ khí..."):
         try:
+            st.session_state.current_input_context = input_text.strip() if input_text else "Phân tích trực tiếp từ hình ảnh đính kèm sản phẩm."
+            
             prompt_text = f"""
             Phân tích siêu chuyên sâu sản phẩm/chủ đề cho thể loại '{selected_mode}' theo phong cách '{selected_style}'. 
-            Thông tin mô tả: "{input_text.strip() if input_text else 'Phân tích kỹ lưỡng từng chi tiết từ hình ảnh đính kèm.'}"
+            Thông tin mô tả từ người dùng: "{st.session_state.current_input_context}"
 
             YÊU CẦU ĐẶC BIỆT: Phải bóc tách cực kỳ chi tiết về mặt cơ khí và thiết kế vật lý của sản phẩm để phục vụ việc tạo prompt video chân thật (Veo 3):
-            1. Cấu tạo chi tiết: Vị trí, màu sắc và chất liệu của nút bấm nguồn, cổng sạc (vd: Type-C), đèn LED hiển thị pin, cấu trúc cốc chứa rác trong suốt.
-            2. Thông số vật lý: Kích thước cầm tay gọn gàng, trọng lượng nhẹ (vd: ~400g giúp thao tác một tay không mỏi), công thái học của tay cầm.
-            3. Chi tiết phụ kiện & cách dùng: Từng đầu hút chuyên dụng (đầu chổi, khe hẹp, thổi bụi, bơm hơi), cách tháo lắp màng lọc HEPA, hướng dẫn sử dụng chi tiết cho từng chế độ.
+            1. Cấu tạo chi tiết: Vị trí, màu sắc và chất liệu của nút bấm nguồn, cổng sạc, đèn LED hiển thị pin, cấu trúc cốc chứa rác trong suốt.
+            2. Thông số vật lý: Kích thước cầm tay gọn gàng, trọng lượng nhẹ, công thái học của tay cầm.
+            3. Chi tiết phụ kiện & cách dùng: Từng đầu hút chuyên dụng, cách tháo lắp, hướng dẫn sử dụng chi tiết cho từng chế độ.
 
             BẮT BUỘC TRẢ VỀ ĐỊNH DẠNG JSON CHUẨN GỒM CÁC KEY SAU:
             {{
               "content_analysis": {{
-                "mechanical_and_accessories": "Mô tả siêu chi tiết: Cấu tạo thân máy, vị trí nút bấm, cổng sạc, đèn báo pin, trọng lượng, kích thước cầm nắm và trọn bộ 6 đầu phụ kiện kèm hướng dẫn sử dụng chi tiết từng đầu.",
-                "customer_pain_points": "Phân tích 3 tầng nỗi đau của khách hàng (Chức năng làm sạch ngóc ngách, Tài chính - giá hời tại xưởng, Cảm xúc giải tỏa mệt mỏi).",
-                "core_desires": "Mong muốn cốt lõi và khao khát sở hữu thiết bị tiện ích.",
+                "mechanical_and_accessories": "Mô tả siêu chi tiết: Cấu tạo thân máy, vị trí nút bấm, cổng sạc, đèn báo pin, trọng lượng, kích thước cầm nắm và trọn bộ đầu phụ kiện kèm hướng dẫn sử dụng.",
+                "customer_pain_points": "Phân tích 3 tầng nỗi đau của khách hàng (Chức năng, Tài chính - giá hời tại xưởng, Cảm xúc).",
+                "core_desires": "Mong muốn cốt lõi và khao khát lớn nhất.",
                 "emotional_or_usp_hook": "Slogan, USP độc quyền hoặc câu hook giật gân chốt đơn.",
-                "visual_physics_rules": "Quy chuẩn vật lý khi chuyển động (lực hút lốc xoáy Vortex, bụi mịn bị hút bay vào cốc trong suốt).",
-                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ toàn bộ video, mô tả rõ màu sắc Hero Color và ánh sáng showroom."
+                "visual_physics_rules": "Quy chuẩn vật lý khi chuyển động (lực hút lốc xoáy Vortex, bụi mịn bị hút bay).",
+                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ toàn bộ video, mô tả rõ màu sắc Hero Color và ánh sáng showroom/xưởng."
               }},
               "script_outlines": [
                 {{
                   "id": 1,
                   "title": "Tên kịch bản 1 (Tập trung thao tác nút bấm & lực hút xưởng)",
-                  "setting_style": "Bối cảnh không gian",
+                  "setting_style": "Bối cảnh xưởng/kho/showroom",
                   "angle": "Góc tiếp cận chuyển đổi",
                   "target_hook": "Câu mở đầu giật gân",
                   "recommended_scenes_count": "4",
@@ -518,8 +569,8 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận K�
                 }},
                 {{
                   "id": 2,
-                  "title": "Tên kịch bản 2 (Tập trung bộ phụ kiện 6 đầu & đa năng 3 trong 1)",
-                  "setting_style": "Bối cảnh không gian",
+                  "title": "Tên kịch bản 2 (Tập trung bộ phụ kiện & đa năng)",
+                  "setting_style": "Bối cảnh xưởng/kho/showroom",
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
                   "recommended_scenes_count": "4",
@@ -528,7 +579,7 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận K�
                 {{
                   "id": 3,
                   "title": "Tên kịch bản 3",
-                  "setting_style": "Bối cảnh không gian",
+                  "setting_style": "Bối cảnh xưởng/kho/showroom",
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
                   "recommended_scenes_count": "4",
@@ -537,7 +588,7 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận K�
                 {{
                   "id": 4,
                   "title": "Tên kịch bản 4",
-                  "setting_style": "Bối cảnh không gian",
+                  "setting_style": "Bối cảnh xưởng/kho/showroom",
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
                   "recommended_scenes_count": "4",
@@ -546,7 +597,7 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận K�
                 {{
                   "id": 5,
                   "title": "Tên kịch bản 5",
-                  "setting_style": "Bối cảnh không gian",
+                  "setting_style": "Bối cảnh xưởng/kho/showroom",
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
                   "recommended_scenes_count": "4",
@@ -619,55 +670,10 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
                     st.session_state.active_script_id = sc_id
                     st.rerun()
                 else:
-                    with st.spinner(f"Đang dựng kịch bản chi tiết #{sc_id}..."):
-                        try:
-                            p_detail = f"""
-                            Dựa trên DNA phân tích, hãy tạo chi tiết phân cảnh cho ý tưởng ID {sc_id} - {outline.get('title')} ({selected_mode}).
-                            QUY ĐỊNH KỸ THUẬT:
-                            1. Thời lượng mỗi cảnh 'duration' chỉ dùng đúng 3 mốc: '4s', '6s', '8s' (CẤM 10s).
-                            2. 100% các phân cảnh có lời thoại lồng tiếng miền Bắc chuẩn Hà Nội (~3 từ/s).
-                            3. Miêu tả rõ biểu cảm gương mặt và cử chỉ hình thể nhân vật.
-                            Xuất chuẩn 1 Dict JSON:
-                            {{
-                              "id": {sc_id},
-                              "title": "{outline.get('title')}",
-                              "setting_style": "{outline.get('setting_style')}",
-                              "voice_profile": {json.dumps(outline.get('voice_profile', {}), ensure_ascii=False)},
-                              "total_estimated_duration": "24s",
-                              "scenes": [
-                                {{
-                                  "scene_number": 1,
-                                  "duration": "4s",
-                                  "scene_setting": "Mô tả không gian, biểu cảm và hình thể nhân vật",
-                                  "transition_type": "Cắt cảnh (Hard Cut)",
-                                  "voice_director_vn": "Chỉ đạo ngữ điệu giọng đọc miền Bắc",
-                                  "voiceover_vi": "Lời thoại miền Bắc",
-                                  "image_prompt": "Prompt Imagen 3 (9:16)",
-                                  "video_prompt": "Prompt Veo 3 tích hợp biểu cảm & thoại"
-                                }}
-                              ]
-                            }}
-                            """
-                            res_d = call_gemini_api([p_detail], get_system_instructions(selected_mode, selected_style))
-                            st.session_state.generated_details[sc_id] = res_d
-                            st.session_state.active_script_id = sc_id
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Lỗi: {e}")
+                    create_scene_details_for_id(sc_id, selected_mode, selected_style)
     st.markdown("---")
     if st.button("➕ Gọi Thêm 5 Kịch Bản Khác", key="btn_add_more_1", type="primary", use_container_width=True):
-        with st.spinner("Đang bổ sung 5 kịch bản mới..."):
-            try:
-                cur_len = len(all_combined_scripts_list)
-                p_more = f"Tạo thêm đúng 5 kịch bản mới (id từ {cur_len + 1} đến {cur_len + 5}) với các key: id, title, setting_style, angle, target_hook, recommended_scenes_count, voice_profile. Xuất JSON key 'script_outlines'."
-                res_m = call_gemini_api([p_more], get_system_instructions(selected_mode, selected_style))
-                new_s = res_m.get("script_outlines", [])
-                for i, sc in enumerate(new_s): sc["id"] = cur_len + i + 1
-                st.session_state.expanded_scripts.extend(new_s)
-                st.success("✅ Đã thêm 5 kịch bản mới thành công!")
-                st.rerun()
-            except Exception as e:
-                st.error(f"Lỗi: {e}")
+        add_five_scripts_continuation(selected_mode, selected_style)
 
 # GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC ĐIỀU HƯỚNG
 if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
@@ -739,18 +745,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         """, unsafe_allow_html=True)
 
         if st.button("➕ Gọi Thêm 5 Tình Huống Kịch Bản Mới", key="btn_add_more_phase2", use_container_width=True):
-            with st.spinner("Đang bổ sung 5 kịch bản..."):
-                try:
-                    cur_len = len(all_combined_scripts_list)
-                    p_more = f"Tạo thêm đúng 5 kịch bản mới (id từ {cur_len + 1} đến {cur_len + 5}) với các key: id, title, setting_style, angle, target_hook, recommended_scenes_count, voice_profile. Xuất JSON key 'script_outlines'."
-                    res_m = call_gemini_api([p_more], get_system_instructions(selected_mode, selected_style))
-                    new_s = res_m.get("script_outlines", [])
-                    for i, sc in enumerate(new_s): sc["id"] = cur_len + i + 1
-                    st.session_state.expanded_scripts.extend(new_s)
-                    st.success("✅ Đã thêm 5 kịch bản mới!")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Lỗi: {e}")
+            add_five_scripts_continuation(selected_mode, selected_style)
 
     with col_right:
         st.markdown("""
@@ -771,39 +766,5 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                     st.session_state.active_script_id = it_id
                     st.rerun()
                 else:
-                    with st.spinner(f"Đang dựng kịch bản chi tiết #{it_id}..."):
-                        try:
-                            p_detail = f"""
-                            Dựa trên DNA phân tích, hãy tạo chi tiết phân cảnh cho ý tưởng ID {it_id} - {item.get('title')} ({selected_mode}).
-                            QUY ĐỊNH KỸ THUẬT:
-                            1. Thời lượng mỗi cảnh 'duration' chỉ dùng đúng 3 mốc: '4s', '6s', '8s' (CẤM 10s).
-                            2. 100% các phân cảnh có lời thoại lồng tiếng miền Bắc chuẩn Hà Nội (~3 từ/s).
-                            3. Miêu tả rõ biểu cảm gương mặt và cử chỉ hình thể nhân vật.
-                            Xuất chuẩn 1 Dict JSON:
-                            {{
-                              "id": {it_id},
-                              "title": "{item.get('title')}",
-                              "setting_style": "{item.get('setting_style')}",
-                              "voice_profile": {json.dumps(item.get('voice_profile', {}), ensure_ascii=False)},
-                              "total_estimated_duration": "24s",
-                              "scenes": [
-                                {{
-                                  "scene_number": 1,
-                                  "duration": "4s",
-                                  "scene_setting": "Mô tả không gian, biểu cảm và hình thể nhân vật",
-                                  "transition_type": "Cắt cảnh (Hard Cut)",
-                                  "voice_director_vn": "Chỉ đạo ngữ điệu giọng đọc miền Bắc",
-                                  "voiceover_vi": "Lời thoại miền Bắc",
-                                  "image_prompt": "Prompt Imagen 3 (9:16)",
-                                  "video_prompt": "Prompt Veo 3 tích hợp biểu cảm & thoại"
-                                }}
-                              ]
-                            }}
-                            """
-                            res_d = call_gemini_api([p_detail], get_system_instructions(selected_mode, selected_style))
-                            st.session_state.generated_details[it_id] = res_d
-                            st.session_state.active_script_id = it_id
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Lỗi: {e}")
+                    create_scene_details_for_id(it_id, selected_mode, selected_style)
             st.markdown("<hr style='margin: 6px 0;'>", unsafe_allow_html=True)
