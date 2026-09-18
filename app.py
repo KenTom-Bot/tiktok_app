@@ -176,6 +176,31 @@ if ADMIN_EMAIL not in st.session_state.licensed_accounts:
     save_licensed_accounts(st.session_state.licensed_accounts)
 
 # ==============================================================================
+# HÀM XỬ LÝ ĐĂNG NHẬP (HỖ TRỢ NHẤN ENTER)
+# ==============================================================================
+def process_login(login_val):
+    input_val = login_val.strip()
+    if not input_val:
+        return
+    if input_val == ADMIN_EMAIL or input_val in st.session_state.licensed_accounts:
+        if input_val != ADMIN_EMAIL:
+            acc_info = st.session_state.licensed_accounts[input_val]
+            exp_date_str = acc_info.get("expires_at", "2099-12-31")
+            try:
+                exp_date = datetime.strptime(exp_date_str, "%Y-%m-%d")
+                if datetime.now() > exp_date:
+                    st.error(f"❌ Tài khoản đã hết hạn vào ngày {exp_date_str}!")
+                    return
+            except Exception:
+                pass
+        st.session_state.is_logged_in = True
+        st.session_state.current_user_email = input_val
+        st.success("🎉 Đăng nhập thành công!")
+        st.rerun()
+    else:
+        st.error("❌ Tài khoản chưa được cấp quyền!")
+
+# ==============================================================================
 # SIDEBAR
 # ==============================================================================
 with st.sidebar:
@@ -186,26 +211,12 @@ with st.sidebar:
         st.session_state.current_user_email = ""
 
     if not st.session_state.is_logged_in:
-        login_input = st.text_input("Nhập Email / SĐT của bạn:", placeholder="vd: user@gmail.com")
-        if st.button("🔑 Đăng Nhập", use_container_width=True):
-            input_val = login_input.strip()
-            if input_val == ADMIN_EMAIL or input_val in st.session_state.licensed_accounts:
-                if input_val != ADMIN_EMAIL:
-                    acc_info = st.session_state.licensed_accounts[input_val]
-                    exp_date_str = acc_info.get("expires_at", "2099-12-31")
-                    try:
-                        exp_date = datetime.strptime(exp_date_str, "%Y-%m-%d")
-                        if datetime.now() > exp_date:
-                            st.error(f"❌ Tài khoản đã hết hạn vào ngày {exp_date_str}!")
-                            st.stop()
-                    except Exception:
-                        pass
-                st.session_state.is_logged_in = True
-                st.session_state.current_user_email = input_val
-                st.success("🎉 Đăng nhập thành công!")
-                st.rerun()
-            else:
-                st.error("❌ Tài khoản chưa được cấp quyền!")
+        # Sử dụng form để cho phép nhấn Enter đăng nhập ngay lập tức
+        with st.form("login_form", clear_on_submit=False):
+            login_input = st.text_input("Nhập Email / SĐT của bạn:", placeholder="vd: user@gmail.com")
+            submitted_login = st.form_submit_button("🔑 Đăng Nhập", use_container_width=True)
+            if submitted_login:
+                process_login(login_input)
     else:
         st.success(f"👤 Đang đăng nhập: **{st.session_state.current_user_email}**")
         if st.button("🚪 Đăng Xuất", use_container_width=True):
@@ -323,20 +334,27 @@ def optimize_image_for_api(image: Image.Image, max_dimension: int = 896, quality
     buffer.seek(0)
     return Image.open(buffer)
 
+# Cải tiến hàm format để ngắt dòng từng ý rõ ràng, dễ đọc cho người dùng
 def format_analysis_field(field_val) -> str:
-    if isinstance(field_val, dict): return "<br>".join([f"• <b>{k.replace('_', ' ').title()}:</b> {v}" for k, v in field_val.items()])
-    elif isinstance(field_val, list): return "<br>".join([f"• {item}" for item in field_val])
+    if isinstance(field_val, dict):
+        return "<br>".join([f"• <b>{k.replace('_', ' ').title()}:</b> {v}" for k, v in field_val.items()])
+    elif isinstance(field_val, list):
+        return "<br>".join([f"• {item}" for item in field_val])
+    
     text = str(field_val)
-    for kw in ["Chức năng:", "Tài chính:", "Cảm xúc:", "1.", "2.", "3."]:
-        if kw in text and not text.startswith(kw): text = text.replace(kw, f"<br>• <b>{kw}</b>")
-    return text
+    # Tách dòng tự động khi gặp các từ khóa hoặc dấu câu định dạng
+    keywords = ["Chức năng:", "Tài chính:", "Cảm xúc:", "1.", "2.", "3.", "•", "-"]
+    for kw in keywords:
+        if kw in text and not text.startswith(kw):
+            text = text.replace(kw, f"<br><br>• <b>{kw.replace(':', '')}</b>:")
+    return text.replace("\n", "<br>")
 
 def get_system_instructions(mode: str, style: str) -> str:
     base = r"""
 BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
 PHONG CÁCH KẾT XUẤT THỊ GIÁC: """ + style.upper() + r"""
 QUY TẮC ĐẠO DIỄN & LỜI THOẠI BẮT BUỘC:
-1. THỜI LƯỢNG MỖI CẢNH: CHỈ DÙNG 3 MỐC: 4s, 6s, 8s. TUYỆT ĐỐI CẤM DÙNG MỐC 10 GIÂY.
+1. THỜI LƯỢNG MỖI CẢNH: CHỈ ĐƯỢC DÙNG 3 MỐC: 4s, 6s, 8s. TUYỆT ĐỐI CẤM DÙNG MỐC 10 GIÂY.
 2. 100% CÁC PHÂN CẢNH ĐỀU PHẢI CÓ LỜI THOẠI (VOICEOVER).
 3. ĐỊNH MỨC TỪ VỰNG: Cảnh 4s (10-12 từ), Cảnh 6s (15-18 từ), Cảnh 8s (22-25 từ). Giọng miền Bắc chuẩn Hà Nội.
 4. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
@@ -431,23 +449,32 @@ with col_style:
         "Minimalist Studio / Commercial Clean", "Dark Moody / Noir", "Paper Cut-out / Stop Motion"
     ])
 
-# Bảng Cheat Sheet
-with st.expander("💡 Bảng Gợi Ý Phối Hợp 'Thể Loại & Phong Cách'", expanded=False):
+# Bảng Cẩm Nang Phối Hợp Đầy Đủ 10 Thể Loại (Cheat Sheet)
+with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp 'Thể Loại & Phong Cách' Chuẩn Xác Nhất", expanded=False):
     st.markdown("""
-    <div style="background-color: #f8fafc; padding: 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.9rem;">
-        <b>🎯 Cẩm Nang Nhanh:</b><br>
-        • <b>TikTok Shop:</b> Hợp với <code>Minimalist Studio</code> hoặc <code>Cyberpunk</code>.<br>
-        • <b>Mẹ & Bé:</b> Hợp với <code>Paper Cut-out</code> hoặc <code>3D Pixar</code>.<br>
-        • <b>TVC Cao Cấp:</b> Hợp với <code>Cinematic Realism</code> hoặc <code>Dark Moody</code>.
+    <div style="background-color: #f8fafc; padding: 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 0.95rem; color: #334155;">
+        <h4 style="color: #0f172a; margin-top: 0; margin-bottom: 12px; font-size: 1.05rem;">🎯 Cẩm Nang Phối Hợp Sáng Tạo Nội Dung Đa Vũ Trụ</h4>
+        <ul style="padding-left: 20px; line-height: 1.8; margin-bottom: 0;">
+            <li><b>🛒 TikTok Shop & Bán Hàng:</b> Phù hợp nhất với <code style="color: #e11d48;">Minimalist Studio / Commercial Clean</code> hoặc <code style="color: #e11d48;">Cyberpunk / Sci-Fi Neon</code> (đồ công nghệ).</li>
+            <li><b>👶 Mẹ & Bé & Cùng Con Học:</b> Tối ưu với <code style="color: #e11d48;">Paper Cut-out / Stop Motion</code> hoặc <code style="color: #e11d48;">3D Pixar / Disney Animation</code> (ấm áp, an toàn).</li>
+            <li><b>📺 TVC Quảng Cáo Cao Cấp:</b> Nên chọn <code style="color: #e11d48;">Cinematic Realism (8K)</code> hoặc <code style="color: #e11d48;">Dark Moody / Noir</code> (sang trọng, kịch tính).</li>
+            <li><b>🏡 Nhà Cửa & Kiến Trúc:</b> Kết hợp <code style="color: #e11d48;">Cinematic Realism</code> (hiện đại) hoặc <code style="color: #e11d48;">Vintage / Retro Film</code> (hoài niệm).</li>
+            <li><b>🌿 Du Lịch & Phong Cảnh:</b> Sử dụng <code style="color: #e11d48;">Cinematic Realism</code> (hùng vĩ) hoặc <code style="color: #e11d48;">Tranh Thủy Mặc Cổ Phong</code> (vùng cao, tâm linh).</li>
+            <li><b>🚗 Xe Cộ & Trải Nghiệm Lái:</b> Tối ưu với <code style="color: #e11d48;">Cinematic Realism</code> kết hợp <code style="color: #e11d48;">Cyberpunk / Sci-Fi Neon</code> (tốc độ, ánh sáng đèn).</li>
+            <li><b>🍲 Ẩm Thực & Đời Sống:</b> Sử dụng <code style="color: #e11d48;">Vintage / Retro Film</code> hoặc <code style="color: #e11d48;">Minimalist Studio</code> (tôn vinh món ăn).</li>
+            <li><b>📖 Đời Sống & Giáo Dục:</b> Phù hợp với <code style="color: #e11d48;">2D Ghibli / Anime Art</code> hoặc <code style="color: #e11d48;">Paper Cut-out</code> (gần gũi, nhân văn).</li>
+            <li><b>🏛️ Lịch Sử & Tín Ngưỡng Di Sản:</b> Tối ưu tuyệt đối bằng <code style="color: #e11d48;">Tranh Thủy Mặc Cổ Phong</code> hoặc <code style="color: #e11d48;">Dark Moody / Noir</code> (cổ kính, huyền bí).</li>
+            <li><b>🧘 Chữa Lành & Lifestyle:</b> Kết hợp <code style="color: #e11d48;">Minimalist Studio</code> hoặc <code style="color: #e11d48;">Cinematic Realism</code> (bình yên, thư thái).</li>
+        </ul>
     </div>
     """, unsafe_allow_html=True)
 
 st.markdown("---")
-input_text = st.text_area("✍️ Tóm tắt ý tưởng / Chủ đề sản phẩm:", height=90)
+input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô tả chi tiết sản phẩm:", height=100)
 uploaded_files = st.file_uploader("🖼️ Tải ảnh tham chiếu (Tùy chọn):", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
-if st.button("🚀 Bắt Đầu Bóc Tách DNA & Lên 5 Ma Trận Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files)):
-    with st.spinner("Đang phân tích chuyên sâu..."):
+if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files)):
+    with st.spinner("Đang phân tích chuyên sâu dữ liệu đầu vào..."):
         prompt = f"Phân tích chuyên sâu cho '{selected_mode}' phong cách '{selected_style}'. Nội dung: '{input_text}'."
         try:
             res = generate_with_smart_retry([prompt], get_system_instructions(selected_mode, selected_style))
@@ -458,10 +485,30 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA & Lên 5 Ma Trận Kịch Bản",
         except Exception as e:
             st.error(f"Lỗi: {e}")
 
+# Hiển thị DNA Phân tích với các ý ngắt dòng rõ ràng
+if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
+    st.divider()
+    st.markdown(f"### 🔍 **Phân Tích DNA Chi Tiết Đa Tầng — [{selected_mode.upper()}]**")
+    ca = st.session_state.content_analysis
+    with st.container(border=True):
+        st.markdown("##### 🏭 **1. Thông số Cốt lõi & Chi tiết đặc thù:**")
+        st.markdown(f"<div style='line-height: 1.8;'>{format_analysis_field(ca.get('mechanical_and_accessories', 'N/A'))}</div>", unsafe_allow_html=True)
+        st.markdown("---")
+        st.markdown("##### 🎯 **2. Ma trận Nỗi đau & Tâm lý:**")
+        st.markdown(f"<div style='line-height: 1.8;'>{format_analysis_field(ca.get('customer_pain_points', 'N/A'))}</div>", unsafe_allow_html=True)
+        st.markdown("---")
+        st.markdown("##### 💡 **3. Mong muốn cốt lõi & USP:**")
+        st.markdown(f"<div style='line-height: 1.8;'>• <b>Mong muốn:</b> {format_analysis_field(ca.get('core_desires', 'N/A'))}<br>• <b>USP / Slogan:</b> {format_analysis_field(ca.get('emotional_or_usp_hook', 'N/A'))}</div>", unsafe_allow_html=True)
+        st.markdown("---")
+        st.markdown("##### ⚙️ **4. Quy chuẩn Vật lý:**")
+        st.markdown(f"<div style='line-height: 1.8;'>{format_analysis_field(ca.get('visual_physics_rules', 'N/A'))}</div>", unsafe_allow_html=True)
+    st.markdown("##### 📌 **Chuỗi khóa thị giác (Visual DNA Lock):**")
+    st.code(format_analysis_field(ca.get('prompt_dna_lock', 'N/A')), language="text")
+
 # GIAI ĐOẠN 1: DANH SÁCH KỊCH BẢN BAN ĐẦU
 if st.session_state.all_scripts and st.session_state.active_script_id is None:
     st.divider()
-    st.markdown("### 📋 **Danh Sách 5 Ma Trận Kịch Bản Thực Chiến**")
+    st.markdown(f"### 📋 **Danh Sách 5 Ma Trận Kịch Bản Thực Chiến**")
     for outline in st.session_state.all_scripts:
         sc_id = outline.get("id")
         col_info, col_act = st.columns([3, 1.2])
@@ -475,7 +522,7 @@ if st.session_state.all_scripts and st.session_state.active_script_id is None:
     if st.button("➕ Gọi Thêm 5 Kịch Bản Khác", key="btn_add_more_1", type="primary", use_container_width=True):
         add_five_scripts_continuation(selected_mode, selected_style)
 
-# GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC ĐÃ ĐƯỢC SẮP XẾP LẠI (TRÁI: NHÂN BẢN & GỌI THÊM | PHẢI: DANH SÁCH CÁC KỊCH BẢN)
+# GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC (TRÁI: NHÂN BẢN & GỌI THÊM | PHẢI: DANH SÁCH KỊCH BẢN)
 if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
     st.divider()
     active_script = st.session_state.generated_details[st.session_state.active_script_id]
@@ -504,7 +551,6 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
 
     st.markdown("### ⚡ **Khu Vực Quản Trị & Mở Rộng Kịch Bản**")
     
-    # Chia bố cục: Trái (Nhân bản trên, Gọi thêm dưới) | Phải (Danh sách kịch bản chưa tạo / đã tạo)
     col_left, col_right = st.columns([1.1, 0.9])
 
     with col_left:
@@ -551,7 +597,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
             add_five_scripts_continuation(selected_mode, selected_style)
 
     with col_right:
-        # CỘT PHẢI: DANH SÁCH TẤT CẢ KỊCH BẢN (GỐC, NHÂN BẢN, MỞ RỘNG)
+        # CỘT PHẢI: DANH SÁCH TẤT CẢ KỊCH BẢN ĐỂ GỢI Ý/CHUYỂN ĐỔI
         st.markdown("""
         <div class="custom-card" style="background: #f8fafc;">
             <div style="color: #0f172a; font-weight: 800; font-size: 1.1rem; margin-bottom: 10px;">📋 Danh Sách Kịch Bản Hệ Thống</div>
