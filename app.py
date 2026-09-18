@@ -377,35 +377,36 @@ def format_analysis_field(field_val) -> str:
             
     return "".join(formatted_output) if formatted_output else text
 
-def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str) -> str:
+def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str, target_duration_mins: float = 0.5) -> str:
     is_sales = ("Bán Hàng" in mode or "Sales" in goal)
     format_instruction = "9:16 vertical video format, mobile-first framing" if aspect_ratio == "9:16" else "16:9 widescreen cinematic format, professional movie framing"
     
-    goal_instruction = """
-    - MỤC TIÊU: Tập trung tối đa vào tỷ lệ chuyển đổi, kích thích chốt đơn dồn dập, giải quyết nhanh nỗi đau khách hàng trong thời lượng ngắn.
-    """ if is_sales else f"""
-    - MỤC TIÊU: Phục vụ mục đích '{goal}', thiết kế kịch bản dài tập hoặc viral theo cấu trúc Hồi/Chương (Act & Chapter), chiều sâu cảm xúc lớn, tăng lượt chia sẻ (share) tự nhiên.
-    """
+    if is_sales:
+        duration_rule = "QUY CHUẨN THỜI LƯỢNG SALES (24s - 35s): Phân rã thành 4 đến 6 phân cảnh (mỗi cảnh 4s, 6s hoặc 8s), nhịp độ cực nhanh, tập trung dồn dập vào hook, tính năng thực tế và chuyển đổi đơn hàng."
+    else:
+        total_seconds = int(target_duration_mins * 60)
+        duration_rule = f"QUY CHUẨN THỜI LƯỢNG KỂ CHUYỆN / REVIEW DÀI ({target_duration_mins} phút / {total_seconds} giây): Xây dựng cốt truyện có chiều sâu, chia theo cấu trúc Hồi/Chương (Act & Chapter), số lượng phân cảnh phải đủ để trải đều trong tổng thời lượng {total_seconds} giây."
 
     outfit_rule = """
     2. QUY CHUẨN TRANG PHỤC CỐ ĐỊNH (SALES OUTFIT LOCK): Nhân vật BẮT BUỘC mặc CÙNG MỘT BỘ TRANG PHỤC cố định xuyên suốt tất cả các cảnh để tối ưu nhận diện thương hiệu và chốt đơn.
     """ if is_sales else """
-    2. QUY CHUẨN TRANG PHỤC LINH HOẠT THEO THỜI GIAN/BỐI CẢNH: Nếu kịch bản có mốc thời gian mới (ví dụ: ngày hôm sau) hoặc đổi hoàn toàn hoàn cảnh, nhân vật ĐƯỢC PHÉP thay đổi trang phục mới phù hợp, nhưng KHUÔN MẶT và vóc dáng cốt lõi phải giữ nguyên 100%.
+    2. QUY CHUẨN TRANG PHỤC LINH HOẠT THEO THỜI GIAN/BỐI CẢNH: Nếu kịch bản có mốc thời gian mới (ví dụ: ngày hôm sau, đổi bối cảnh/hoàn cảnh), nhân vật ĐƯỢC PHÉP thay đổi trang phục mới phù hợp, nhưng KHUÔN MẶT và vóc dáng cốt lõi phải giữ nguyên 100%.
     """
 
     base = f"""
 BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
 PHONG CÁCH KẾT XUẤT THỊ GIÁC: {style.upper()}
 ĐỊNH DẠNG KHUNG HÌNH: {format_instruction}
-{goal_instruction}
+MỤC TIÊU CHIẾN DỊCH: {goal}
+{duration_rule}
 
 🛑 QUY TẮC BẮT BUỘC 100% (KHÔNG ĐƯỢC VI PHẠM):
-1. KHÓA CỨNG KHUÔN MẶT (IDENTITY ANCHOR): Nhân vật 100% người Việt Nam, có mô tả khuôn mặt/kiểu tóc cụ thể và giữ nguyên qua mọi cảnh.
+1. KHÓA CỨNG KHUÔN MẶT & VÓC DÁNG (IDENTITY ANCHOR): Nhân vật 100% người Việt Nam, biểu cảm khuôn mặt chân thực, hình thể chuẩn xác, có mô tả đặc điểm nhận diện riêng và giữ nguyên 100% qua mọi cảnh.
 {outfit_rule}
 3. MÀN HÌNH SẠCH (ZERO TEXT LOCK): Trong mọi 'image_prompt', bắt buộc cài đặt lệnh chống chữ: 'no text, zero typography, clean screen, no watermarks, no logos'.
-4. KHÓA MÀU SẢN PHẨM & VẬT LÝ HÚT/THỔI: Giữ nguyên 100% màu sắc sản phẩm gốc từ ảnh, mô tả đúng hướng luồng khí hút bụi đi ngược vào đầu vòi và xoáy trực tiếp vào cốc chứa rác trong suốt.
-5. CHUYỂN CẢNH THÔNG MINH: AI tự động phân tích nội dung chọn kiểu chuyển cảnh (Hard Cut, Match Cut, Time-jump). Thời lượng mỗi cảnh CHỈ DÙNG 3 mốc: 4s, 6s, 8s.
-6. VOICE & KHẨU HÌNH: 100% video prompt có lồng tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s) kèm chỉ đạo khẩu hình.
+4. KHÓA MÀU SẢN PHẨM & VẬT LÝ HÚT/THỔI: Giữ nguyên 100% màu sắc sản phẩm gốc từ ảnh tham chiếu (Anti-Color Shift), mô tả đúng hướng luồng khí hút bụi đi ngược vào đầu vòi và xoáy trực tiếp vào cốc chứa rác trong suốt.
+5. CHUYỂN CẢNH THÔNG MINH: AI tự động phân tích nội dung chọn kiểu chuyển cảnh (Hard Cut, Match Cut, Time-jump). Mỗi cảnh ưu tiên dùng mốc 4s, 6s, 8s.
+6. VOICE & KHẨU HÌNH: 100% video prompt có lồng tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s) kèm chỉ đạo khẩu hình khớp nhân vật.
 """
     return base
 
@@ -423,7 +424,7 @@ def call_gemini_api(contents, system_inst):
             else: raise e
     raise Exception("Lỗi kết nối Gemini API sau nhiều lần thử.")
 
-def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_ratio: str, goal: str):
+def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float):
     with st.spinner("⏳ Đang khai thác thêm 5 góc tiếp cận độc quyền bám sát sản phẩm & kho xưởng..."):
         all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
         cur_len = len(all_sources)
@@ -439,7 +440,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
         Xuất JSON chuẩn với key 'script_outlines'.
         """
         try:
-            res = call_gemini_api([prompt_more], get_system_instructions(current_mode, current_style, aspect_ratio, goal))
+            res = call_gemini_api([prompt_more], get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins))
             new_scripts = res.get("script_outlines", [])
             for i, sc in enumerate(new_scripts): sc["id"] = cur_len + i + 1
             st.session_state.expanded_scripts.extend(new_scripts)
@@ -448,7 +449,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
         except Exception as e:
             st.error(f"Lỗi gọi thêm kịch bản: {e}")
 
-def create_scene_details_for_id(target_id: int, current_mode: str, current_style: str, aspect_ratio: str, goal: str):
+def create_scene_details_for_id(target_id: int, current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float):
     all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
     outline = next((sc for sc in all_sources if isinstance(sc, dict) and sc.get("id") == target_id), None)
     if not outline: return
@@ -457,17 +458,22 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     ca_data = st.session_state.get("content_analysis", {})
     exact_color_spec = ca_data.get("mechanical_and_accessories", "Giữ nguyên màu sắc chuẩn xác từ ảnh thực tế") if isinstance(ca_data, dict) else "Giữ nguyên màu sắc"
     
-    with st.spinner(f"🎬 Đang dựng chi tiết cảnh quay #{target_id} (Khung hình {aspect_ratio} | Mục tiêu: {goal})..."):
+    total_sec = int(target_duration_mins * 60)
+    duration_str = f"{total_sec}s ({target_duration_mins} phút)" if target_duration_mins > 0.5 else "24s - 35s (Sales Conversion)"
+    
+    with st.spinner(f"🎬 Đang dựng chi tiết cảnh quay #{target_id} (Thời lượng: {duration_str} | Khung hình {aspect_ratio})..."):
         prompt_detail = f"""
         Sản phẩm gốc & MÃ MÀU THỰC TẾ: "{exact_color_spec}" (Ngữ cảnh: {product_ctx})
-        Thể loại nội dung: "{current_mode}" | Mục tiêu chiến dịch: "{goal}" | Tỷ lệ khung hình: "{aspect_ratio}"
+        Thể loại nội dung: "{current_mode}" | Mục tiêu chiến dịch: "{goal}" | Tỷ lệ khung hình: "{aspect_ratio}" | Tổng thời lượng yêu cầu: {duration_str}
         Ý tưởng kịch bản: ID {target_id} - {outline.get('title')}
         Bối cảnh định hướng: {outline.get('setting_style')} | Góc tiếp cận: {outline.get('angle')} | Hook: {outline.get('target_hook')}
         
         QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC CHO CÁC CẢNH:
-        1. THỜI LƯỢNG MỖI CẢNH: Chỉ dùng 3 mốc: '4s', '6s', '8s'.
-        2. CHUYỂN CẢNH THÔNG MINH: AI tự quyết định `transition_type` phù hợp (Hard Cut, Match Cut, hoặc chuyển cảnh thời gian/không gian).
-        3. NHÂN VẬT & TRANG PHỤC: Giữ nguyên khuôn mặt nhân vật người Việt Nam xuyên suốt. Nếu nội dung Sales, bắt buộc mặc cùng một bộ trang phục cố định. Nếu nội dung Khác, được phép đổi trang phục theo mốc thời gian/bối cảnh.
+        1. PHÂN RÃ THỜI LƯỢNG & SỐ PHÂN CẢNH: 
+           - Nếu là Sales: Tổng thời lượng từ 24s - 35s chia thành 4 đến 6 phân cảnh.
+           - Nếu là Kể chuyện dài tập / Review chuyên sâu: Tổng thời lượng khớp chính xác {total_sec} giây, số lượng phân cảnh phải đủ nhiều để trải đều toàn bộ thời lượng.
+        2. CHUYỂN CẢNH THÔNG MINH: AI tự quyết định `transition_type` phù hợp (Hard Cut, Match Cut, Time-jump).
+        3. NHÂN VẬT & TRANG PHỤC: Giữ nguyên 100% khuôn mặt và vóc dáng nhân vật người Việt Nam xuyên suốt. Nếu nội dung Sales, bắt buộc mặc cùng một bộ trang phục cố định. Nếu nội dung Khác, được phép đổi trang phục theo mốc thời gian/bối cảnh.
         4. KHÓA MÀU SẢN PHẨM & VẬT LÝ HÚT BỤI: Giữ nguyên màu sản phẩm gốc, hướng hút bụi xoáy thẳng vào cốc trong suốt.
         5. MÀN HÌNH SẠCH & VOICE MIỀN BẮC: Ảnh sạch tuyệt đối, không có chữ (`no text, zero typography, clean screen`). Tích hợp lồng tiếng miền Bắc trong `video_prompt`.
         
@@ -477,23 +483,23 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
           "title": "{outline.get('title')}", 
           "setting_style": "{outline.get('setting_style')}",
           "voice_profile": {json.dumps(outline.get('voice_profile', {}), ensure_ascii=False)},
-          "total_estimated_duration": "24s",
+          "total_estimated_duration": "{duration_str}",
           "scenes": [
             {{
               "scene_number": 1, 
-              "duration": "4s", 
+              "duration": "6s", 
               "scene_setting": "Bối cảnh thực tế", 
               "transition_type": "Hard Cut hoặc Match Cut hoặc Time-jump", 
               "voice_director_vn": "Chỉ đạo ngữ điệu miền Bắc", 
               "voiceover_vi": "Lời thoại miền Bắc", 
-              "image_prompt": "Prompt Imagen 3 ({aspect_ratio}) hiển thị nhân vật nữ người Việt Nam, trang phục phù hợp quy định, giữ nguyên màu sắc sản phẩm gốc, màn hình sạch, no text, clean screen", 
+              "image_prompt": "Prompt Imagen 3 ({aspect_ratio}) hiển thị nhân vật nữ người Việt Nam (giữ nguyên khuôn mặt), trang phục phù hợp quy định, giữ nguyên màu sắc sản phẩm gốc, màn hình sạch, no text, clean screen", 
               "video_prompt": "Prompt Veo 3 miêu tả chuyển động, hành động hút bụi đúng chiều vật lý, đọc lời thoại miền Bắc khớp khẩu hình"
             }}
           ]
         }}
         """
         try:
-            sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal)
+            sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins)
             res = call_gemini_api([prompt_detail], sys_inst)
             if isinstance(res, list): res = res[0]
             st.session_state.generated_details[target_id] = res
@@ -531,32 +537,7 @@ with col_style:
         "Minimalist Studio / Commercial Clean", "Dark Moody / Noir", "Paper Cut-out / Stop Motion"
     ])
 
-# BỔ SUNG CẤU HÌNH KHUNG HÌNH & MỤC ĐÍCH NGAY DƯỚI PHẦN CHỌN THỂ LOẠI & PHONG CÁCH
-st.markdown("---")
-st.markdown("### 📐 Cấu Hình Khung Hình & Mục Đích Chiến Dịch")
-
-col_ratio, col_goal = st.columns(2)
-with col_ratio:
-    aspect_ratio_choice = st.selectbox(
-        "Tỷ lệ khung hình video:",
-        ["9:16 (Dọc - TikTok, Reels, Shorts)", "16:9 (Ngang - YouTube, Phim dài, Facebook)"],
-        index=0
-    )
-    selected_aspect = "9:16" if "9:16" in aspect_ratio_choice else "16:9"
-
-with col_goal:
-    if selected_mode == "🛒 TikTok Shop & Bán Hàng":
-        content_goal = "Chuyển đổi đơn hàng & Chốt Sale trực tiếp (Sales & Conversion)"
-        st.info("💡 **Chế độ Sales:** Trang phục giữ nguyên xuyên suốt 100%, tập trung hook giật gân, test thực tế và chốt đơn.")
-    else:
-        content_goal_options = [
-            "Viral & Xây dựng thương hiệu cá nhân (Personal Branding)",
-            "Kể chuyện dài tập / Phim ngắn (Long-form Storytelling)",
-            "Chia sẻ kiến thức / Review chuyên sâu (Education & Deep Review)"
-        ]
-        content_goal = st.selectbox("Mục đích sản xuất video:", content_goal_options, index=0)
-
-# BẢNG CẨM NANG PHỐI HỢP ĐẦY ĐỦ 10 THỂ LOẠI (CHEAT SHEET)
+# ĐÃ ĐƯA BẢNG CẨM NANG PHỐI HỢP LÊN TRÊN PHẦN CẤU HÌNH KHUNG HÌNH & MỤC ĐÍCH
 with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp 'Thể Loại & Phong Cách' Chuẩn Xác Nhất", expanded=False):
     st.markdown("""
     <div style="background-color: #f8fafc; padding: 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 0.95rem; color: #334155;">
@@ -575,6 +556,37 @@ with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp '
         </ul>
     </div>
     """, unsafe_allow_html=True)
+
+st.markdown("---")
+st.markdown("### 📐 Cấu Hình Khung Hình, Mục Đích & Thời Lượng Chiến Dịch")
+
+col_ratio, col_goal, col_time = st.columns([1, 1, 1])
+with col_ratio:
+    aspect_ratio_choice = st.selectbox(
+        "Tỷ lệ khung hình video:",
+        ["9:16 (Dọc - TikTok, Reels, Shorts)", "16:9 (Ngang - YouTube, Phim dài, Facebook)"],
+        index=0
+    )
+    selected_aspect = "9:16" if "9:16" in aspect_ratio_choice else "16:9"
+
+with col_goal:
+    if selected_mode == "🛒 TikTok Shop & Bán Hàng":
+        content_goal = "Chuyển đổi đơn hàng & Chốt Sale trực tiếp (Sales & Conversion)"
+        st.info("💡 **Chế độ Sales:** 24s-35s (4-6 phân cảnh), trang phục giữ nguyên xuyên suốt 100%.")
+    else:
+        content_goal_options = [
+            "Viral & Xây dựng thương hiệu cá nhân (Personal Branding)",
+            "Kể chuyện dài tập / Phim ngắn (Long-form Storytelling)",
+            "Chia sẻ kiến thức / Review chuyên sâu (Education & Deep Review)"
+        ]
+        content_goal = st.selectbox("Mục đích sản xuất video:", content_goal_options, index=0)
+
+with col_time:
+    if selected_mode == "🛒 TikTok Shop & Bán Hàng":
+        target_duration_mins = 0.5 # Mặc định 24-35s
+        st.info("⏱️ **Thời lượng Sales:** Tự động tối ưu 24s - 35s.")
+    else:
+        target_duration_mins = st.number_input("⏱️ Nhập thời lượng mong muốn (Phút):", min_value=0.5, max_value=30.0, value=1.0, step=0.5)
 
 st.markdown("---")
 input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô tả chi tiết sản phẩm:", height=100)
@@ -611,7 +623,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịc
                   "setting_style": "Bối cảnh xưởng/kho/showroom",
                   "angle": "Góc tiếp cận chuyển đổi",
                   "target_hook": "Câu mở đầu giật gân",
-                  "recommended_scenes_count": "4",
+                  "recommended_scenes_count": "5",
                   "voice_profile": {{"gender": "Nữ", "age_range": "25-30", "tone": "Năng lượng cao"}}
                 }},
                 {{
@@ -620,7 +632,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịc
                   "setting_style": "Bối cảnh xưởng/kho/showroom",
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
-                  "recommended_scenes_count": "4",
+                  "recommended_scenes_count": "5",
                   "voice_profile": {{"gender": "Nam", "age_range": "28-35", "tone": "Trầm ấm"}}
                 }},
                 {{
@@ -629,7 +641,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịc
                   "setting_style": "Bối cảnh xưởng/kho/showroom",
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
-                  "recommended_scenes_count": "4",
+                  "recommended_scenes_count": "5",
                   "voice_profile": {{"gender": "Nữ", "age_range": "25-30", "tone": "Hào hứng"}}
                 }},
                 {{
@@ -638,7 +650,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịc
                   "setting_style": "Bối cảnh xưởng/kho/showroom",
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
-                  "recommended_scenes_count": "4",
+                  "recommended_scenes_count": "5",
                   "voice_profile": {{"gender": "Nam", "age_range": "25-30", "tone": "Thuyết phục"}}
                 }},
                 {{
@@ -647,7 +659,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịc
                   "setting_style": "Bối cảnh xưởng/kho/showroom",
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
-                  "recommended_scenes_count": "4",
+                  "recommended_scenes_count": "5",
                   "voice_profile": {{"gender": "Nữ", "age_range": "28-35", "tone": "Tin cậy"}}
                 }}
               ]
@@ -660,7 +672,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịc
                     payload.append(types.Part.from_bytes(data=f.getvalue(), mime_type=f.type if f.type else "image/jpeg"))
             payload.append(prompt_text)
             
-            res = call_gemini_api(payload, get_system_instructions(selected_mode, selected_style, selected_aspect, content_goal))
+            res = call_gemini_api(payload, get_system_instructions(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins))
             
             st.session_state.content_analysis = res.get("content_analysis")
             st.session_state.all_scripts = res.get("script_outlines", [])
@@ -701,8 +713,8 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
         sc_id = outline.get("id")
         col_info, col_act = st.columns([3, 1.2])
         with col_info:
-            raw_scenes_count = outline.get("recommended_scenes_count", "4")
-            scenes_display_text = f"{raw_scenes_count} Phân cảnh (~24s)" if str(raw_scenes_count).isdigit() else str(raw_scenes_count)
+            raw_scenes_count = outline.get("recommended_scenes_count", "5")
+            scenes_display_text = f"{raw_scenes_count} Phân cảnh" if str(raw_scenes_count).isdigit() else str(raw_scenes_count)
             pacing_badge = f'<span class="badge-dynamic">🎬 {scenes_display_text}</span>'
             
             is_gen = sc_id in st.session_state.generated_details
@@ -717,10 +729,10 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
                     st.session_state.active_script_id = sc_id
                     st.rerun()
                 else:
-                    create_scene_details_for_id(sc_id, selected_mode, selected_style, selected_aspect, content_goal)
+                    create_scene_details_for_id(sc_id, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
     st.markdown("---")
     if st.button("➕ Gọi Thêm 5 Kịch Bản Khác", key="btn_add_more_1", type="primary", use_container_width=True):
-        add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal)
+        add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
 
 # GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC ĐIỀU HƯỚNG
 if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
@@ -788,7 +800,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                         target_script = st.session_state.generated_details[selected_win_id]
                         cur_len = len(all_combined_scripts_list)
                         p_clone = f"Dựa trên kịch bản: {json.dumps(target_script, ensure_ascii=False)}. Tạo đúng 5 biến thể mới (id từ {cur_len+1} đến {cur_len+5}). Xuất JSON key 'cloned_outlines'."
-                        res_c = call_gemini_api([p_clone], get_system_instructions(selected_mode, selected_style, selected_aspect, content_goal))
+                        res_c = call_gemini_api([p_clone], get_system_instructions(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins))
                         cloned_list = res_c.get("cloned_outlines", [])
                         for idx_c, cl in enumerate(cloned_list): cl["id"] = cur_len + idx_c + 1
                         st.session_state.cloned_scripts.extend(cloned_list)
@@ -806,7 +818,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         """, unsafe_allow_html=True)
 
         if st.button("➕ Gọi Thêm 5 Tình Huống Kịch Bản Mới", key="btn_add_more_phase2", use_container_width=True):
-            add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal)
+            add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
 
     with col_right:
         st.markdown("""
@@ -825,5 +837,5 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                 st.markdown(f"• **#{it_id}. {item.get('title')}** — <span class='badge-pending'>CHƯA TẠO</span>", unsafe_allow_html=True)
                 
                 if st.button("✨ Tạo chi tiết ngay", key=f"nav_sc_{it_id}", use_container_width=True):
-                    create_scene_details_for_id(it_id, selected_mode, selected_style, selected_aspect, content_goal)
+                    create_scene_details_for_id(it_id, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
                 st.markdown("<hr style='margin: 6px 0;'>", unsafe_allow_html=True)
