@@ -787,18 +787,3 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                 if st.button("✨ Tạo chi tiết ngay", key=f"nav_sc_{it_id}", use_container_width=True):
                     create_scene_details_for_id(it_id, selected_mode, selected_style)
                 st.markdown("<hr style='margin: 6px 0;'>", unsafe_allow_html=True)
-
-        for item in all_combined_scripts_list:
-            it_id = item.get("id")
-            is_gen = it_id in st.session_state.generated_details
-            badge = '<span class="badge-ready">ĐÃ TẠO</span>' if is_gen else '<span class="badge-pending">CHƯA TẠO</span>'
-            prefix = "👉 " if (it_id == st.session_state.active_script_id) else "• "
-            
-            st.markdown(f"{prefix} **#{it_id}. {item.get('title')}** — {badge}", unsafe_allow_html=True)
-            if st.button("👁️ Xem lại" if is_gen else "✨ Tạo chi tiết", key=f"nav_sc_{it_id}", use_container_width=True):
-                if is_gen:
-                    st.session_state.active_script_id = it_id
-                    st.rerun()
-                else:
-                    create_scene_details_for_id(it_id, selected_mode, selected_style)
-            st.markdown("<hr style='margin: 6px 0;'>", unsafe_allow_html=True)
