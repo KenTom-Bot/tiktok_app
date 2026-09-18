@@ -323,6 +323,10 @@ with st.sidebar:
                     st.session_state.cloned_scripts = loaded_proj.get("cloned_scripts", [])
                     st.session_state.expanded_scripts = loaded_proj.get("expanded_scripts", [])
                     st.session_state.generated_details = {int(k): v for k, v in loaded_proj.get("generated_details", {}).items()}
+                    
+                    # BỔ SUNG: Đặt lại active_script_id về None để hiển thị danh sách kịch bản ra màn hình chính
+                    st.session_state.active_script_id = None
+                    
                     st.success("🎉 Đã khôi phục thành công dự án từ file!")
                     st.rerun()
                 else:
