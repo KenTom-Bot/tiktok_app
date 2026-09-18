@@ -678,15 +678,33 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
 # GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC ĐIỀU HƯỚNG
 if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
     st.divider()
-    active_script = st.session_state.generated_details[st.session_state.active_script_id]
-    if isinstance(active_script, list): active_script = active_script[0]
+    raw_active_data = st.session_state.generated_details[st.session_state.active_script_id]
+    
+    # Chuẩn hóa an toàn tuyệt đối chống lỗi AttributeError nếu dữ liệu trả về lồng danh sách
+    if isinstance(raw_active_data, list):
+        active_script = raw_active_data[0] if len(raw_active_data) > 0 else {}
+    elif isinstance(raw_active_data, dict):
+        # Trường hợp mô hình bọc trong key 'script_details' hoặc tương tự
+        if "scenes" not in raw_active_data and len(raw_active_data) == 1:
+            first_val = list(raw_active_data.values())[0]
+            active_script = first_val[0] if isinstance(first_val, list) else first_val
+        else:
+            active_script = raw_active_data
+    else:
+        active_script = {}
 
-    vp = active_script.get("voice_profile", {})
-    st.markdown(f"### 🎬 **KỊCH BẢN CHI TIẾT: {str(active_script.get('title', '')).upper()}**")
-    st.info(f"⏱️ Tổng thời lượng: **{active_script.get('total_estimated_duration', '24s')}** | 🎙️ Giọng: **{vp.get('gender', 'Nữ')} miền Bắc ({vp.get('age_range', '25-30')})**")
+    vp = active_script.get("voice_profile", {}) if isinstance(active_script, dict) else {}
+    script_title = active_script.get('title', 'Kịch bản chi tiết') if isinstance(active_script, dict) else 'Kịch bản chi tiết'
+    total_dur = active_script.get('total_estimated_duration', '24s') if isinstance(active_script, dict) else '24s'
 
-    scenes_list = active_script.get("scenes", [])
+    st.markdown(f"### 🎬 **KỊCH BẢN CHI TIẾT: {str(script_title).upper()}**")
+    st.info(f"⏱️ Tổng thời lượng: **{total_dur}** | 🎙️ Giọng: **{vp.get('gender', 'Nữ')} miền Bắc ({vp.get('age_range', '25-30')})**")
+
+    scenes_list = active_script.get("scenes", []) if isinstance(active_script, dict) else []
+    if isinstance(scenes_list, dict): scenes_list = [scenes_list]
+    
     for idx, scene in enumerate(scenes_list, start=1):
+        if not isinstance(scene, dict): continue
         dur = scene.get("duration", "6s")
         st.markdown(f"#### **📍 Phân cảnh {idx} ({dur}) — [ {scene.get('transition_type', 'Hard Cut')} ]**")
         st.markdown(f"🏛️ **Bối cảnh & Biểu cảm nhân vật:** *{scene.get('scene_setting')}*")
