@@ -385,11 +385,12 @@ BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
 PHONG CÁCH KẾT XUẤT THỊ GIÁC: {style.upper()}
 
 🛑 QUY TẮC BẮT BUỘC VỀ NHÂN VẬT & TÍNH CHÂN THẬT (VIETNAMESE CHARACTER LOCK):
-1. 100% NHÂN VẬT LÀ NGƯỜI VIỆT NAM: Trong mọi 'image_prompt' và 'video_prompt', nhân vật xuất hiện (nam hoặc nữ) bắt buộc phải là người Việt Nam với gương mặt, nét đẹp Á Đông thuần túy, trang phục hiện đại, lịch sự, gần gũi phong cách người Việt. Tuyệt đối không để người nước ngoài hoặc lai Tây.
-2. KHÓA MÀU SẮC & KHÔNG ẢO GIÁC: Giữ nguyên 100% màu sắc và chất liệu thực tế của sản phẩm từ ảnh gốc. Cấm tự ý thêm đèn LED rực rỡ hay chi tiết cơ khí giả mà sản phẩm không có.
-3. VẬT LÝ HÚT/THỔI ĐÚNG CHIỀU: Mô tả rõ ràng luồng khí hút bụi đi ngược vào đầu vòi và xoáy trực tiếp vào cốc chứa rác trong suốt.
-4. THỜI LƯỢNG MỖI CẢNH: CHỈ DÙNG 3 MỐC: 4s, 6s, 8s (CẤM MỐC 10 GIÂY).
-5. VOICE & KHẨU HÌNH: 100% video prompt có lồng tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s) kèm chỉ đạo khẩu hình khớp nhân vật. Màn hình sạch (không text, không logo, không watermark).
+1. 100% NHÂN VẬT LÀ NGƯỜI VIỆT NAM: Trong mọi 'image_prompt' và 'video_prompt', nhân vật xuất hiện (nam hoặc nữ) bắt buộc phải là người Việt Nam với gương mặt, nét đẹp Á Đông thuần túy, lịch sự, gần gũi phong cách người Việt. Tuyệt đối không để người nước ngoài hoặc lai Tây.
+2. ĐỒNG NHẤT TRANG PHỤC XUYÊN SUỐT (OUTFIT LOCK): Xuyên suốt toàn bộ các phân cảnh của video, nhân vật BẮT BUỘC phải mặc CÙNG MỘT BỘ TRANG PHỤC cố định đã định hình từ cảnh đầu tiên (ví dụ: áo sơ mi trắng xắn tay lịch sự hoặc áo polo tối màu chuyên nghiệp). TUYỆT ĐỐI KHÔNG ĐƯỢC thay đổi kiểu dáng hay màu sắc trang phục giữa các cảnh để đảm bảo tính liên tục thương hiệu.
+3. KHÓA MÀU SẮC & KHÔNG ẢO GIÁC: Giữ nguyên 100% màu sắc và chất liệu thực tế của sản phẩm từ ảnh gốc. Cấm tự ý thêm đèn LED rực rỡ hay chi tiết cơ khí giả mà sản phẩm không có.
+4. VẬT LÝ HÚT/THỔI ĐÚNG CHIỀU: Mô tả rõ ràng luồng khí hút bụi đi ngược vào đầu vòi và xoáy trực tiếp vào cốc chứa rác trong suốt.
+5. THỜI LƯỢNG MỖI CẢNH: CHỈ DÙNG 3 MỐC: 4s, 6s, 8s (CẤM MỐC 10 GIÂY).
+6. VOICE & KHẨU HÌNH: 100% video prompt có lồng tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s) kèm chỉ đạo khẩu hình khớp nhân vật. Màn hình sạch (không text, không logo, không watermark).
 """
     return base
 def call_gemini_api(contents, system_inst):
