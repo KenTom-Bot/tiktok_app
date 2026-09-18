@@ -518,7 +518,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
 # ==============================================================================
 st.markdown("""
 <div class="header-container">
-    <div class="header-badge">🌟 STUDIO VIDEO AI ĐA NĂNG TOÀN DIỆN</div>
+    <div class="header-badge">🌟 STUDIO VIDEO AI ĐA NĂNG TOÀN DIỆN NHÀ KEN TÔM</div>
     <div class="main-title">🎬 Hệ Thống Kịch Bản Đa Vũ Trụ Pro</div>
     <div class="sub-title">TikTok Shop, Mẹ & Bé Viral, TVC Điện Ảnh, Phim Đời Sống & Giáo Dục</div>
 </div>
