@@ -448,15 +448,20 @@ QUY TẮC ĐẠO DIỄN & LỜI THOẠI BẮT BUỘC:
 """
     if mode == "🛒 TikTok Shop & Bán Hàng":
         return base + r"""
-CHẾ ĐỘ: TIKTOK SHOP & SẢN PHẨM CHUYỂN ĐỔI
-- Khóa chặt giải phẫu cơ khí: Màu sắc Hero Color, chất liệu, vị trí nút bấm, cổng sạc, phụ kiện.
-- Ma trận nỗi đau & mong muốn: Bóc tách rõ 3 tầng nỗi đau (Chức năng, Tài chính, Cảm xúc).
+CHẾ ĐỘ: TIKTOK SHOP & SẢN PHẨM CHUYỂN ĐỔI (BẮT BUỘC ƯU TIÊN DEAL & GIÁ XƯỞNG)
+- Khóa chặt giải phẫu cơ khí / sản phẩm: Màu sắc Hero Color, chất liệu, vị trí nút bấm, cổng sạc, phụ kiện.
+- CHIẾN LƯỢC HOẠT ĐỘNG & KÍCH CẦU (BẮT BUỘC ĐƯA VÀO KỊCH BẢN):
+  + Luôn nhấn mạnh yếu tố GIÁ TẬN GỐC TẠI XƯỞNG / KHO / SHOWROOM (không qua trung gian, xả kho không lợi nhuận).
+  + Tạo cảm giác khan hiếm: Deal sốc giới hạn khung giờ, quà tặng kèm độc quyền cho phiên livestream hoặc giỏ hàng góc trái.
+- Ma trận nỗi đau & mong muốn: Bóc tách rõ 3 tầng nỗi đau (Chức năng, Tài chính - giá hời, Cảm xúc).
+- Vật lý siêu thực: Bụi/vụn rác bị hút xoáy thẳng vào buồng chứa; sương siêu mịn; vải đàn hồi.
 """
     elif mode == "👶 Mẹ & Bé & Cùng Con Học (Viral Parenting)":
         return base + r"""
 CHẾ ĐỘ: MẸ & BÉ & GIÁO DỤC SỚM (VIRAL PARENTING)
 - Khoảnh khắc ấm áp, tương tác tự nhiên giữa mẹ/bố và con nhỏ.
 - Phương pháp giáo dục hiện đại: Montessori, STEM tại nhà, học qua chơi, phát triển EQ.
+- Ma trận nỗi đau phụ huynh: Trẻ nghiện iPad, chậm nói, lười học toán/tiếng Anh.
 """
     elif mode == "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp":
         return base + r"""
