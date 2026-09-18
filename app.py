@@ -193,7 +193,7 @@ def process_login(login_val):
         st.error("❌ Tài khoản chưa được cấp quyền!")
 
 # ==============================================================================
-# SIDEBAR - ĐĂNG NHẬP & QUẢN TRỊ
+# SIDEBAR - ĐĂNG NHẬP, QUẢN TRỊ & QUẢN LÝ DỰ ÁN ĐẦY ĐỦ
 # ==============================================================================
 with st.sidebar:
     st.markdown("### 🔐 **Đăng Nhập Hệ Thống**")
@@ -310,6 +310,26 @@ with st.sidebar:
                 st.success("✅ Đã mở dự án thành công!")
                 st.rerun()
 
+        st.markdown("<div style='font-size: 0.85rem; color: #64748b; margin-top: 8px;'>Hoặc tải file dự án cũ từ máy tính:</div>", unsafe_allow_html=True)
+        uploaded_project_file = st.file_uploader("📤 Chọn file kịch bản (.json)", type=["json"], label_visibility="collapsed")
+        if uploaded_project_file is not None:
+            try:
+                file_bytes = uploaded_project_file.getvalue()
+                loaded_proj = json.loads(file_bytes.decode("utf-8"))
+                if "all_scripts" in loaded_proj:
+                    st.session_state.active_project_title = loaded_proj.get("title", "Dự án tải lên")
+                    st.session_state.content_analysis = loaded_proj.get("content_analysis")
+                    st.session_state.all_scripts = loaded_proj.get("all_scripts", [])
+                    st.session_state.cloned_scripts = loaded_proj.get("cloned_scripts", [])
+                    st.session_state.expanded_scripts = loaded_proj.get("expanded_scripts", [])
+                    st.session_state.generated_details = {int(k): v for k, v in loaded_proj.get("generated_details", {}).items()}
+                    st.success("🎉 Đã khôi phục thành công dự án từ file!")
+                    st.rerun()
+                else:
+                    st.error("❌ Định dạng file JSON không hợp lệ!")
+            except Exception as e:
+                st.error(f"❌ Lỗi đọc file: {e}")
+
 def safe_copy_button(text_to_copy: str, button_label: str = "📋 Sao Chép Prompt"):
     b64 = base64.b64encode(text_to_copy.encode('utf-8')).decode('utf-8')
     components.html(f"""
@@ -369,7 +389,6 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
     2. QUY CHUẨN TRANG PHỤC LINH HOẠT THEO THỜI GIAN/BỐI CẢNH: Nếu kịch bản có mốc thời gian mới (ví dụ: ngày hôm sau, đổi bối cảnh), nhân vật ĐƯỢC PHÉP thay đổi trang phục mới phù hợp, nhưng KHUÔN MẶT và vóc dáng cốt lõi giữ nguyên 100%.
     """
 
-    # Mặc định chế độ chuyên gia ngầm toàn diện cho mọi đối tượng
     master_director_directive = "CHẾ ĐỘ CHUYÊN GIA CAO CẤP: Tối ưu hóa sâu sắc các thông số điện ảnh chuyên sâu (Lighting setup, Lens focal length, Color grading, Camera movement physics) cho Imagen 3 và Veo 3 để mọi người dùng dù không biết gì vẫn tạo ra video đạt chuẩn Hollywood."
 
     base = f"""
