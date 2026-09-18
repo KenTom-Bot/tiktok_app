@@ -375,16 +375,33 @@ def format_analysis_field(field_val) -> str:
     
     text = str(field_val).strip()
     text = re.sub(r'<<\.?', '', text)
-    text = text.replace('<br>', '\n').replace('<b>', '').replace('</b>', '')
+    text = text.replace('<b>', '').replace('</b>', '')
     
-    sentences = re.split(r'(?<=[.?!])\s+', text)
-    formatted_lines = []
-    for s in sentences:
-        s_clean = s.strip()
-        if s_clean:
-            formatted_lines.append(f"• {s_clean}")
+    # Chuẩn hóa các dấu xuống dòng thô từ LLM
+    lines = text.split('\n')
+    processed_lines = []
+    for line in lines:
+        line_clean = line.strip()
+        if not line_clean:
+            continue
+        # Tách các ý nhỏ nếu trong một dòng có chứa dạng "1.", "2.", v.v. nằm giữa câu
+        sub_parts = re.split(r'(?=\s*\d+\.\s)', line_clean)
+        for part in sub_parts:
+            p_clean = part.strip()
+            if p_clean:
+                processed_lines.append(p_clean)
+
+    formatted_output = []
+    for line in processed_lines:
+        # Kiểm tra xem dòng có bắt đầu bằng số thứ tự (ví dụ: "1.", "2.") hoặc gạch đầu dòng không
+        if re.match(r'^(\d+[\.\)]|[-•])\s*', line):
+            # Nếu là ý con, thụt lề vào trong bằng style padding-left
+            formatted_output.append(f"<div style='margin-left: 20px; margin-top: 4px;'>{line}</div>")
+        else:
+            # Dòng tiêu đề chính hoặc đoạn văn mở đầu
+            formatted_output.append(f"<div style='margin-top: 6px;'><b>{line}</b></div>" if ":" in line and len(line) < 60 else f"<div style='margin-top: 4px;'>{line}</div>")
             
-    return "<br>".join(formatted_lines) if formatted_lines else text
+    return "".join(formatted_output) if formatted_output else text
 
 def get_system_instructions(mode: str, style: str) -> str:
     base = f"""
