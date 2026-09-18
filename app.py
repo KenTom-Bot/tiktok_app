@@ -401,7 +401,7 @@ def format_analysis_field(field_val) -> str:
             
     return "".join(formatted_output) if formatted_output else text
 
-ef get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str) -> str:
+def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str) -> str:
     is_sales = ("Bán Hàng" in mode or "Sales" in goal)
     format_instruction = "9:16 vertical video format, mobile-first framing" if aspect_ratio == "9:16" else "16:9 widescreen cinematic format, professional movie framing"
     
