@@ -228,15 +228,29 @@ with st.sidebar:
             duration_option = st.selectbox("Thời hạn:", options=["Dùng thử 3 ngày", "1 Tháng", "3 Tháng", "6 Tháng", "1 Năm", "2 Năm", "3 Năm", "5 Năm", "10 Năm", "Vĩnh viễn (Trọn đời)"], index=0)
             if st.form_submit_button("➕ Cấp Quyền", use_container_width=True):
                 if new_account_id.strip():
-                    exp = "2099-12-31" if "Vĩnh viễn" in duration_option else ((datetime.now() + timedelta(days=3)) if "Dùng thử" in duration_option else (datetime.now() + timedelta(days={"1 Tháng": 30, "3 Tháng": 90, "6 Tháng": 180, "1 Năm": 365, "2 Năm": 730, "3 Năm": 1095, "5 Năm": 1825, "10 Năm": 3650}.get(duration_option, 30))).strftime("%Y-%m-%d")
-                    st.session_state.licensed_accounts[new_account_id.strip()] = {"contact": new_account_id.strip(), "roles": assigned_modules, "expires_at": exp}
+                    # Xử lý tính toán ngày hết hạn an toàn, không lỗi cú pháp
+                    if "Vĩnh viễn" in duration_option:
+                        expiry_date = "2099-12-31"
+                    elif "Dùng thử" in duration_option:
+                        expiry_date = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
+                    else:
+                        month_map = {
+                            "1 Tháng": 30, "3 Tháng": 90, "6 Tháng": 180, 
+                            "1 Năm": 365, "2 Năm": 730, "3 Năm": 1095, 
+                            "5 Năm": 1825, "10 Năm": 3650
+                        }
+                        days_add = month_map.get(duration_option, 30)
+                        expiry_date = (datetime.now() + timedelta(days=days_add)).strftime("%Y-%m-%d")
+
+                    st.session_state.licensed_accounts[new_account_id.strip()] = {
+                        "contact": new_account_id.strip(), "roles": assigned_modules, "expires_at": expiry_date
+                    }
                     save_licensed_accounts(st.session_state.licensed_accounts)
                     st.success("✅ Đã cấp quyền!")
                     st.rerun()
 
 def safe_copy_button(text_to_copy: str, button_label: str = "📋 Copy Prompt"):
     b64 = base64.b64encode(text_to_copy.encode('utf-8')).decode('utf-8')
-    btn_id = f"cb_{abs(hash(text_to_copy)) % 1000000}"
     components.html(f"""
     <button onclick='navigator.clipboard.writeText(decodeURIComponent(escape(atob("{b64}"))));this.innerText="✅ Đã sao chép!";setTimeout(()=>this.innerText="{button_label}",2000);' style="background:linear-gradient(135deg, #ff4b4b, #ff7300);color:white;border:none;padding:8px 16px;font-size:13px;font-weight:700;border-radius:6px;cursor:pointer;width:100%;">{button_label}</button>
     """, height=40)
@@ -262,7 +276,7 @@ def get_system_instructions(mode: str, style: str) -> str:
 BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
 PHONG CÁCH KẾT XUẤT THỊ GIÁC: {style.upper()}
 QUY TẮC ĐẠO DIỄN & LỜI THOẠI:
-1. THỜI LƯỢNG MỖI CẢNH: CHỈ DÙNG 3 MỐC: 4s, 6s, 8s (CẤM MỐC 10 GIÂY).
+1. THỜI LƯỢNG MỖI CẢNH: CHỈ ĐÙNG 3 MỐC: 4s, 6s, 8s (CẤM MỐC 10 GIÂY).
 2. 100% CÁC PHÂN CẢNH ĐỀU PHẢI CÓ LỜI THOẠI (VOICEOVER) GIỌNG MIỀN BẮC CHUẨN.
 3. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
 """
@@ -304,7 +318,7 @@ with col_mode:
     selected_mode = st.selectbox("🎯 Chọn Thể Loại Nội Dung:", options=[
         "🛒 TikTok Shop & Bán Hàng", "👶 Mẹ & Bé & Cùng Con Học (Viral Parenting)", "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp",
         "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan", "🌿 Du Lịch & Phong Cảnh Đất Nước", "🚗 Xe Cộ & Trải Nghiệm Lái",
-        "🍲 Ẩm Thực & Trải Nghiệm Đời Sống", "📖 Đời Sống & Bài Học Giáo Dục", "🏛️ Lịch Sử & Tín Ngưỡng Di Sản", "🧘 Chữa Lành & Phong Cách Sống"
+        "🍲 Ẩm Thực & Đời Sống", "📖 Đời Sống & Bài Học Giáo Dục", "🏛️ Lịch Sử & Tín Ngưỡng Di Sản", "🧘 Chữa Lành & Phong Cách Sống"
     ])
 with col_style:
     selected_style = st.selectbox("🎨 Chọn Phong Cách Hình Ảnh:", options=[
@@ -320,7 +334,6 @@ st.markdown("---")
 input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô tả chi tiết sản phẩm:", height=100)
 uploaded_files = st.file_uploader("🖼️ Tải ảnh tham chiếu (Tùy chọn):", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
-# Xử lý nút phân tích chính (Đảm bảo bắt lỗi trực quan và không bị kẹt luồng)
 if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files)):
     with st.spinner("⏳ Đang xử lý dữ liệu và gọi Gemini API..."):
         try:
