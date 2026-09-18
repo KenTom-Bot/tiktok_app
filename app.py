@@ -271,10 +271,12 @@ with st.sidebar:
     if st.session_state.is_logged_in:
         st.markdown("---")
         st.markdown("### 🗂️ **Quản Lý Dự Án**")
-        project_title_input = st.text_input("Tên dự án:", value=st.session_state.get("active_project_title", "Chiến dịch mới"))
+        project_title_input = st.text_input("Tên dự án hiện tại:", value=st.session_state.get("active_project_title", "Chiến dịch mới"))
+        
         col_p1, col_p2 = st.columns(2)
         with col_p1:
-            if st.button("💾 Lưu", use_container_width=True):
+            # 1. NÚT LƯU DỰ ÁN TRÊN APP
+            if st.button("💾 Lưu App", use_container_width=True):
                 if st.session_state.all_scripts:
                     p_id = f"proj_{int(time.time())}"
                     st.session_state.projects_library[p_id] = {
@@ -283,20 +285,64 @@ with st.sidebar:
                         "all_scripts": st.session_state.all_scripts, "cloned_scripts": st.session_state.cloned_scripts,
                         "expanded_scripts": st.session_state.expanded_scripts, "generated_details": st.session_state.generated_details
                     }
-                    st.success("✅ Đã lưu dự án!")
+                    st.success("✅ Đã lưu vào bộ nhớ app!")
         with col_p2:
-            if st.session_state.projects_library:
-                proj_keys = list(st.session_state.projects_library.keys())
-                selected_load_id = st.selectbox("Chọn dự án:", options=proj_keys, format_func=lambda x: st.session_state.projects_library[x]["title"], label_visibility="collapsed")
-                if st.button("📂 Mở", use_container_width=True):
-                    p_data = st.session_state.projects_library[selected_load_id]
-                    st.session_state.active_project_title = p_data["title"]
-                    st.session_state.content_analysis = p_data["content_analysis"]
-                    st.session_state.all_scripts = p_data["all_scripts"]
-                    st.session_state.cloned_scripts = p_data["cloned_scripts"]
-                    st.session_state.expanded_scripts = p_data["expanded_scripts"]
-                    st.session_state.generated_details = p_data["generated_details"]
+            # 2. XUẤT FILE DỰ ÁN RA JSON ĐỂ TẢI VỀ MÁY
+            if st.session_state.all_scripts:
+                export_data = {
+                    "title": project_title_input,
+                    "mode": st.session_state.get("selected_mode"),
+                    "style": st.session_state.get("selected_style"),
+                    "content_analysis": st.session_state.content_analysis,
+                    "all_scripts": st.session_state.all_scripts,
+                    "cloned_scripts": st.session_state.cloned_scripts,
+                    "expanded_scripts": st.session_state.expanded_scripts,
+                    "generated_details": st.session_state.generated_details
+                }
+                json_str = json.dumps(export_data, ensure_ascii=False, indent=2)
+                st.download_button(
+                    label="📥 Tải JSON",
+                    data=json_str,
+                    file_name=f"{project_title_input.replace(' ', '_')}.json",
+                    mime="application/json",
+                    use_container_width=True
+                )
+
+        # 3. MỞ LẠI CÁC DỰ ÁN ĐÃ LƯU TRONG BỘ NHỚ APP
+        if st.session_state.projects_library:
+            proj_keys = list(st.session_state.projects_library.keys())
+            selected_load_id = st.selectbox("📂 Chọn dự án đã lưu trong app:", options=proj_keys, format_func=lambda x: st.session_state.projects_library[x]["title"])
+            if st.button("📂 Mở Dự Án Này", use_container_width=True):
+                p_data = st.session_state.projects_library[selected_load_id]
+                st.session_state.active_project_title = p_data["title"]
+                st.session_state.content_analysis = p_data["content_analysis"]
+                st.session_state.all_scripts = p_data["all_scripts"]
+                st.session_state.cloned_scripts = p_data["cloned_scripts"]
+                st.session_state.expanded_scripts = p_data["expanded_scripts"]
+                st.session_state.generated_details = p_data["generated_details"]
+                st.success("✅ Đã mở dự án thành công!")
+                st.rerun()
+
+        # 4. TẢI FILE JSON CŨ TỪ MÁY TÍNH LÊN APP (IMPORT PROJECT)
+        st.markdown("<div style='font-size: 0.85rem; color: #64748b; margin-top: 8px;'>Hoặc tải file dự án cũ từ máy tính:</div>", unsafe_allow_html=True)
+        uploaded_project_file = st.file_uploader("📤 Chọn file kịch bản (.json)", type=["json"], label_visibility="collapsed")
+        if uploaded_project_file is not None:
+            try:
+                file_bytes = uploaded_project_file.getvalue()
+                loaded_proj = json.loads(file_bytes.decode("utf-8"))
+                if "all_scripts" in loaded_proj:
+                    st.session_state.active_project_title = loaded_proj.get("title", "Dự án tải lên")
+                    st.session_state.content_analysis = loaded_proj.get("content_analysis")
+                    st.session_state.all_scripts = loaded_proj.get("all_scripts", [])
+                    st.session_state.cloned_scripts = loaded_proj.get("cloned_scripts", [])
+                    st.session_state.expanded_scripts = loaded_proj.get("expanded_scripts", [])
+                    st.session_state.generated_details = {int(k): v for k, v in loaded_proj.get("generated_details", {}).items()}
+                    st.success("🎉 Đã khôi phục thành công dự án từ file!")
                     st.rerun()
+                else:
+                    st.error("❌ Định dạng file JSON không hợp lệ!")
+            except Exception as e:
+                st.error(f"❌ Lỗi đọc file: {e}")
 
 def safe_copy_button(text_to_copy: str, button_label: str = "📋 Copy Prompt"):
     b64 = base64.b64encode(text_to_copy.encode('utf-8')).decode('utf-8')
