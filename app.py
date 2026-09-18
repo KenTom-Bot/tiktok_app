@@ -357,22 +357,25 @@ def format_analysis_field(field_val) -> str:
     text = re.sub(r'<<\.?', '', text)
     text = text.replace('<b>', '').replace('</b>', '')
     
+    # Tách các câu hoặc ý nhỏ dựa trên dấu chấm hoặc số thứ tự
     lines = text.split('\n')
     processed_lines = []
     for line in lines:
         line_clean = line.strip()
         if not line_clean: continue
-        sub_parts = re.split(r'(?=\s*\d+\.\s)', line_clean)
+        # Tách nhỏ các ý có chứa dạng "1.", "2.", "Tông màu", "Kích thước", "Trọng lượng", "Bộ phụ kiện"
+        sub_parts = re.split(r'(?=\s*(?:\d+\.|Tông màu|Kích thước|Trọng lượng|Thao tác|Bộ phụ kiện|Chất liệu)\b)', line_clean)
         for part in sub_parts:
             p_clean = part.strip()
             if p_clean: processed_lines.append(p_clean)
 
     formatted_output = []
-    for line in processed_lines:
-        if re.match(r'^(\d+[\.\)]|[-•])\s*', line):
-            formatted_output.append(f"<div style='margin-left: 20px; margin-top: 4px;'>{line}</div>")
+    for idx, line in enumerate(processed_lines):
+        # Nếu là ý phụ chi tiết cấu tạo, thụt lề vào trong cho đẹp mắt
+        if idx > 0 or re.match(r'^(\d+[\.\)]|[-•])\s*', line):
+            formatted_output.append(f"<div style='margin-left: 15px; margin-top: 6px;'>• {line.lstrip('1234567890. ')}</div>")
         else:
-            formatted_output.append(f"<div style='margin-top: 6px;'><b>{line}</b></div>" if ":" in line and len(line) < 60 else f"<div style='margin-top: 4px;'>{line}</div>")
+            formatted_output.append(f"<div style='margin-top: 4px;'>{line}</div>")
             
     return "".join(formatted_output) if formatted_output else text
 
