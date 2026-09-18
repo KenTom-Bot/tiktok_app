@@ -470,7 +470,7 @@ st.markdown("---")
 input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô tả chi tiết sản phẩm:", height=100)
 uploaded_files = st.file_uploader("🖼️ Tải ảnh tham chiếu (Tùy chọn):", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
-if st.button("🚀 Bắt Đầu Phân Tích Sản Phẩm & Lên Trận Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files)):
+if st.button("🚀 Bắt Đầu Phân Tích Sản Phẩm & Lên Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files)):
     with st.spinner("Đang xử lý hình ảnh và phân tích chuyên sâu dữ liệu đầu vào..."):
         prompt = f"Phân tích chuyên sâu cho '{selected_mode}' phong cách '{selected_style}'. Nội dung: '{input_text.strip() if input_text else 'Phân tích qua hình ảnh đính kèm.'}'."
         try:
