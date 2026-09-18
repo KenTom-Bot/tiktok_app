@@ -385,7 +385,8 @@ BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
 PHONG CÁCH KẾT XUẤT THỊ GIÁC: {style.upper()}
 
 🛑 QUY TẮC BẮT BUỘC VỀ NHÂN VẬT & TÍNH CHÂN THẬT (VIETNAMESE CHARACTER LOCK):
-1.TUYỆT ĐỐI KHÔNG CÓ CHỮ TRÊN ẢNH: Trong mọi 'image_prompt' (Imagen 3), BẮT BUỘC phải cài đặt các từ khóa chống chữ: 'no text, zero typography, clean screen, no watermarks, no logos, no captions, no subtitles'. Ảnh sinh ra phải là hình ảnh thực tế thuần túy, sạch tuyệt đối, không được có bất kỳ ký tự hay chữ viết nào xuất hiện trên khung hình.
+1. ĐỒNG NHẤT KHUÔN MẶT & HÌNH DÁNG (IDENTITY ANCHOR): Ngay từ phân cảnh đầu tiên, hệ thống phải định hình một gương mặt nhân vật cụ thể (ví dụ: một nữ reviewer người Việt Nam 26 tuổi, tóc đen ngang vai buộc nửa gọn gàng, khuôn mặt trái xoan thanh tú, nụ cười thân thiện). Xuyên suốt toàn bộ các cảnh còn lại, BẮT BUỘC phải lặp lại chính xác các từ khóa định hình gương mặt và kiểu tóc này trong mọi 'image_prompt' và 'video_prompt' để đảm bảo nhân vật qua các cảnh nhìn giống hệt nhau như một người.
+1. TUYỆT ĐỐI KHÔNG CÓ CHỮ TRÊN ẢNH: Trong mọi 'image_prompt' (Imagen 3), BẮT BUỘC phải cài đặt các từ khóa chống chữ: 'no text, zero typography, clean screen, no watermarks, no logos, no captions, no subtitles'. Ảnh sinh ra phải là hình ảnh thực tế thuần túy, sạch tuyệt đối, không được có bất kỳ ký tự hay chữ viết nào xuất hiện trên khung hình.
 2. 100% NHÂN VẬT LÀ NGƯỜI VIỆT NAM: Trong mọi 'image_prompt' và 'video_prompt', nhân vật xuất hiện (nam hoặc nữ) bắt buộc phải là người Việt Nam với gương mặt, nét đẹp Á Đông thuần túy, lịch sự, gần gũi phong cách người Việt. Tuyệt đối không để người nước ngoài hoặc lai Tây.
 3. ĐỒNG NHẤT TRANG PHỤC XUYÊN SUỐT (OUTFIT LOCK): Xuyên suốt toàn bộ các phân cảnh của video, nhân vật BẮT BUỘC phải mặc CÙNG MỘT BỘ TRANG PHỤC cố định đã định hình từ cảnh đầu tiên (ví dụ: áo sơ mi trắng xắn tay lịch sự hoặc áo polo tối màu chuyên nghiệp). TUYỆT ĐỐI KHÔNG ĐƯỢC thay đổi kiểu dáng hay màu sắc trang phục giữa các cảnh để đảm bảo tính liên tục thương hiệu.
 4. KHÓA MÀU SẮC & KHÔNG ẢO GIÁC: Giữ nguyên 100% màu sắc và chất liệu thực tế của sản phẩm từ ảnh gốc. Cấm tự ý thêm đèn LED rực rỡ hay chi tiết cơ khí giả mà sản phẩm không có.
@@ -451,10 +452,11 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         
         QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC:
         1. THỜI LƯỢNG MỖI CẢNH: Chỉ dùng 3 mốc: '4s', '6s', '8s'.
-        2. TUYỆT ĐỐI KHÔNG TEXT TRÊN ẢNH (CLEAN SCREEN): Trong `image_prompt`, bắt buộc thêm các lệnh kỹ thuật: `no text, zero typography, clean screen, no watermarks, no logos, no captions`. Không để xuất hiện bất kỳ chữ hay phụ đề nào trên bức ảnh của Imagen 3.
-        3. 100% NHÂN VẬT VIỆT NAM: Trong 'image_prompt' và 'video_prompt', bắt buộc ghi rõ nhân vật là người Việt Nam trẻ trung, chuyên nghiệp, nét mặt Á Đông gần gũi, mặc trang phục cố định xuyên suốt.
-        4. KHÓA MÀU SẮC GỐC & VẬT LÝ HÚT BỤI: Giữ nguyên màu sắc sản phẩm gốc, không đổi màu. Mô tả hướng hút bụi xoáy trực tiếp vào cốc chứa trong suốt.
-        5. VOICE MIỀN BẮC & KHẨU HÌNH: Tích hợp đồng thời hành động, biểu cảm gương mặt và lời thoại tiếng Việt miền Bắc trong `video_prompt`.
+        2. ĐỒNG NHẤT KHUÔN MẶT & HÌNH DÁNG (CONSISTENT FACE): Trong mọi `image_prompt` và `video_prompt`, phải neo giữ chặt chẽ hình ảnh một nhân vật người Việt Nam cố định (ví dụ: "cùng một nữ reviewer người Việt Nam, khuôn mặt trái xoan, tóc đen ngang vai, vóc dáng cân đối"). Các cảnh sau phải giữ nguyên mô tả đặc điểm khuôn mặt này để AI không bị đổi mẫu.
+        3. TUYỆT ĐỐI KHÔNG TEXT TRÊN ẢNH (CLEAN SCREEN): Trong `image_prompt`, bắt buộc thêm các lệnh kỹ thuật: `no text, zero typography, clean screen, no watermarks, no logos, no captions`. Không để xuất hiện bất kỳ chữ hay phụ đề nào trên bức ảnh của Imagen 3.
+        4. 100% NHÂN VẬT VIỆT NAM: Trong 'image_prompt' và 'video_prompt', bắt buộc ghi rõ nhân vật là người Việt Nam trẻ trung, chuyên nghiệp, nét mặt Á Đông gần gũi, mặc trang phục cố định xuyên suốt.
+        5. KHÓA MÀU SẮC GỐC & VẬT LÝ HÚT BỤI: Giữ nguyên màu sắc sản phẩm gốc, không đổi màu. Mô tả hướng hút bụi xoáy trực tiếp vào cốc chứa trong suốt.
+        6. VOICE MIỀN BẮC & KHẨU HÌNH: Tích hợp đồng thời hành động, biểu cảm gương mặt và lời thoại tiếng Việt miền Bắc trong `video_prompt`.
         
         Xuất chuẩn 1 Dict JSON duy nhất:
         {{
