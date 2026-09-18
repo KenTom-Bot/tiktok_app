@@ -193,7 +193,7 @@ def process_login(login_val):
         st.error("❌ Tài khoản chưa được cấp quyền!")
 
 # ==============================================================================
-# SIDEBAR - ĐĂNG NHẬP, QUẢN TRỊ & QUẢN LÝ DỰ ÁN ĐẦY ĐỦ
+# SIDEBAR - ĐĂNG NHẬP, QUẢN TRỊ & QUẢN LÝ DỰ ÁN
 # ==============================================================================
 with st.sidebar:
     st.markdown("### 🔐 **Đăng Nhập Hệ Thống**")
@@ -307,6 +307,7 @@ with st.sidebar:
                 st.session_state.cloned_scripts = p_data["cloned_scripts"]
                 st.session_state.expanded_scripts = p_data["expanded_scripts"]
                 st.session_state.generated_details = p_data["generated_details"]
+                st.session_state.active_script_id = None
                 st.success("✅ Đã mở dự án thành công!")
                 st.rerun()
 
@@ -317,20 +318,16 @@ with st.sidebar:
                 file_bytes = uploaded_project_file.getvalue()
                 loaded_proj = json.loads(file_bytes.decode("utf-8"))
                 
-                # Bắt linh hoạt các dạng cấu trúc file JSON khác nhau từ các bản trước
                 proj_data = loaded_proj
                 if "projects_library" in loaded_proj and len(loaded_proj["projects_library"]) > 0:
                     first_key = list(loaded_proj["projects_library"].keys())[0]
                     proj_data = loaded_proj["projects_library"][first_key]
                 elif "all_scripts" not in loaded_proj and isinstance(loaded_proj, dict):
-                    # Nếu file chứa thẳng dữ liệu dự án
                     proj_data = loaded_proj
 
-                # Nạp dữ liệu an toàn vào session state
                 st.session_state.active_project_title = proj_data.get("title", "Dự án tải lên")
                 st.session_state.content_analysis = proj_data.get("content_analysis")
                 
-                # Quét mọi biến thể tên key chứa danh sách kịch bản
                 scripts = proj_data.get("all_scripts", [])
                 if not scripts and "script_outlines" in proj_data:
                     scripts = proj_data.get("script_outlines", [])
@@ -342,7 +339,7 @@ with st.sidebar:
                 raw_details = proj_data.get("generated_details", {})
                 st.session_state.generated_details = {int(k): v for k, v in raw_details.items()} if raw_details else {}
                 
-                # Buộc hiển thị ra danh sách chính thay vì kẹt ở chế độ xem chi tiết
+                # QUAN TRỌNG: Reset active_script_id về None để hiển thị ngay danh sách kịch bản ra màn hình chính
                 st.session_state.active_script_id = None
                 
                 st.success("🎉 Đã khôi phục thành công dự án từ file!")
@@ -539,7 +536,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
 st.markdown("""
 <div class="header-container">
     <div class="header-badge">🌟 STUDIO VIDEO AI ĐA NĂNG TOÀN DIỆN</div>
-    <div class="main-title">🎬 Hệ Thống Kịch Bản Đa Vũ Trụ Nhà Ken Tôm</div>
+    <div class="main-title">🎬 Hệ Thống Kịch Bản Đa Vũ Trụ Pro</div>
     <div class="sub-title">TikTok Shop, Mẹ & Bé Viral, TVC Điện Ảnh, Phim Đời Sống & Giáo Dục</div>
 </div>
 """, unsafe_allow_html=True)
@@ -710,16 +707,16 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịc
 # Hiển thị DNA Phân tích
 if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
     st.divider()
-    st.markdown(f"### 🔍 **Phân Tích Sản Phẩm Chi Tiết Đa Tầng — [{selected_mode.upper()}]**")
+    st.markdown(f"### 🔍 **Phân Tích DNA Chi Tiết Đa Tầng — [{selected_mode.upper()}]**")
     ca = st.session_state.content_analysis
     with st.container(border=True):
-        st.markdown("##### 🏭 **1. Thông số & Chi tiết sản phẩm:**")
+        st.markdown("##### 🏭 **1. Thông số Cốt lõi & Chi tiết đặc thù:**")
         st.markdown(f"<div style='line-height: 1.8;'>{format_analysis_field(ca.get('mechanical_and_accessories', 'N/A'))}</div>", unsafe_allow_html=True)
         st.markdown("---")
-        st.markdown("##### 🎯 **2. Nỗi đau & Tâm lý Khách Hàng:**")
+        st.markdown("##### 🎯 **2. Ma trận Nỗi đau & Tâm lý:**")
         st.markdown(f"<div style='line-height: 1.8;'>{format_analysis_field(ca.get('customer_pain_points', 'N/A'))}</div>", unsafe_allow_html=True)
         st.markdown("---")
-        st.markdown("##### 💡 **3. Mong muốn Khách hàng:**")
+        st.markdown("##### 💡 **3. Mong muốn cốt lõi & USP:**")
         st.markdown(f"<div style='line-height: 1.8;'>• <b>Mong muốn:</b> {format_analysis_field(ca.get('core_desires', 'N/A'))}<br>• <b>USP / Slogan:</b> {format_analysis_field(ca.get('emotional_or_usp_hook', 'N/A'))}</div>", unsafe_allow_html=True)
         st.markdown("---")
         st.markdown("##### ⚙️ **4. Quy chuẩn Vật lý:**")
