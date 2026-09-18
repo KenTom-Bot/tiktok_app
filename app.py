@@ -219,15 +219,18 @@ with st.sidebar:
     if st.session_state.is_logged_in and IS_ADMIN:
         st.markdown("---")
         st.markdown("### ⚙️ **Quản Lý Tài Khoản (Admin)**")
+        
         with st.form("add_license_form"):
-            new_account_id = st.text_input("Thêm Email / SĐT mới:")
+            st.markdown("<b>➕ Cấp Quyền Tài Khoản Mới</b>", unsafe_allow_html=True)
+            new_account_id = st.text_input("Email / SĐT khách hàng:")
             assigned_modules = st.multiselect("Phân quyền chức năng:", options=[
                 "🛒 TikTok Shop & Bán Hàng", "👶 Mẹ & Bé & Cùng Con Học", "📺 TVC Quảng Cáo & Thương Hiệu",
                 "🏡 Nhà Cửa & Kiến Trúc", "🌿 Du Lịch & Phong Cảnh", "🚗 Xe Cộ & Trải Nghiệm Lái",
                 "🍲 Ẩm Thực & Đời Sống", "📖 Đời Sống & Giáo Dục", "🏛️ Lịch Sử & Tín Ngưỡng Di Sản", "🧘 Chữa Lành & Lifestyle"
             ], default=["🛒 TikTok Shop & Bán Hàng"])
             duration_option = st.selectbox("Thời hạn:", options=["Dùng thử 3 ngày", "1 Tháng", "3 Tháng", "6 Tháng", "1 Năm", "2 Năm", "3 Năm", "5 Năm", "10 Năm", "Vĩnh viễn (Trọn đời)"], index=0)
-            if st.form_submit_button("➕ Cấp Quyền", use_container_width=True):
+            
+            if st.form_submit_button("💾 Lưu / Cấp Quyền Mới", use_container_width=True):
                 if new_account_id.strip():
                     if "Vĩnh viễn" in duration_option:
                         expiry_date = "2099-12-31"
@@ -246,7 +249,53 @@ with st.sidebar:
                         "contact": new_account_id.strip(), "roles": assigned_modules, "expires_at": expiry_date
                     }
                     save_licensed_accounts(st.session_state.licensed_accounts)
-                    st.success("✅ Đã cấp quyền!")
+                    st.success("✅ Đã lưu thành công!")
+                    st.rerun()
+
+        # Hiển thị danh sách tài khoản đã cấp và cho phép SỬA / CẬP NHẬT trực tiếp
+        if st.session_state.licensed_accounts:
+            with st.expander(f"📋 Danh sách tài khoản đã cấp ({len(st.session_state.licensed_accounts)})"):
+                for acc, info in list(st.session_state.licensed_accounts.items()):
+                    st.markdown(f"**👤 {acc}**")
+                    st.caption(f"• Quyền: {', '.join(info.get('roles', []))}<br>• Hết hạn: {info.get('expires_at')}", unsafe_allow_html=True)
+                    
+                    # Nút xóa tài khoản
+                    if acc != ADMIN_EMAIL:
+                        if st.button(f"🗑️ Xóa {acc}", key=f"del_acc_{acc}"):
+                            del st.session_state.licensed_accounts[acc]
+                            save_licensed_accounts(st.session_state.licensed_accounts)
+                            st.success(f"Đã xóa {acc}!")
+                            st.rerun()
+                    st.markdown("---")
+
+    if st.session_state.is_logged_in:
+        st.markdown("---")
+        st.markdown("### 🗂️ **Quản Lý Dự Án**")
+        project_title_input = st.text_input("Tên dự án:", value=st.session_state.get("active_project_title", "Chiến dịch mới"))
+        col_p1, col_p2 = st.columns(2)
+        with col_p1:
+            if st.button("💾 Lưu", use_container_width=True):
+                if st.session_state.all_scripts:
+                    p_id = f"proj_{int(time.time())}"
+                    st.session_state.projects_library[p_id] = {
+                        "title": project_title_input, "mode": st.session_state.get("selected_mode"),
+                        "style": st.session_state.get("selected_style"), "content_analysis": st.session_state.content_analysis,
+                        "all_scripts": st.session_state.all_scripts, "cloned_scripts": st.session_state.cloned_scripts,
+                        "expanded_scripts": st.session_state.expanded_scripts, "generated_details": st.session_state.generated_details
+                    }
+                    st.success("✅ Đã lưu dự án!")
+        with col_p2:
+            if st.session_state.projects_library:
+                proj_keys = list(st.session_state.projects_library.keys())
+                selected_load_id = st.selectbox("Chọn dự án:", options=proj_keys, format_func=lambda x: st.session_state.projects_library[x]["title"], label_visibility="collapsed")
+                if st.button("📂 Mở", use_container_width=True):
+                    p_data = st.session_state.projects_library[selected_load_id]
+                    st.session_state.active_project_title = p_data["title"]
+                    st.session_state.content_analysis = p_data["content_analysis"]
+                    st.session_state.all_scripts = p_data["all_scripts"]
+                    st.session_state.cloned_scripts = p_data["cloned_scripts"]
+                    st.session_state.expanded_scripts = p_data["expanded_scripts"]
+                    st.session_state.generated_details = p_data["generated_details"]
                     st.rerun()
 
 def safe_copy_button(text_to_copy: str, button_label: str = "📋 Copy Prompt"):
@@ -263,7 +312,6 @@ def clean_and_parse_json(text_content: str):
     parsed = json.loads(cleaned.strip())
     return parsed[0] if isinstance(parsed, list) and len(parsed) > 0 else parsed
 
-# Hàm định dạng ngắt dòng mỗi câu rõ ràng
 def format_analysis_field(field_val) -> str:
     if isinstance(field_val, dict):
         return "<br>".join([f"• <b>{str(k).replace('_', ' ').title()}:</b> {str(v)}" for k, v in field_val.items()])
@@ -274,7 +322,6 @@ def format_analysis_field(field_val) -> str:
     text = re.sub(r'<<\.?', '', text)
     text = text.replace('<br>', '\n').replace('<b>', '').replace('</b>', '')
     
-    # Tách đoạn văn thành các câu riêng biệt dựa trên dấu chấm, chấm hỏi, chấm than
     sentences = re.split(r'(?<=[.?!])\s+', text)
     formatted_lines = []
     for s in sentences:
@@ -290,8 +337,8 @@ BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
 PHONG CÁCH KẾT XUẤT THỊ GIÁC: {style.upper()}
 QUY TẮC ĐẠO DIỄN, BIỂU CẢM & LỜI THOẠI CHÂN THẬT:
 1. THỜI LƯỢNG MỖI CẢNH: CHỈ DÙNG 3 MỐC: 4s, 6s, 8s (CẤM MỐC 10 GIÂY).
-2. BIỂU CẢM VÀ HÌNH THỂ NHÂN VẬT: Trong 'video_prompt' và 'scene_setting', bắt buộc miêu tả chi tiết biểu cảm gương mặt (ví dụ: mắt mở lớn ngạc nhiên, nụ cười mỉm tự tin, ánh mắt trìu mến), cử chỉ bàn tay công thái học, tương tác vật lý chân thật với sản phẩm.
-3. LỜI THOẠI & NGỮ ĐIỆU (VOICEOVER): 100% tiếng Việt miền Bắc chuẩn Hà Nội. Trong 'voice_director_vn', chỉ đạo rõ ngữ điệu (ví dụ: giọng ấm áp truyền cảm, nhịp nhanh hào hứng, nhấn mạnh từ khóa giá xưởng/deal sốc). Khớp nhịp đọc ~3 từ/s.
+2. BIỂU CẢM VÀ HÌNH THỂ NHÂN VẬT: Trong 'video_prompt' và 'scene_setting', bắt buộc miêu tả chi tiết biểu cảm gương mặt, cử chỉ bàn tay, tương tác vật lý chân thật với sản phẩm.
+3. LỜI THOẠI & NGỮ ĐIỆU (VOICEOVER): 100% tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s).
 4. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
 """
     if mode == "🛒 TikTok Shop & Bán Hàng":
@@ -469,7 +516,7 @@ if st.session_state.content_analysis and isinstance(st.session_state.content_ana
     raw_dna = str(ca.get('prompt_dna_lock', 'N/A')).replace('<br>', ' ').replace('<b>', '').replace('</b>', '')
     st.code(raw_dna, language="text")
 
-# GIAI ĐOẠN 1: DANH SÁCH KỊCH BẢN BAN ĐẦU (ĐÃ HIỂN THỊ ĐẦY ĐỦ SỐ BỐI CẢNH & THỜI LƯỢNG)
+# GIAI ĐOẠN 1: DANH SÁCH KỊCH BẢN BAN ĐẦU
 all_combined_scripts_list = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
 
 if all_combined_scripts_list and st.session_state.active_script_id is None:
@@ -555,7 +602,6 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
     st.markdown(f"### 🎬 **KỊCH BẢN CHI TIẾT: {str(active_script.get('title', '')).upper()}**")
     st.info(f"⏱️ Tổng thời lượng: **{active_script.get('total_estimated_duration', '24s')}** | 🎙️ Giọng: **{vp.get('gender', 'Nữ')} miền Bắc ({vp.get('age_range', '25-30')})**")
 
-    # Sửa lỗi đánh số phân cảnh bằng enumerate để không bị sai thành phân cảnh 1 hết
     scenes_list = active_script.get("scenes", [])
     for idx, scene in enumerate(scenes_list, start=1):
         dur = scene.get("duration", "6s")
