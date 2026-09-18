@@ -149,7 +149,7 @@ def save_licensed_accounts(accounts_dict):
     except Exception as e:
         st.error(f"Lỗi lưu danh sách tài khoản: {e}")
 
-# Khởi tạo Session State an toàn
+# Khởi tạo Session State
 if "content_analysis" not in st.session_state: st.session_state.content_analysis = None
 if "all_scripts" not in st.session_state: st.session_state.all_scripts = []
 if "cloned_scripts" not in st.session_state: st.session_state.cloned_scripts = []
@@ -228,7 +228,6 @@ with st.sidebar:
             duration_option = st.selectbox("Thời hạn:", options=["Dùng thử 3 ngày", "1 Tháng", "3 Tháng", "6 Tháng", "1 Năm", "2 Năm", "3 Năm", "5 Năm", "10 Năm", "Vĩnh viễn (Trọn đời)"], index=0)
             if st.form_submit_button("➕ Cấp Quyền", use_container_width=True):
                 if new_account_id.strip():
-                    # Xử lý tính toán ngày hết hạn an toàn, không lỗi cú pháp
                     if "Vĩnh viễn" in duration_option:
                         expiry_date = "2099-12-31"
                     elif "Dùng thử" in duration_option:
@@ -275,13 +274,14 @@ def get_system_instructions(mode: str, style: str) -> str:
     base = f"""
 BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
 PHONG CÁCH KẾT XUẤT THỊ GIÁC: {style.upper()}
-QUY TẮC ĐẠO DIỄN & LỜI THOẠI:
+QUY TẮC ĐẠO DIỄN, BIỂU CẢM & LỜI THOẠI CHÂN THẬT:
 1. THỜI LƯỢNG MỖI CẢNH: CHỈ ĐÙNG 3 MỐC: 4s, 6s, 8s (CẤM MỐC 10 GIÂY).
-2. 100% CÁC PHÂN CẢNH ĐỀU PHẢI CÓ LỜI THOẠI (VOICEOVER) GIỌNG MIỀN BẮC CHUẨN.
-3. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
+2. BIỂU CẢM VÀ HÌNH THỂ NHÂN VẬT: Trong 'video_prompt', bắt buộc miêu tả chi tiết biểu cảm gương mặt (ví dụ: mắt mở lớn ngạc nhiên, nụ cười mỉm tự tin, ánh mắt trìu mến), cử chỉ bàn tay công thái học, tương tác vật lý chân thật với sản phẩm.
+3. LỜI THOẠI & NGỮ ĐIỆU (VOICEOVER): 100% tiếng Việt miền Bắc chuẩn Hà Nội. Trong 'voice_director_vn', chỉ đạo rõ ngữ điệu (ví dụ: giọng ấm áp truyền cảm, nhịp nhanh hào hứng, nhấn mạnh vào từ khóa giá xưởng/deal sốc). Khớp nhịp đọc ~3 từ/s.
+4. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
 """
     if mode == "🛒 TikTok Shop & Bán Hàng":
-        return base + "\n- Ưu tiên DEAL SỐC, GIÁ TẬN GỐC TẠI XƯỞNG / KHO / SHOWROOM."
+        return base + "\n- Ưu tiên DEAL SỐC, GIÁ TẬN GỐC TẠI XƯỞNG / KHO / SHOWROOM. Biểu cảm nhân vật năng lượng cao, chốt đơn quyết liệt."
     return base
 
 def call_gemini_api(contents, system_inst):
@@ -318,7 +318,7 @@ with col_mode:
     selected_mode = st.selectbox("🎯 Chọn Thể Loại Nội Dung:", options=[
         "🛒 TikTok Shop & Bán Hàng", "👶 Mẹ & Bé & Cùng Con Học (Viral Parenting)", "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp",
         "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan", "🌿 Du Lịch & Phong Cảnh Đất Nước", "🚗 Xe Cộ & Trải Nghiệm Lái",
-        "🍲 Ẩm Thực & Đời Sống", "📖 Đời Sống & Bài Học Giáo Dục", "🏛️ Lịch Sử & Tín Ngưỡng Di Sản", "🧘 Chữa Lành & Phong Cách Sống"
+        "🍲 Ẩm Thực & Trải Nghiệm Đời Sống", "📖 Đời Sống & Bài Học Giáo Dục", "🏛️ Lịch Sử & Tín Ngưỡng Di Sản", "🧘 Chữa Lành & Phong Cách Sống"
     ])
 with col_style:
     selected_style = st.selectbox("🎨 Chọn Phong Cách Hình Ảnh:", options=[
@@ -327,8 +327,25 @@ with col_style:
         "Minimalist Studio / Commercial Clean", "Dark Moody / Noir", "Paper Cut-out / Stop Motion"
     ])
 
-with st.expander("💡 Xem Bảng Gợi Ý Phối Hợp 'Thể Loại & Phong Cách'", expanded=False):
-    st.markdown("Tra cứu nhanh các ngách nội dung phù hợp với từng phong cách thị giác điện ảnh.")
+# BẢNG CẨM NANG PHỐI HỢP ĐẦY ĐỦ 10 THỂ LOẠI (CHEAT SHEET)
+with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp 'Thể Loại & Phong Cách' Chuẩn Xác Nhất", expanded=False):
+    st.markdown("""
+    <div style="background-color: #f8fafc; padding: 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 0.95rem; color: #334155;">
+        <h4 style="color: #0f172a; margin-top: 0; margin-bottom: 12px; font-size: 1.05rem;">🎯 Cẩm Nang Phối Hợp Sáng Tạo Nội Dung Đa Vũ Trụ</h4>
+        <ul style="padding-left: 20px; line-height: 1.8; margin-bottom: 0;">
+            <li><b>🛒 TikTok Shop & Bán Hàng:</b> Phù hợp nhất với <code style="color: #e11d48;">Minimalist Studio / Commercial Clean</code> hoặc <code style="color: #e11d48;">Cyberpunk / Sci-Fi Neon</code> (đồ công nghệ).</li>
+            <li><b>👶 Mẹ & Bé & Cùng Con Học:</b> Tối ưu với <code style="color: #e11d48;">Paper Cut-out / Stop Motion</code> hoặc <code style="color: #e11d48;">3D Pixar / Disney Animation</code> (ấm áp, an toàn).</li>
+            <li><b>📺 TVC Quảng Cáo Cao Cấp:</b> Nên chọn <code style="color: #e11d48;">Cinematic Realism (8K)</code> hoặc <code style="color: #e11d48;">Dark Moody / Noir</code> (sang trọng, kịch tính).</li>
+            <li><b>🏡 Nhà Cửa & Kiến Trúc:</b> Kết hợp <code style="color: #e11d48;">Cinematic Realism</code> (hiện đại) hoặc <code style="color: #e11d48;">Vintage / Retro Film</code> (hoài niệm).</li>
+            <li><b>🌿 Du Lịch & Phong Cảnh:</b> Sử dụng <code style="color: #e11d48;">Cinematic Realism</code> (hùng vĩ) hoặc <code style="color: #e11d48;">Tranh Thủy Mặc Cổ Phong</code> (vùng cao, tâm linh).</li>
+            <li><b>🚗 Xe Cộ & Trải Nghiệm Lái:</b> Tối ưu với <code style="color: #e11d48;">Cinematic Realism</code> kết hợp <code style="color: #e11d48;">Cyberpunk / Sci-Fi Neon</code> (tốc độ, ánh sáng đèn).</li>
+            <li><b>🍲 Ẩm Thực & Đời Sống:</b> Sử dụng <code style="color: #e11d48;">Vintage / Retro Film</code> hoặc <code style="color: #e11d48;">Minimalist Studio</code> (tôn vinh món ăn).</li>
+            <li><b>📖 Đời Sống & Giáo Dục:</b> Phù hợp với <code style="color: #e11d48;">2D Ghibli / Anime Art</code> hoặc <code style="color: #e11d48;">Paper Cut-out</code> (gần gũi, nhân văn).</li>
+            <li><b>🏛️ Lịch Sử & Tín Ngưỡng Di Sản:</b> Tối ưu tuyệt đối bằng <code style="color: #e11d48;">Tranh Thủy Mặc Cổ Phong</code> hoặc <code style="color: #e11d48;">Dark Moody / Noir</code> (cổ kính, huyền bí).</li>
+            <li><b>🧘 Chữa Lành & Lifestyle:</b> Kết hợp <code style="color: #e11d48;">Minimalist Studio</code> hoặc <code style="color: #e11d48;">Cinematic Realism</code> (bình yên, thư thái).</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
 
 st.markdown("---")
 input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô tả chi tiết sản phẩm:", height=100)
@@ -389,7 +406,7 @@ if st.session_state.all_scripts and st.session_state.active_script_id is None:
             if st.button("✨ Tạo chi tiết kịch bản này", key=f"btn_init_{sc_id}", use_container_width=True):
                 with st.spinner(f"Đang dựng kịch bản chi tiết #{sc_id}..."):
                     try:
-                        p_detail = f"Dựa trên DNA, tạo chi tiết cho ý tưởng ID {sc_id} - {outline.get('title')} ({selected_mode}). Thời lượng cảnh chỉ dùng 4s, 6s, 8s. Xuất JSON chuẩn 1 Dict."
+                        p_detail = f"Dựa trên DNA, tạo chi tiết cho ý tưởng ID {sc_id} - {outline.get('title')} ({selected_mode}). Chú trọng miêu tả cảm xúc gương mặt, cử chỉ hình thể nhân vật và ngữ điệu giọng đọc. Thời lượng cảnh chỉ dùng 4s, 6s, 8s. Xuất JSON chuẩn 1 Dict."
                         res_d = call_gemini_api([p_detail], get_system_instructions(selected_mode, selected_style))
                         st.session_state.generated_details[sc_id] = res_d
                         st.session_state.active_script_id = sc_id
@@ -425,7 +442,8 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         sc_num = scene.get("scene_number", 1)
         dur = scene.get("duration", "6s")
         st.markdown(f"#### **📍 Phân cảnh {sc_num} ({dur}) — [ {scene.get('transition_type', 'Hard Cut')} ]**")
-        st.markdown(f"🏛️ **Bối cảnh:** *{scene.get('scene_setting')}*")
+        st.markdown(f"🏛️ **Bối cảnh & Biểu cảm nhân vật:** *{scene.get('scene_setting')}*")
+        st.markdown(f"**🎙️ Đạo diễn ngữ điệu:** *{scene.get('voice_director_vn')}*")
         st.markdown(f"**💬 Lời thoại miền Bắc:** `\"{scene.get('voiceover_vi')}\"`")
         
         if scene.get('image_prompt'):
@@ -512,7 +530,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                 else:
                     with st.spinner(f"Đang dựng kịch bản chi tiết #{it_id}..."):
                         try:
-                            p_detail = f"Dựa trên DNA, tạo chi tiết cho ý tưởng ID {it_id} - {item.get('title')} ({selected_mode}). Thời lượng cảnh chỉ dùng 4s, 6s, 8s. Xuất JSON chuẩn 1 Dict."
+                            p_detail = f"Dựa trên DNA, tạo chi tiết cho ý tưởng ID {it_id} - {item.get('title')} ({selected_mode}). Chú trọng biểu cảm nhân vật và ngữ điệu. Thời lượng cảnh chỉ dùng 4s, 6s, 8s. Xuất JSON chuẩn 1 Dict."
                             res_d = call_gemini_api([p_detail], get_system_instructions(selected_mode, selected_style))
                             st.session_state.generated_details[it_id] = res_d
                             st.session_state.active_script_id = it_id
