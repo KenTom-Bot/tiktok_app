@@ -440,18 +440,18 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     ca_data = st.session_state.get("content_analysis", {})
     locked_color_info = ca_data.get("mechanical_and_accessories", "giữ nguyên màu sắc thực tế từ ảnh gốc") if isinstance(ca_data, dict) else "giữ nguyên màu sắc thực tế"
     
-    with st.spinner(f"🎬 Đang dựng kịch bản chi tiết cảnh quay #{target_id} (Khóa màu & Tích hợp 100% Voice vào Video Prompt)..."):
+    with st.spinner(f"🎬 Đang dựng kịch bản chi tiết cảnh quay #{target_id} (Khóa chặt quy luật vật lý hút/thổi)..."):
         prompt_detail = f"""
         Sản phẩm gốc & Màu sắc thực tế cần khóa chặt: "{locked_color_info}" (Mô tả chung: {product_ctx})
         Thể loại nội dung: "{current_mode}"
         Ý tưởng kịch bản: ID {target_id} - {outline.get('title')}
         Bối cảnh định hướng: {outline.get('setting_style')} | Góc tiếp cận: {outline.get('angle')} | Hook: {outline.get('target_hook')}
         
-        QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC (ĐẶC BIỆT QUAN TRỌNG VỀ VOICE TRONG VIDEO PROMPT):
+        QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC VỀ VẬT LÝ HÚT / THỔI (RẤT QUAN TRỌNG):
         1. Thời lượng mỗi cảnh 'duration' chỉ dùng đúng 3 mốc: '4s', '6s', '8s'.
-        2. KHÓA MÀU SẮC 100%: Trong 'image_prompt' (Imagen 3), bắt buộc giữ nguyên màu sắc gốc thực tế, không đổi màu, không thêm chi tiết thừa.
-        3. 100% VIDEO PROMPT CÓ VOICE & KHẨU HÌNH: Trong 'video_prompt' (Veo 3), BẮT BUỘC phải viết rõ hành động nhân vật đang vừa thao tác cơ khí vừa cất tiếng đọc lời thoại tiếng Việt miền Bắc chuẩn xác. Phải lồng trực tiếp đoạn thoại (voiceover_vi) và chỉ đạo khẩu hình, biểu cảm gương mặt vào trong câu lệnh video prompt để Veo 3 đồng bộ âm thanh và hình ảnh.
-        4. Lời thoại 100% tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s), chỉ đạo ngữ điệu rõ ràng trong 'voice_director_vn'.
+        2. TUYỆT ĐỐI KHÓA HƯỚNG VẬT LÝ (VORTEX PHYSICS): Trong 'video_prompt' (Veo 3), khi thực hiện tính năng HÚT, bắt buộc phải miêu tả rõ ràng luồng khí hút chặt bụi bẩn từ bề mặt đi ngược vào đầu vòi, xoáy thẳng và gom gọn vào bên trong cốc chứa rác trong suốt. Tuyệt đối cấm hiện tượng bụi bay ngược ra ngoài hoặc thổi tung tóe khi đang ở chế độ hút. Ngược lại, khi ở chế độ THỔI, phải miêu tả luồng gió thổi bay bụi từ khe hẹp ra ngoài.
+        3. 100% VIDEO PROMPT CÓ VOICE & KHẨU HÌNH: Trong 'video_prompt', lồng trực tiếp đoạn thoại (voiceover_vi) và chỉ đạo khẩu hình nhân vật đọc giọng miền Bắc khớp với hành động.
+        4. Giữ nguyên 100% màu sắc gốc của sản phẩm, không đổi màu, không thêm chi tiết thừa.
         
         Xuất chuẩn 1 Dict JSON duy nhất:
         {{
@@ -464,12 +464,12 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
             {{
               "scene_number": 1, 
               "duration": "4s", 
-              "scene_setting": "Bối cảnh phù hợp thực tế tình huống sử dụng", 
+              "scene_setting": "Bối cảnh thực tế tình huống sử dụng", 
               "transition_type": "Hard Cut", 
               "voice_director_vn": "Chỉ đạo ngữ điệu miền Bắc", 
               "voiceover_vi": "Lời thoại miền Bắc", 
-              "image_prompt": "Prompt Imagen 3 (9:16) giữ nguyên 100% màu sắc gốc thực tế, không đổi màu", 
-              "video_prompt": "Prompt Veo 3 kết hợp đồng thời hành động thao tác tay, biểu cảm gương mặt và lồng trực tiếp nội dung lời thoại tiếng Việt miền Bắc khớp khẩu hình nhân vật"
+              "image_prompt": "Prompt Imagen 3 (9:16) giữ nguyên 100% màu sắc gốc thực tế", 
+              "video_prompt": "Prompt Veo 3 mô tả chính xác hướng vật lý: luồng khí hút sạch bụi bẩn từ bề mặt đi ngược vào đầu vòi và xoáy trực tiếp vào cốc chứa rác trong suốt, kèm lồng tiếng thoại miền Bắc khớp khẩu hình"
             }}
           ]
         }}
@@ -482,6 +482,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
             st.rerun()
         except Exception as e:
             st.error(f"Lỗi dựng chi tiết kịch bản: {e}")
+            
 # ==============================================================================
 # GIAO DIỆN CHÍNH
 # ==============================================================================
