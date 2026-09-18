@@ -687,20 +687,18 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
     st.divider()
     raw_active_data = st.session_state.generated_details[st.session_state.active_script_id]
     
-    # Chuẩn hóa an toàn tuyệt đối chống lỗi AttributeError nếu dữ liệu trả về lồng danh sách
+    # Chuẩn hóa an toàn chống lỗi kiểu dữ liệu
     if isinstance(raw_active_data, list):
         active_script = raw_active_data[0] if len(raw_active_data) > 0 else {}
     elif isinstance(raw_active_data, dict):
-        # Trường hợp mô hình bọc trong key 'script_details' hoặc tương tự
-        if "scenes" not in raw_active_data and len(raw_active_data) == 1:
-            first_val = list(raw_active_data.values())[0]
-            active_script = first_val[0] if isinstance(first_val, list) else first_val
-        else:
-            active_script = raw_active_data
+        active_script = raw_active_data
     else:
         active_script = {}
 
-    vp = active_script.get("voice_profile", {}) if isinstance(active_script, dict) else {}
+    # Ép kiểu an toàn tuyệt đối cho voice_profile (vp)
+    raw_vp = active_script.get("voice_profile", {}) if isinstance(active_script, dict) else {}
+    vp = raw_vp if isinstance(raw_vp, dict) else {"gender": "Nữ", "age_range": "25-30", "tone": "Năng lượng cao"}
+
     script_title = active_script.get('title', 'Kịch bản chi tiết') if isinstance(active_script, dict) else 'Kịch bản chi tiết'
     total_dur = active_script.get('total_estimated_duration', '24s') if isinstance(active_script, dict) else '24s'
 
