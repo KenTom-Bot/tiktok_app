@@ -534,28 +534,28 @@ input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô
 uploaded_files = st.file_uploader("🖼️ Tải ảnh tham chiếu (Tùy chọn):", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
 if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files)):
-    with st.spinner("⏳ Đang quét màu sắc thực tế từ ảnh và phân tích chuyên sâu cơ khí..."):
+    with st.spinner("⏳ Đang phân tích..."):
         try:
             st.session_state.current_input_context = input_text.strip() if input_text else "Phân tích trực tiếp từ hình ảnh đính kèm sản phẩm."
             
             prompt_text = f"""
-            Phân tích siêu chuyên sâu sản phẩm/chủ đề cho thể loại '{selected_mode}' theo phong cách '{selected_style}'. 
+            Phân tích siêu chuyên sâu sản phẩm/chủ đề bất kỳ cho thể loại '{selected_mode}' theo phong cách '{selected_style}'. 
             Thông tin mô tả từ người dùng: "{st.session_state.current_input_context}"
 
-            YÊU CẦU ĐẶC BIỆT VỀ MÀU SẮC VÀ HÌNH THỰC TẾ (RẤT QUAN TRỌNG):
-            1. Nhận diện màu sắc chuẩn xác: Nếu có hình ảnh đính kèm, phải quét và xác định chính xác tông màu thực tế của sản phẩm (ví dụ: Xám Titan nhám, Đen nhung mờ, Bạc ánh kim, Trắng sứ, v.v.). Tuyệt đối không được đoán mò hoặc dùng màu chung chung.
-            2. Cấu tạo cơ khí: Vị trí nút bấm, chất liệu nhựa ABS cao cấp, cốc chứa rác trong suốt và trọn bộ đầu phụ kiện.
-            3. Khóa thị giác (Visual DNA Lock): Định nghĩa rõ mã màu Hero Color này để toàn bộ các prompt ảnh (Imagen 3) và video (Veo 3) sau này sinh ra phải khớp 100% với sản phẩm thật ngoài đời.
+            QUY ĐỊNH ĐỘNG VỀ NHẬN DIỆN SẢN PHẨM (RẤT QUAN TRỌNG):
+            1. Tự động quét màu sắc thực tế: Phải phân tích kỹ hình ảnh hoặc thông tin mô tả do người dùng cung cấp để xác định CHÍNH XÁC màu sắc chủ đạo (Hero Color), độ bóng/nhám, chất liệu thực tế của chính sản phẩm đó (ví dụ: nếu ảnh là máy hút bụi trắng xám thì nhận diện trắng xám, nếu là sản phẩm màu đen hoặc màu khác thì phải nhận diện đúng màu đó). Tuyệt đối không áp đặt màu cố định.
+            2. Bóc tách cơ khí & cấu tạo linh hoạt: Tự động nhận diện vị trí các nút bấm, cổng sạc, màn hình LED, chất liệu (nhựa ABS, kim loại, vải, kính, v.v.), kích thước cầm nắm và các phụ kiện đi kèm phù hợp với đặc thù của sản phẩm được cung cấp.
+            3. Khóa thị giác (Visual DNA Lock): Thiết lập chuỗi khóa thị giác đồng bộ dựa trên chính đặc điểm thực tế vừa quét được của sản phẩm để các prompt ảnh (Imagen 3) và video (Veo 3) sau này tái tạo giống hệt sản phẩm thật ngoài đời.
 
             BẮT BUỘC TRẢ VỀ ĐỊNH DẠNG JSON CHUẨN GỒM CÁC KEY SAU:
             {{
               "content_analysis": {{
-                "mechanical_and_accessories": "Mô tả chuẩn xác màu sắc thực tế (Hero Color), chất liệu nhám/bóng, vị trí nút bấm, cổng sạc, trọng lượng và trọn bộ đầu phụ kiện.",
-                "customer_pain_points": "Phân tích 3 tầng nỗi đau của khách hàng (Chức năng làm sạch, Tài chính - giá hời tại xưởng, Cảm xúc).",
-                "core_desires": "Mong muốn cốt lõi và khao khát sở hữu thiết bị tiện ích.",
+                "mechanical_and_accessories": "Mô tả chuẩn xác màu sắc thực tế của sản phẩm (Hero Color), chất liệu nhám/bóng, vị trí nút bấm, cổng sạc, trọng lượng, kích thước và trọn bộ phụ kiện kèm theo.",
+                "customer_pain_points": "Phân tích 3 tầng nỗi đau của khách hàng (Chức năng giải quyết vấn đề, Tài chính - giá hời tại xưởng, Cảm xúc).",
+                "core_desires": "Mong muốn cốt lõi và khao khát lớn nhất của khách hàng khi mua sản phẩm này.",
                 "emotional_or_usp_hook": "Slogan, USP độc quyền hoặc câu hook giật gân chốt đơn.",
-                "visual_physics_rules": "Quy chuẩn vật lý khi chuyển động (lực hút lốc xoáy Vortex, bụi mịn bị hút bay).",
-                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ, bắt buộc ghim chính xác màu sắc thực tế (Hero Color) và ánh sáng showroom/xưởng."
+                "visual_physics_rules": "Quy chuẩn vật lý khi chuyển động đặc thù của sản phẩm (lực hút, độ đàn hồi, hiệu ứng ánh sáng, v.v.).",
+                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ toàn bộ video, bắt buộc ghim chính xác màu sắc thực tế và đặc điểm nhận diện của sản phẩm."
               }},
               "script_outlines": [
                 {{
@@ -569,7 +569,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịc
                 }},
                 {{
                   "id": 2,
-                  "title": "Tên kịch bản 2 (Tập trung bộ phụ kiện & đa năng)",
+                  "title": "Tên kịch bản 2 (Tập trung bộ phụ kiện & tính năng độc quyền)",
                   "setting_style": "Bối cảnh xưởng/kho/showroom",
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
