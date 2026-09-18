@@ -106,10 +106,15 @@ st.markdown("""
     .badge-pending { color: #d97706; font-weight: 700; background: #fef3c7; padding: 2px 8px; border-radius: 4px; }
     .badge-ready { color: #15803d; font-weight: 700; background: #dcfce7; padding: 2px 8px; border-radius: 4px; }
     .badge-dynamic { color: #1e40af; font-weight: 700; background: #dbeafe; padding: 2px 8px; border-radius: 4px; }
-    @media (max-width: 768px) {
-        .main-title { font-size: 1.65rem !important; }
-        .sub-title { font-size: 0.95rem !important; }
-        .header-container { padding: 0.8rem 0.5rem 1.2rem 0.5rem; }
+    
+    /* Thanh hỗ trợ nhanh nổi */
+    .support-box {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border: 1.5px solid #86efac;
+        border-radius: 12px;
+        padding: 12px;
+        text-align: center;
+        margin-top: 15px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -121,7 +126,33 @@ if not api_key:
 
 client = genai.Client(api_key=api_key)
 
-# Khởi tạo Session State toàn diện
+ACCOUNTS_FILE = "accounts.json"
+
+def load_licensed_accounts():
+    if os.path.exists(ACCOUNTS_FILE):
+        try:
+            with open(ACCOUNTS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    default_accounts = {
+        "admin@studiopro.com": {
+            "contact": "admin@studiopro.com",
+            "roles": ["Tất cả thể loại"],
+            "expires_at": "2099-12-31"
+        }
+    }
+    save_licensed_accounts(default_accounts)
+    return default_accounts
+
+def save_licensed_accounts(accounts_dict):
+    try:
+        with open(ACCOUNTS_FILE, "w", encoding="utf-8") as f:
+            json.dump(accounts_dict, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        st.error(f"Lỗi lưu danh sách tài khoản: {e}")
+
+# Khởi tạo Session State
 if "content_analysis" not in st.session_state:
     st.session_state.content_analysis = None
 if "all_scripts" not in st.session_state:
@@ -137,104 +168,197 @@ if "active_script_id" not in st.session_state:
 if "projects_library" not in st.session_state:
     st.session_state.projects_library = {}
 if "licensed_accounts" not in st.session_state:
-    st.session_state.licensed_accounts = {
-        "admin@studiopro.com": {
-            "contact": "admin@studiopro.com",
-            "role": "Toàn quyền Quản trị (Admin)",
-            "expires_at": (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d")
-        }
-    }
+    st.session_state.licensed_accounts = load_licensed_accounts()
 
 # ==============================================================================
-# SIDEBAR: QUẢN LÝ TÀI KHOẢN & PHÂN QUYỀN + QUẢN LÝ DỰ ÁN
+# SIDEBAR: ĐĂNG NHẬP, QUẢN TRỊ TÀI KHOẢN, HỖ TRỢ & QUẢN LÝ DỰ ÁN
 # ==============================================================================
 with st.sidebar:
-    st.markdown("### 🔐 **Quản Lý Tài Khoản & Phân Quyền**")
-    with st.form("add_license_form"):
-        new_account_id = st.text_input("Email hoặc Số điện thoại:", placeholder="vd: user@gmail.com")
-        assigned_role = st.selectbox("Phân quyền chức năng:", ["Toàn quyền Studio", "Chỉ tạo Kịch bản TikTok Shop", "Chỉ tạo Mẹ & Bé / Giáo dục", "Xem mẫu"])
-        duration_months = st.slider("Thời hạn sử dụng (Tháng):", min_value=1, max_value=24, value=3)
-        if st.form_submit_button("➕ Cấp Quyền Truy Cập", use_container_width=True):
-            if new_account_id.strip():
-                expiry_date = (datetime.now() + timedelta(days=duration_months * 30)).strftime("%Y-%m-%d")
-                st.session_state.licensed_accounts[new_account_id.strip()] = {
-                    "contact": new_account_id.strip(),
-                    "role": assigned_role,
-                    "expires_at": expiry_date
-                }
-                st.success(f"✅ Đã cấp quyền cho {new_account_id} ({duration_months} tháng)!")
-            else:
-                st.warning("⚠️ Vui lòng nhập thông tin hợp lệ.")
+    st.markdown("### 🔐 **Đăng Nhập Hệ Thống**")
+    if "is_logged_in" not in st.session_state:
+        st.session_state.is_logged_in = False
+    if "current_user_email" not in st.session_state:
+        st.session_state.current_user_email = ""
 
-    st.markdown("---")
-    st.markdown("### 🗂️ **Quản Lý Dự Án (Projects)**")
-    project_title_input = st.text_input("Tên dự án hiện tại:", value=st.session_state.get("active_project_title", "Chiến dịch mới"))
-    
-    col_p1, col_p2 = st.columns(2)
-    with col_p1:
-        if st.button("💾 Lưu Dự Án", use_container_width=True):
-            if st.session_state.all_scripts:
-                p_id = f"proj_{int(time.time())}"
-                st.session_state.projects_library[p_id] = {
-                    "title": project_title_input,
-                    "mode": st.session_state.get("selected_mode", "TikTok"),
-                    "style": st.session_state.get("selected_style", "Cinematic"),
-                    "content_analysis": st.session_state.content_analysis,
-                    "all_scripts": st.session_state.all_scripts,
-                    "cloned_scripts": st.session_state.cloned_scripts,
-                    "expanded_scripts": st.session_state.expanded_scripts,
-                    "generated_details": st.session_state.generated_details
-                }
-                st.success(f"✅ Đã lưu dự án!")
-            else:
-                st.warning("⚠️ Chưa có kịch bản để lưu!")
+    if not st.session_state.is_logged_in:
+        login_input = st.text_input("Nhập Email / SĐT của bạn:", placeholder="vd: user@gmail.com")
+        if st.button("🔑 Đăng Nhập", use_container_width=True):
+            ADMIN_EMAILS = ["admin@studiopro.com", "admin"]
+            input_val = login_input.strip()
+            
+            if input_val in ADMIN_EMAILS or input_val in st.session_state.licensed_accounts:
+                if input_val not in ADMIN_EMAILS:
+                    acc_info = st.session_state.licensed_accounts[input_val]
+                    exp_date_str = acc_info.get("expires_at", "2099-12-31")
+                    try:
+                        exp_date = datetime.strptime(exp_date_str, "%Y-%m-%d")
+                        if datetime.now() > exp_date:
+                            st.error(f"❌ Tài khoản của bạn đã hết hạn vào ngày {exp_date_str}. Vui lòng liên hệ Admin để gia hạn!")
+                            st.stop()
+                    except Exception:
+                        pass
 
-    with col_p2:
-        if st.session_state.projects_library:
-            proj_keys = list(st.session_state.projects_library.keys())
-            selected_load_id = st.selectbox("Chọn dự án:", options=proj_keys, format_func=lambda x: st.session_state.projects_library[x]["title"], label_visibility="collapsed")
-            if st.button("📂 Mở Lại", use_container_width=True):
-                p_data = st.session_state.projects_library[selected_load_id]
-                st.session_state.active_project_title = p_data["title"]
-                st.session_state.content_analysis = p_data["content_analysis"]
-                st.session_state.all_scripts = p_data["all_scripts"]
-                st.session_state.cloned_scripts = p_data["cloned_scripts"]
-                st.session_state.expanded_scripts = p_data["expanded_scripts"]
-                st.session_state.generated_details = p_data["generated_details"]
-                st.success(f"✅ Đã tải dự án!")
+                st.session_state.is_logged_in = True
+                st.session_state.current_user_email = input_val
+                st.success("🎉 Đăng nhập thành công!")
                 st.rerun()
-
-    if st.session_state.all_scripts:
-        export_data = json.dumps({
-            "title": project_title_input,
-            "content_analysis": st.session_state.content_analysis,
-            "all_scripts": st.session_state.all_scripts,
-            "cloned_scripts": st.session_state.cloned_scripts,
-            "expanded_scripts": st.session_state.expanded_scripts,
-            "generated_details": st.session_state.generated_details
-        }, ensure_ascii=False, indent=2)
-        
-        st.download_button(
-            label="📥 Tải File Dự Án (JSON)",
-            data=export_data,
-            file_name=f"project_{int(time.time())}.json",
-            mime="application/json",
-            use_container_width=True
-        )
-
-    import_uploaded_file = st.file_uploader("📤 Mở file Dự án từ máy", type=["json"])
-    if import_uploaded_file:
-        try:
-            imported_json = json.load(import_uploaded_file)
-            st.session_state.content_analysis = imported_json.get("content_analysis")
-            st.session_state.all_scripts = imported_json.get("all_scripts", [])
-            st.session_state.cloned_scripts = imported_json.get("cloned_scripts", [])
-            st.session_state.expanded_scripts = imported_json.get("expanded_scripts", [])
-            st.session_state.generated_details = imported_json.get("generated_details", {})
-            st.success("✅ Đã mở dự án thành công!")
+            else:
+                st.error("❌ Tài khoản chưa được cấp quyền truy cập!")
+    else:
+        st.success(f"👤 Đang đăng nhập: **{st.session_state.current_user_email}**")
+        if st.button("🚪 Đăng Xuất", use_container_width=True):
+            st.session_state.is_logged_in = False
+            st.session_state.current_user_email = ""
             st.rerun()
-        except Exception as e:
-            st.error(f"Lỗi đọc file: {e}")
+
+    # THÔNG TIN HỖ TRỢ NHANH (ZALO, HOTLINE, FACEBOOK, TIKTOK CHỜ SẴN LINK)
+    st.markdown("""
+    <div class="support-box">
+        <b style="color: #166534; font-size: 0.95rem;">💬 Cần Hỗ Trợ / Mua Gói?</b><br>
+        <p style="font-size: 0.85rem; color: #15803d; margin: 6px 0 8px 0;">Kết nối ngay với chúng tôi:</p>
+        <a href="https://zalo.me/0968484369" target="_blank" style="display: inline-block; background: #0068ff; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 11px; margin: 2px;">📱 Zalo Chat</a>
+        <a href="#" target="_blank" style="display: inline-block; background: #1877f2; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 11px; margin: 2px;">📘 Facebook</a>
+        <a href="#" target="_blank" style="display: inline-block; background: #010101; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 11px; margin: 2px;">🎬 TikTok</a>
+        <div style="font-weight: 700; color: #166534; font-size: 12px; margin-top: 8px;">📞 Hotline: 096 8484 369</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Chỉ Admin mới nhìn thấy khu vực quản lý tài khoản
+    IS_ADMIN = st.session_state.current_user_email in ["admin@studiopro.com", "admin"]
+
+    if st.session_state.is_logged_in and IS_ADMIN:
+        st.markdown("---")
+        st.markdown("### ⚙️ **Quản Lý Tài Khoản (Admin)**")
+        with st.form("add_license_form"):
+            new_account_id = st.text_input("Thêm Email / SĐT mới:", placeholder="khachhang@gmail.com")
+            
+            assigned_modules = st.multiselect(
+                "Phân quyền chức năng:",
+                options=[
+                    "🛒 TikTok Shop & Bán Hàng",
+                    "👶 Mẹ & Bé & Cùng Con Học",
+                    "📺 TVC Quảng Cáo & Thương Hiệu",
+                    "🏡 Nhà Cửa & Kiến Trúc",
+                    "🌿 Du Lịch & Phong Cảnh",
+                    "🚗 Xe Cộ & Trải Nghiệm Lái",
+                    "🍲 Ẩm Thực & Đời Sống",
+                    "📖 Đời Sống & Giáo Dục",
+                    "🏛️ Lịch Sử & Di Sản",
+                    "🧘 Chữa Lành & Lifestyle"
+                ],
+                default=["🛒 TikTok Shop & Bán Hàng"]
+            )
+            
+            duration_option = st.selectbox(
+                "Thời hạn sử dụng:",
+                options=[
+                    "Dùng thử 3 ngày", "1 Tháng", "3 Tháng", "6 Tháng", "1 Năm", 
+                    "2 Năm", "3 Năm", "5 Năm", "10 Năm", "Vĩnh viễn (Trọn đời)"
+                ],
+                index=0
+            )
+            
+            if st.form_submit_button("➕ Cấp Quyền Truy Cập", use_container_width=True):
+                if new_account_id.strip():
+                    if "Vĩnh viễn" in duration_option:
+                        expiry_date = "2099-12-31"
+                    elif "Dùng thử 3 ngày" in duration_option:
+                        expiry_date = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
+                    else:
+                        num_map = {"1 Tháng": 1, "3 Tháng": 3, "6 Tháng": 6, "1 Năm": 12, "2 Năm": 24, "3 Năm": 36, "5 Năm": 60, "10 Năm": 120}
+                        months = num_map.get(duration_option, 1)
+                        expiry_date = (datetime.now() + timedelta(days=months * 30)).strftime("%Y-%m-%d")
+
+                    st.session_state.licensed_accounts[new_account_id.strip()] = {
+                        "contact": new_account_id.strip(),
+                        "roles": assigned_modules,
+                        "expires_at": expiry_date
+                    }
+                    save_licensed_accounts(st.session_state.licensed_accounts)
+                    st.success(f"✅ Đã cấp quyền cho {new_account_id} ({duration_option})!")
+                    st.rerun()
+                else:
+                    st.warning("⚠️ Vui lòng nhập thông tin hợp lệ.")
+
+        if st.session_state.licensed_accounts:
+            with st.expander(f"📋 Danh sách đã cấp ({len(st.session_state.licensed_accounts)})"):
+                for acc, info in st.session_state.licensed_accounts.items():
+                    roles_str = ", ".join(info.get("roles", ["Tất cả"]))
+                    st.markdown(f"**👤 {acc}**")
+                    st.caption(f"• Quyền: {roles_str}<br>• Hết hạn: {info['expires_at']}", unsafe_allow_html=True)
+                    st.markdown("---")
+
+    # Khu vực quản lý dự án (Hiển thị cho mọi user đã đăng nhập)
+    if st.session_state.is_logged_in:
+        st.markdown("---")
+        st.markdown("### 🗂️ **Quản Lý Dự Án (Projects)**")
+        project_title_input = st.text_input("Tên dự án hiện tại:", value=st.session_state.get("active_project_title", "Chiến dịch mới"))
+        
+        col_p1, col_p2 = st.columns(2)
+        with col_p1:
+            if st.button("💾 Lưu Dự Án", use_container_width=True):
+                if st.session_state.all_scripts:
+                    p_id = f"proj_{int(time.time())}"
+                    st.session_state.projects_library[p_id] = {
+                        "title": project_title_input,
+                        "mode": st.session_state.get("selected_mode", "TikTok"),
+                        "style": st.session_state.get("selected_style", "Cinematic"),
+                        "content_analysis": st.session_state.content_analysis,
+                        "all_scripts": st.session_state.all_scripts,
+                        "cloned_scripts": st.session_state.cloned_scripts,
+                        "expanded_scripts": st.session_state.expanded_scripts,
+                        "generated_details": st.session_state.generated_details
+                    }
+                    st.success(f"✅ Đã lưu dự án thành công!")
+                else:
+                    st.warning("⚠️ Chưa có kịch bản để lưu!")
+
+        with col_p2:
+            if st.session_state.projects_library:
+                proj_keys = list(st.session_state.projects_library.keys())
+                selected_load_id = st.selectbox("Chọn dự án:", options=proj_keys, format_func=lambda x: st.session_state.projects_library[x]["title"], label_visibility="collapsed")
+                if st.button("📂 Mở Lại", use_container_width=True):
+                    p_data = st.session_state.projects_library[selected_load_id]
+                    st.session_state.active_project_title = p_data["title"]
+                    st.session_state.content_analysis = p_data["content_analysis"]
+                    st.session_state.all_scripts = p_data["all_scripts"]
+                    st.session_state.cloned_scripts = p_data["cloned_scripts"]
+                    st.session_state.expanded_scripts = p_data["expanded_scripts"]
+                    st.session_state.generated_details = p_data["generated_details"]
+                    st.success(f"✅ Đã tải dự án thành công!")
+                    st.rerun()
+
+        if st.session_state.all_scripts:
+            export_data = json.dumps({
+                "title": project_title_input,
+                "content_analysis": st.session_state.content_analysis,
+                "all_scripts": st.session_state.all_scripts,
+                "cloned_scripts": st.session_state.cloned_scripts,
+                "expanded_scripts": st.session_state.expanded_scripts,
+                "generated_details": st.session_state.generated_details
+            }, ensure_ascii=False, indent=2)
+            
+            st.download_button(
+                label="📥 Tải File Dự Án (JSON)",
+                data=export_data,
+                file_name=f"project_{int(time.time())}.json",
+                mime="application/json",
+                use_container_width=True
+            )
+
+        import_uploaded_file = st.file_uploader("📤 Mở file Dự án từ máy", type=["json"])
+        if import_uploaded_file:
+            try:
+                imported_json = json.load(import_uploaded_file)
+                st.session_state.content_analysis = imported_json.get("content_analysis")
+                st.session_state.all_scripts = imported_json.get("all_scripts", [])
+                st.session_state.cloned_scripts = imported_json.get("cloned_scripts", [])
+                st.session_state.expanded_scripts = imported_json.get("expanded_scripts", [])
+                st.session_state.generated_details = imported_json.get("generated_details", {})
+                st.success("✅ Đã mở dự án thành công từ file!")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Lỗi đọc file: {e}")
 
 def safe_copy_button(text_to_copy: str, button_label: str = "📋 Copy Prompt"):
     b64_content = base64.b64encode(text_to_copy.encode('utf-8')).decode('utf-8')
@@ -319,14 +443,12 @@ QUY TẮC ĐẠO DIỄN & LỜI THOẠI BẮT BUỘC:
 CHẾ ĐỘ: TIKTOK SHOP & SẢN PHẨM CHUYỂN ĐỔI
 - Khóa chặt giải phẫu cơ khí: Màu sắc Hero Color, chất liệu, vị trí nút bấm, cổng sạc, phụ kiện.
 - Ma trận nỗi đau & mong muốn: Bóc tách rõ 3 tầng nỗi đau (Chức năng, Tài chính, Cảm xúc).
-- Vật lý siêu thực: Bụi/vụn rác bị hút xoáy thẳng vào buồng chứa; sương siêu mịn; vải đàn hồi.
 """
     elif mode == "👶 Mẹ & Bé & Cùng Con Học (Viral Parenting)":
         return base + r"""
 CHẾ ĐỘ: MẸ & BÉ & GIÁO DỤC SỚM (VIRAL PARENTING)
 - Khoảnh khắc ấm áp, tương tác tự nhiên giữa mẹ/bố và con nhỏ.
 - Phương pháp giáo dục hiện đại: Montessori, STEM tại nhà, học qua chơi, phát triển EQ.
-- Ma trận nỗi đau phụ huynh: Trẻ nghiện iPad, chậm nói, lười học toán/tiếng Anh.
 """
     elif mode == "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp":
         return base + r"""
@@ -470,7 +592,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str):
             st.error(f"Lỗi tạo thêm: {e}")
 
 # ==============================================================================
-# GIAO DIỆN CHÍNH
+# GIAO DIỆN CHÍNH (CHỈ CHO PHÉP KHI ĐÃ ĐĂNG NHẬP)
 # ==============================================================================
 st.markdown("""
 <div class="header-container">
@@ -479,6 +601,10 @@ st.markdown("""
     <div class="sub-title">TikTok Shop, Mẹ & Bé Viral, TVC Điện Ảnh, Phim Đời Sống & Giáo Dục</div>
 </div>
 """, unsafe_allow_html=True)
+
+if not st.session_state.is_logged_in:
+    st.warning("⚠️ **Vui lòng nhập Email hoặc Số điện thoại ở thanh bên (Sidebar) bên trái để đăng nhập vào hệ thống sáng tạo.**")
+    st.stop()
 
 col_mode, col_style = st.columns([1.5, 1])
 with col_mode:
@@ -518,19 +644,17 @@ with col_style:
     )
 st.session_state["selected_style"] = selected_style
 
-# ==============================================================================
-# BẢNG GỢI Ý PHỐI HỢP THỂ LOẠI & PHONG CÁCH (CHEAT SHEET)
-# ==============================================================================
+# Bảng Cẩm Nang Phối Hợp (Cheat Sheet)
 with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp 'Thể Loại & Phong Cách' Chuẩn Xác Nhất", expanded=False):
     st.markdown("""
     <div style="background-color: #f8fafc; padding: 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 0.95rem; color: #334155;">
         <h4 style="color: #0f172a; margin-top: 0; margin-bottom: 12px; font-size: 1.05rem;">🎯 Cẩm Nang Phối Hợp Sáng Tạo Nội Dung</h4>
         <ul style="padding-left: 20px; line-height: 1.7; margin-bottom: 0;">
-            <li><b>🛒 TikTok Shop & Bán Hàng:</b> Phù hợp nhất với <code style="color: #e11d48;">Minimalist Studio / Commercial Clean</code> (sạch sẽ, tôn sản phẩm) hoặc <code style="color: #e11d48;">Cyberpunk / Sci-Fi Neon</code> (cho đồ công nghệ, đèn LED).</li>
-            <li><b>👶 Mẹ & Bé & Cùng Con Học:</b> Tối ưu với <code style="color: #e11d48;">Paper Cut-out / Stop Motion</code> hoặc <code style="color: #e11d48;">3D Pixar / Disney Animation</code> để tạo cảm giác dễ thương, an toàn cho trẻ nhỏ.</li>
-            <li><b>📺 TVC Quảng Cáo Cao Cấp:</b> Nên chọn <code style="color: #e11d48;">Cinematic Realism (8K)</code> hoặc <code style="color: #e11d48;">Dark Moody / Noir</code> để tạo chiều sâu kịch tính, sang trọng.</li>
-            <li><b>🏡 Nhà Cửa & Kiến Trúc:</b> Kết hợp hoàn hảo với <code style="color: #e11d48;">Cinematic Realism</code> (hiện đại) hoặc <code style="color: #e11d48;">Vintage / Retro Film</code> (nhà gỗ, Wabi-sabi hoài niệm).</li>
-            <li><b>🌿 Du Lịch & Ẩm Thực:</b> Sử dụng <code style="color: #e11d48;">Cinematic Realism</code> (hùng vĩ) hoặc <code style="color: #e11d48;">Vintage / Retro</code> (gợi cảm giác ấm cúng, ngon miệng).</li>
+            <li><b>🛒 TikTok Shop & Bán Hàng:</b> Phù hợp nhất với <code style="color: #e11d48;">Minimalist Studio / Commercial Clean</code> hoặc <code style="color: #e11d48;">Cyberpunk / Sci-Fi Neon</code> (đồ công nghệ).</li>
+            <li><b>👶 Mẹ & Bé & Cùng Con Học:</b> Tối ưu với <code style="color: #e11d48;">Paper Cut-out / Stop Motion</code> hoặc <code style="color: #e11d48;">3D Pixar / Disney Animation</code> (ấm áp, an toàn).</li>
+            <li><b>📺 TVC Quảng Cáo Cao Cấp:</b> Nên chọn <code style="color: #e11d48;">Cinematic Realism (8K)</code> hoặc <code style="color: #e11d48;">Dark Moody / Noir</code> (sang trọng, kịch tính).</li>
+            <li><b>🏡 Nhà Cửa & Kiến Trúc:</b> Kết hợp <code style="color: #e11d48;">Cinematic Realism</code> (hiện đại) hoặc <code style="color: #e11d48;">Vintage / Retro Film</code> (hoài niệm).</li>
+            <li><b>🌿 Du Lịch & Ẩm Thực:</b> Sử dụng <code style="color: #e11d48;">Cinematic Realism</code> (hùng vĩ) hoặc <code style="color: #e11d48;">Vintage / Retro</code> (ấm cúng, ngon miệng).</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
