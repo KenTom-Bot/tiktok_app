@@ -13,6 +13,30 @@ from datetime import datetime, timedelta
 
 st.set_page_config(page_title="Universal AI Video Studio Pro & License Manager", page_icon="🎬", layout="wide")
 
+st.sidebar.markdown("---")
+    st.sidebar.markdown("### 📐 Cấu Hình Khung Hình & Mục Đích")
+    
+    # 1. Lựa chọn tỷ lệ khung hình
+    aspect_ratio_choice = st.sidebar.selectbox(
+        "Tỷ lệ khung hình video:",
+        ["9:16 (Dọc - TikTok, Reels, Shorts)", "16:9 (Ngang - YouTube, Phim dài, Facebook)"],
+        index=0
+    )
+    selected_aspect = "9:16" if "9:16" in aspect_ratio_choice else "16:9"
+
+    # 2. Lựa chọn mục đích nội dung theo thể loại
+    if selected_mode == "TikTok Shop & Bán Hàng":
+        content_goal = "Chuyển đổi đơn hàng & Chốt Sale trực tiếp (Sales & Conversion)"
+        st.sidebar.info("💡 **Chế độ Sales:** Tập trung vào hook giật gân, test thực tế, giải quyết nỗi đau và kêu gọi mua hàng dồn dập.")
+    else:
+        content_goal_options = [
+            "Viral & Xây dựng thương hiệu cá nhân (Personal Branding)",
+            "Kể chuyện dài tập / Phim ngắn (Long-form Storytelling)",
+            "Chia sẻ kiến thức / Review chuyên sâu (Education & Deep Review)"
+        ]
+        content_goal = st.sidebar.selectbox("Mục đích sản xuất video:", content_goal_options, index=0)
+        st.sidebar.info(f"💡 **Chế độ Nội dung Khác:** Tối ưu hóa cho mục tiêu *{content_goal}* với thời lượng dài, cấu trúc theo hồi/chương sâu sắc.")
+
 st.markdown("""
 <style>
     .header-container {
@@ -379,20 +403,32 @@ def format_analysis_field(field_val) -> str:
             
     return "".join(formatted_output) if formatted_output else text
 
-def get_system_instructions(mode: str, style: str) -> str:
+ef get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str) -> str:
+    is_sales = ("Bán Hàng" in mode or "Sales" in goal)
+    format_instruction = "9:16 vertical video format, mobile-first framing" if aspect_ratio == "9:16" else "16:9 widescreen cinematic format, professional movie framing"
+    
+    goal_instruction = """
+    - MỤC TIÊU: Tập trung tối đa vào tỷ lệ chuyển đổi, kích thích chốt đơn dồn dập, giải quyết nhanh nỗi đau khách hàng trong thời lượng ngắn.
+    """ if is_sales else f"""
+    - MỤC TIÊU: Phục vụ mục đích '{goal}', thiết kế kịch bản dài tập hoặc viral theo cấu trúc Hồi/Chương (Act & Chapter), chiều sâu cảm xúc lớn, tăng lượt chia sẻ (share) tự nhiên.
+    """
     base = f"""
 BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
 PHONG CÁCH KẾT XUẤT THỊ GIÁC: {style.upper()}
+ĐỊNH DẠNG KHUNG HÌNH: {format_instruction}
+{goal_instruction}
 
-🛑 QUY TẮC BẮT BUỘC VỀ NHÂN VẬT & TÍNH CHÂN THẬT (VIETNAMESE CHARACTER LOCK):
-1. ĐỒNG NHẤT KHUÔN MẶT & HÌNH DÁNG (IDENTITY ANCHOR): Ngay từ phân cảnh đầu tiên, hệ thống phải định hình một gương mặt nhân vật cụ thể (ví dụ: một nữ reviewer người Việt Nam 26 tuổi, tóc đen ngang vai buộc nửa gọn gàng, khuôn mặt trái xoan thanh tú, nụ cười thân thiện). Xuyên suốt toàn bộ các cảnh còn lại, BẮT BUỘC phải lặp lại chính xác các từ khóa định hình gương mặt và kiểu tóc này trong mọi 'image_prompt' và 'video_prompt' để đảm bảo nhân vật qua các cảnh nhìn giống hệt nhau như một người.
-1. TUYỆT ĐỐI KHÔNG CÓ CHỮ TRÊN ẢNH: Trong mọi 'image_prompt' (Imagen 3), BẮT BUỘC phải cài đặt các từ khóa chống chữ: 'no text, zero typography, clean screen, no watermarks, no logos, no captions, no subtitles'. Ảnh sinh ra phải là hình ảnh thực tế thuần túy, sạch tuyệt đối, không được có bất kỳ ký tự hay chữ viết nào xuất hiện trên khung hình.
-2. 100% NHÂN VẬT LÀ NGƯỜI VIỆT NAM: Trong mọi 'image_prompt' và 'video_prompt', nhân vật xuất hiện (nam hoặc nữ) bắt buộc phải là người Việt Nam với gương mặt, nét đẹp Á Đông thuần túy, lịch sự, gần gũi phong cách người Việt. Tuyệt đối không để người nước ngoài hoặc lai Tây.
-3. ĐỒNG NHẤT TRANG PHỤC XUYÊN SUỐT (OUTFIT LOCK): Xuyên suốt toàn bộ các phân cảnh của video, nhân vật BẮT BUỘC phải mặc CÙNG MỘT BỘ TRANG PHỤC cố định đã định hình từ cảnh đầu tiên (ví dụ: áo sơ mi trắng xắn tay lịch sự hoặc áo polo tối màu chuyên nghiệp). TUYỆT ĐỐI KHÔNG ĐƯỢC thay đổi kiểu dáng hay màu sắc trang phục giữa các cảnh để đảm bảo tính liên tục thương hiệu.
-4. KHÓA MÀU SẮC & KHÔNG ẢO GIÁC: Giữ nguyên 100% màu sắc và chất liệu thực tế của sản phẩm từ ảnh gốc. Cấm tự ý thêm đèn LED rực rỡ hay chi tiết cơ khí giả mà sản phẩm không có.
-5. VẬT LÝ HÚT/THỔI ĐÚNG CHIỀU: Mô tả rõ ràng luồng khí hút bụi đi ngược vào đầu vòi và xoáy trực tiếp vào cốc chứa rác trong suốt.
-6. THỜI LƯỢNG MỖI CẢNH: CHỈ DÙNG 3 MỐC: 4s, 6s, 8s (CẤM MỐC 10 GIÂY).
-7. VOICE & KHẨU HÌNH: 100% video prompt có lồng tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s) kèm chỉ đạo khẩu hình khớp nhân vật. Màn hình sạch (không text, không logo, không watermark).
+🛑 QUY TẮC BẮT BUỘC VỀ CHUYỂN CẢNH, THỜI GIAN & TRANG PHỤC:
+1. AI TỰ ĐỘNG QUYẾT ĐỊNH CHUYỂN CẢNH (SMART TRANSITIONS): AI tự phân tích nội dung để chọn kiểu chuyển cảnh tối ưu:
+   - Dùng 'Hard Cut' hoặc 'Match Cut' cho các hành động liên tục, dồn dập.
+   - Dùng chuyển cảnh điện ảnh mượt mà cho việc chuyển đổi không gian.
+   - Dùng chuyển cảnh bước ngoặt thời gian (Time-jump) khi chuyển từ ngày sang đêm hoặc sang bối cảnh hoàn toàn mới.
+2. QUY CHUẨN THAY ĐỔI TRANG PHỤC THEO THỜI GIAN/BỐI CẢNH: 
+   - Nếu các cảnh diễn ra liên tục trong cùng một thời điểm: BẮT BUỘC giữ nguyên một bộ trang phục cố định.
+   - Nếu kịch bản có mốc thời gian mới (ví dụ: "Sáng hôm sau", "Hôm qua sang hôm nay") hoặc đổi hoàn toàn hoàn cảnh/địa điểm: Nhân vật ĐƯỢC PHÉP thay đổi trang phục mới phù hợp với hoàn cảnh đó.
+3. KHÓA CỨNG KHUÔN MẶT & VÓC DÁNG (IDENTITY ANCHOR): Dù trang phục có thể thay đổi theo thời gian/bối cảnh, NHƯNG KHUÔN MẶT, kiểu tóc cơ bản và vóc dáng của nhân vật người Việt Nam BẮT BUỘC phải giữ nguyên 100% xuyên suốt mọi cảnh để người xem nhận ra cùng một diễn viên.
+4. MÀN HÌNH SẠCH (ZERO TEXT) & KHÓA MÀU SẢN PHẨM: Tuyệt đối không có chữ/text trên ảnh (`no text, clean screen`). Giữ nguyên 100% màu sắc sản phẩm gốc từ ảnh, hướng hút bụi xoáy thẳng vào cốc trong suốt.
+5. THỜI LƯỢNG & VOICE: Chỉ dùng 3 mốc thời lượng (4s, 6s, 8s). 100% video prompt có lồng tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s) kèm chỉ đạo khẩu hình.
 """
     return base
 def call_gemini_api(contents, system_inst):
@@ -434,7 +470,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str):
         except Exception as e:
             st.error(f"Lỗi gọi thêm kịch bản: {e}")
 
-def create_scene_details_for_id(target_id: int, current_mode: str, current_style: str):
+def create_scene_details_for_id(target_id: int, current_mode: str, current_style: str, aspect_ratio: str, goal: str):
     all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
     outline = next((sc for sc in all_sources if isinstance(sc, dict) and sc.get("id") == target_id), None)
     if not outline: return
@@ -443,20 +479,19 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     ca_data = st.session_state.get("content_analysis", {})
     exact_color_spec = ca_data.get("mechanical_and_accessories", "Giữ nguyên màu sắc chuẩn xác từ ảnh thực tế") if isinstance(ca_data, dict) else "Giữ nguyên màu sắc"
     
-    with st.spinner(f"🎬 Đang dựng chi tiết cảnh quay #{target_id} (Khóa nhân vật Việt Nam & Màu sắc thực tế)..."):
+    with st.spinner(f"🎬 Đang dựng chi tiết cảnh quay #{target_id} (Khung hình {aspect_ratio} | Mục tiêu: {goal})..."):
         prompt_detail = f"""
         Sản phẩm gốc & MÃ MÀU THỰC TẾ: "{exact_color_spec}" (Ngữ cảnh: {product_ctx})
-        Thể loại nội dung: "{current_mode}"
+        Thể loại nội dung: "{current_mode}" | Mục tiêu: "{goal}" | Tỷ lệ: "{aspect_ratio}"
         Ý tưởng kịch bản: ID {target_id} - {outline.get('title')}
         Bối cảnh định hướng: {outline.get('setting_style')} | Góc tiếp cận: {outline.get('angle')} | Hook: {outline.get('target_hook')}
         
-        QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC:
+        QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC CHO CÁC CẢNH:
         1. THỜI LƯỢNG MỖI CẢNH: Chỉ dùng 3 mốc: '4s', '6s', '8s'.
-        2. ĐỒNG NHẤT KHUÔN MẶT & HÌNH DÁNG (CONSISTENT FACE): Trong mọi `image_prompt` và `video_prompt`, phải neo giữ chặt chẽ hình ảnh một nhân vật người Việt Nam cố định (ví dụ: "cùng một nữ reviewer người Việt Nam, khuôn mặt trái xoan, tóc đen ngang vai, vóc dáng cân đối"). Các cảnh sau phải giữ nguyên mô tả đặc điểm khuôn mặt này để AI không bị đổi mẫu.
-        3. TUYỆT ĐỐI KHÔNG TEXT TRÊN ẢNH (CLEAN SCREEN): Trong `image_prompt`, bắt buộc thêm các lệnh kỹ thuật: `no text, zero typography, clean screen, no watermarks, no logos, no captions`. Không để xuất hiện bất kỳ chữ hay phụ đề nào trên bức ảnh của Imagen 3.
-        4. 100% NHÂN VẬT VIỆT NAM: Trong 'image_prompt' và 'video_prompt', bắt buộc ghi rõ nhân vật là người Việt Nam trẻ trung, chuyên nghiệp, nét mặt Á Đông gần gũi, mặc trang phục cố định xuyên suốt.
-        5. KHÓA MÀU SẮC GỐC & VẬT LÝ HÚT BỤI: Giữ nguyên màu sắc sản phẩm gốc, không đổi màu. Mô tả hướng hút bụi xoáy trực tiếp vào cốc chứa trong suốt.
-        6. VOICE MIỀN BẮC & KHẨU HÌNH: Tích hợp đồng thời hành động, biểu cảm gương mặt và lời thoại tiếng Việt miền Bắc trong `video_prompt`.
+        2. CHUYỂN CẢNH THÔNG MINH: AI tự quyết định `transition_type` phù hợp (Hard Cut, Match Cut, hoặc chuyển cảnh thời gian/không gian).
+        3. NHÂN VẬT & TRANG PHỤC THEO THỜI GIAN: Giữ nguyên khuôn mặt nhân vật người Việt Nam xuyên suốt. Nếu cảnh chuyển sang ngày mới hoặc bối cảnh hoàn toàn khác, được phép đổi trang phục mới phù hợp bối cảnh đó, nhưng giữ nguyên nét mặt.
+        4. KHÓA MÀU SẢN PHẨM & VẬT LÝ HÚT BỤI: Giữ nguyên màu sản phẩm gốc, hướng hút bụi xoáy thẳng vào cốc trong suốt.
+        5. MÀN HÌNH SẠCH & VOICE MIỀN BẮC: Ảnh sạch tuyệt đối, không có chữ (`no text, zero typography, clean screen`). Tích hợp lồng tiếng miền Bắc trong `video_prompt`.
         
         Xuất chuẩn 1 Dict JSON duy nhất:
         {{
@@ -469,18 +504,20 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
             {{
               "scene_number": 1, 
               "duration": "4s", 
-              "scene_setting": "Bối cảnh thực tế với nhân vật người Việt Nam", 
-              "transition_type": "Hard Cut", 
+              "scene_setting": "Bối cảnh thực tế", 
+              "transition_type": "Hard Cut hoặc Match Cut hoặc Time-jump", 
               "voice_director_vn": "Chỉ đạo ngữ điệu miền Bắc", 
               "voiceover_vi": "Lời thoại miền Bắc", 
-              "image_prompt": "Prompt Imagen 3 (9:16) có sự xuất hiện của người mẫu/reviewer người Việt Nam, giữ nguyên màu sắc gốc sản phẩm", 
-              "video_prompt": "Prompt Veo 3 miêu tả nhân vật người Việt Nam vừa thao tác hút bụi đúng chiều vật lý vừa đọc lời thoại miền Bắc khớp khẩu hình"
+              "image_prompt": "Prompt Imagen 3 ({aspect_ratio}) hiển thị nhân vật nữ người Việt Nam (giữ nguyên khuôn mặt), trang phục phù hợp với mốc thời gian/bối cảnh cảnh này, giữ nguyên màu sắc sản phẩm gốc, màn hình sạch, no text, clean screen", 
+              "video_prompt": "Prompt Veo 3 miêu tả chuyển động, hành động hút bụi đúng chiều vật lý, đọc lời thoại miền Bắc khớp khẩu hình"
             }}
           ]
         }}
         """
         try:
-            res = call_gemini_api([prompt_detail], get_system_instructions(current_mode, current_style))
+            # Truyền thêm tham số aspect_ratio và goal vào hàm system instructions
+            sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal)
+            res = call_gemini_api([prompt_detail], sys_inst)
             if isinstance(res, list): res = res[0]
             st.session_state.generated_details[target_id] = res
             st.session_state.active_script_id = target_id
