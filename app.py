@@ -471,8 +471,8 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
               "transition_type": "Hard Cut", 
               "voice_director_vn": "Chỉ đạo ngữ điệu miền Bắc phù hợp cảm xúc tình huống", 
               "voiceover_vi": "Lời thoại miền Bắc chuẩn", 
-              "image_prompt": "Prompt Imagen 3 (9:16) thực tế theo đúng không gian tình huống", 
-              "video_prompt": "Prompt Veo 3 tích hợp biểu cảm gương mặt, cử chỉ tay và thoại"
+              "image_prompt": "Prompt Imagen 3 (9:16) thực tế theo đúng không gian tình huống, đúng màu, không thêm chi tiết thừa", 
+              "video_prompt": "Prompt Veo 3 tích hợp biểu cảm gương mặt, cử chỉ tay và thoại, chuyển động cơ khí thực tế, nghiêm cấm tự sinh đèn LED hay chi tiết lạ"
             }}
           ]
         }}
