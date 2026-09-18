@@ -211,7 +211,6 @@ with st.sidebar:
         st.session_state.current_user_email = ""
 
     if not st.session_state.is_logged_in:
-        # Sử dụng form để cho phép nhấn Enter đăng nhập ngay lập tức
         with st.form("login_form", clear_on_submit=False):
             login_input = st.text_input("Nhập Email / SĐT của bạn:", placeholder="vd: user@gmail.com")
             submitted_login = st.form_submit_button("🔑 Đăng Nhập", use_container_width=True)
@@ -334,7 +333,6 @@ def optimize_image_for_api(image: Image.Image, max_dimension: int = 896, quality
     buffer.seek(0)
     return Image.open(buffer)
 
-# Cải tiến hàm format để ngắt dòng từng ý rõ ràng, dễ đọc cho người dùng
 def format_analysis_field(field_val) -> str:
     if isinstance(field_val, dict):
         return "<br>".join([f"• <b>{k.replace('_', ' ').title()}:</b> {v}" for k, v in field_val.items()])
@@ -342,7 +340,6 @@ def format_analysis_field(field_val) -> str:
         return "<br>".join([f"• {item}" for item in field_val])
     
     text = str(field_val)
-    # Tách dòng tự động khi gặp các từ khóa hoặc dấu câu định dạng
     keywords = ["Chức năng:", "Tài chính:", "Cảm xúc:", "1.", "2.", "3.", "•", "-"]
     for kw in keywords:
         if kw in text and not text.startswith(kw):
@@ -354,7 +351,7 @@ def get_system_instructions(mode: str, style: str) -> str:
 BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
 PHONG CÁCH KẾT XUẤT THỊ GIÁC: """ + style.upper() + r"""
 QUY TẮC ĐẠO DIỄN & LỜI THOẠI BẮT BUỘC:
-1. THỜI LƯỢNG MỖI CẢNH: CHỈ ĐƯỢC DÙNG 3 MỐC: 4s, 6s, 8s. TUYỆT ĐỐI CẤM DÙNG MỐC 10 GIÂY.
+1. THỜI LƯỢNG MỖI CẢNH: CHỈ DÙNG 3 MỐC: 4s, 6s, 8s. TUYỆT ĐỐI CẤM DÙNG MỐC 10 GIÂY.
 2. 100% CÁC PHÂN CẢNH ĐỀU PHẢI CÓ LỜI THOẠI (VOICEOVER).
 3. ĐỊNH MỨC TỪ VỰNG: Cảnh 4s (10-12 từ), Cảnh 6s (15-18 từ), Cảnh 8s (22-25 từ). Giọng miền Bắc chuẩn Hà Nội.
 4. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
@@ -474,16 +471,25 @@ input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô
 uploaded_files = st.file_uploader("🖼️ Tải ảnh tham chiếu (Tùy chọn):", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
 if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files)):
-    with st.spinner("Đang phân tích chuyên sâu dữ liệu đầu vào..."):
-        prompt = f"Phân tích chuyên sâu cho '{selected_mode}' phong cách '{selected_style}'. Nội dung: '{input_text}'."
+    with st.spinner("Đang xử lý hình ảnh và phân tích chuyên sâu dữ liệu đầu vào..."):
+        prompt = f"Phân tích chuyên sâu cho '{selected_mode}' phong cách '{selected_style}'. Nội dung: '{input_text.strip() if input_text else 'Phân tích qua hình ảnh đính kèm.'}'."
         try:
-            res = generate_with_smart_retry([prompt], get_system_instructions(selected_mode, selected_style))
+            # Xử lý an toàn danh sách ảnh tải lên để truyền vào SDK Gemini
+            optimized_images = []
+            if uploaded_files:
+                for f in uploaded_files:
+                    img_pil = Image.open(f)
+                    optimized_images.append(optimize_image_for_api(img_pil))
+            
+            api_payload = [*optimized_images, prompt] if optimized_images else [prompt]
+            res = generate_with_smart_retry(api_payload, get_system_instructions(selected_mode, selected_style))
+            
             st.session_state.content_analysis = res.get("content_analysis")
             st.session_state.all_scripts = res.get("script_outlines", [])
             st.session_state.cloned_scripts, st.session_state.expanded_scripts, st.session_state.generated_details, st.session_state.active_script_id = [], [], {}, None
             st.rerun()
         except Exception as e:
-            st.error(f"Lỗi: {e}")
+            st.error(f"Lỗi xử lý API: {e}")
 
 # Hiển thị DNA Phân tích với các ý ngắt dòng rõ ràng
 if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
@@ -568,7 +574,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
             selected_win_id = st.selectbox("Chọn kịch bản win cần nhân bản:", options=generated_ids, format_func=lambda x: options_dict[x], key="sel_win_cb")
             
             if st.button("🚀 Nhân Bản 5 Biến Thể Win", type="primary", use_container_width=True):
-                with st.spinner("Đang nhân bản..."):
+                with st.spinner("Đang nhân bản biến thể..."):
                     target_script = st.session_state.generated_details[selected_win_id]
                     all_src = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
                     cur_len = len(all_src)
