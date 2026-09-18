@@ -176,7 +176,7 @@ if ADMIN_EMAIL not in st.session_state.licensed_accounts:
     save_licensed_accounts(st.session_state.licensed_accounts)
 
 # ==============================================================================
-# XỬ LÝ ĐĂNG NHẬP (HỖ TRỢ ENTER)
+# HÀM XỬ LÝ ĐĂNG NHẬP (HỖ TRỢ ENTER)
 # ==============================================================================
 def process_login(login_val):
     input_val = login_val.strip()
@@ -467,11 +467,10 @@ input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô
 uploaded_files = st.file_uploader("🖼️ Tải ảnh tham chiếu (Tùy chọn):", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
 if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files)):
-    with st.spinner("⏳ Đang xử lý hình ảnh và phân tích chuyên sâu dữ liệu đầu vào qua Gemini API..."):
+    with st.spinner("⏳ Đang xử lý dữ liệu và phân tích chuyên sâu qua Gemini API..."):
         try:
             prompt_text = f"Phân tích chuyên sâu cho '{selected_mode}' phong cách '{selected_style}'. Nội dung: '{input_text.strip() if input_text else 'Phân tích qua hình ảnh đính kèm.'}'."
             
-            # Chuẩn hóa đóng gói dữ liệu hình ảnh theo đúng chuẩn types.Part.from_bytes của SDK google-genai
             api_contents = []
             if uploaded_files:
                 for uploaded_file in uploaded_files:
