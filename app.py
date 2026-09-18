@@ -15,27 +15,25 @@ st.set_page_config(page_title="Universal AI Video Studio Pro & License Manager",
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 📐 Cấu Hình Khung Hình & Mục Đích")
-    
-    # 1. Lựa chọn tỷ lệ khung hình
-    aspect_ratio_choice = st.sidebar.selectbox(
-        "Tỷ lệ khung hình video:",
-        ["9:16 (Dọc - TikTok, Reels, Shorts)", "16:9 (Ngang - YouTube, Phim dài, Facebook)"],
-        index=0
-    )
-    selected_aspect = "9:16" if "9:16" in aspect_ratio_choice else "16:9"
 
-    # 2. Lựa chọn mục đích nội dung theo thể loại
-    if selected_mode == "TikTok Shop & Bán Hàng":
-        content_goal = "Chuyển đổi đơn hàng & Chốt Sale trực tiếp (Sales & Conversion)"
-        st.sidebar.info("💡 **Chế độ Sales:** Tập trung vào hook giật gân, test thực tế, giải quyết nỗi đau và kêu gọi mua hàng dồn dập.")
-    else:
-        content_goal_options = [
-            "Viral & Xây dựng thương hiệu cá nhân (Personal Branding)",
-            "Kể chuyện dài tập / Phim ngắn (Long-form Storytelling)",
-            "Chia sẻ kiến thức / Review chuyên sâu (Education & Deep Review)"
-        ]
-        content_goal = st.sidebar.selectbox("Mục đích sản xuất video:", content_goal_options, index=0)
-        st.sidebar.info(f"💡 **Chế độ Nội dung Khác:** Tối ưu hóa cho mục tiêu *{content_goal}* với thời lượng dài, cấu trúc theo hồi/chương sâu sắc.")
+aspect_ratio_choice = st.sidebar.selectbox(
+    "Tỷ lệ khung hình video:",
+    ["9:16 (Dọc - TikTok, Reels, Shorts)", "16:9 (Ngang - YouTube, Phim dài, Facebook)"],
+    index=0
+)
+selected_aspect = "9:16" if "9:16" in aspect_ratio_choice else "16:9"
+
+if selected_mode == "TikTok Shop & Bán Hàng":
+    content_goal = "Chuyển đổi đơn hàng & Chốt Sale trực tiếp (Sales & Conversion)"
+    st.sidebar.info("💡 **Chế độ Sales:** Tập trung vào hook giật gân, test thực tế, giải quyết nỗi đau và kêu gọi mua hàng dồn dập.")
+else:
+    content_goal_options = [
+        "Viral & Xây dựng thương hiệu cá nhân (Personal Branding)",
+        "Kể chuyện dài tập / Phim ngắn (Long-form Storytelling)",
+        "Chia sẻ kiến thức / Review chuyên sâu (Education & Deep Review)"
+    ]
+    content_goal = st.sidebar.selectbox("Mục đích sản xuất video:", content_goal_options, index=0)
+    st.sidebar.info(f"💡 **Chế độ Nội dung Khác:** Tối ưu hóa cho mục tiêu *{content_goal}* với thời lượng dài, cấu trúc theo hồi/chương sâu sắc.")
 
 st.markdown("""
 <style>
