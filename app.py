@@ -353,7 +353,7 @@ def format_analysis_field(field_val) -> str:
             
     return "".join(formatted_output) if formatted_output else text
 
-def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str, target_duration_mins: float = 0.5, user_level: str = "Chuyên nghiệp (Master Director)") -> str:
+def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str, target_duration_mins: float = 0.5) -> str:
     is_sales = ("Bán Hàng" in mode or "Sales" in goal)
     format_instruction = "9:16 vertical video format, mobile-first framing" if aspect_ratio == "9:16" else "16:9 widescreen cinematic format, professional movie framing"
     
@@ -369,11 +369,8 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
     2. QUY CHUẨN TRANG PHỤC LINH HOẠT THEO THỜI GIAN/BỐI CẢNH: Nếu kịch bản có mốc thời gian mới (ví dụ: ngày hôm sau, đổi bối cảnh), nhân vật ĐƯỢC PHÉP thay đổi trang phục mới phù hợp, nhưng KHUÔN MẶT và vóc dáng cốt lõi giữ nguyên 100%.
     """
 
-    level_instruction = ""
-    if "Nghiệp dư" in user_level:
-        level_instruction = "CHẾ ĐỘ NGHIỆP DƯ: Tối ưu hóa từ khóa đơn giản, dễ hiểu, trực quan, tập trung vào kết quả hiển thị tự nhiên ngay từ cái nhìn đầu tiên."
-    else:
-        level_instruction = "CHẾ ĐỘ CHUYÊN GIA: Tối ưu hóa sâu sắc các thông số điện ảnh chuyên sâu (Lighting setup, Lens focal length, Color grading, Camera movement physics) cho Imagen 3 và Veo 3."
+    # Mặc định chế độ chuyên gia ngầm toàn diện cho mọi đối tượng
+    master_director_directive = "CHẾ ĐỘ CHUYÊN GIA CAO CẤP: Tối ưu hóa sâu sắc các thông số điện ảnh chuyên sâu (Lighting setup, Lens focal length, Color grading, Camera movement physics) cho Imagen 3 và Veo 3 để mọi người dùng dù không biết gì vẫn tạo ra video đạt chuẩn Hollywood."
 
     base = f"""
 BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
@@ -381,7 +378,7 @@ PHONG CÁCH KẾT XUẤT THỊ GIÁC: {style.upper()}
 ĐỊNH DẠNG KHUNG HÌNH: {format_instruction}
 MỤC TIÊU CHIẾN DỊCH: {goal}
 {duration_rule}
-{level_instruction}
+{master_director_directive}
 
 🛑 QUY TẮC BẮT BUỘC 100% (KHÔNG ĐƯỢC VI PHẠM):
 1. KHÓA CỨNG KHUÔN MẶT & VÓC DÁNG (IDENTITY ANCHOR): Nhân vật 100% người Việt Nam, biểu cảm chân thực, hình thể chuẩn xác, có mô tả nhận diện riêng và giữ nguyên 100% qua mọi cảnh.
@@ -412,7 +409,7 @@ def call_gemini_api(contents, system_inst):
             else: raise e
     raise Exception("Lỗi kết nối Gemini API sau nhiều lần thử.")
 
-def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float, user_level: str):
+def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float):
     with st.spinner("⏳ Đang khai thác thêm 5 góc tiếp cận độc quyền bám sát sản phẩm & kho xưởng..."):
         all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
         cur_len = len(all_sources)
@@ -428,7 +425,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
         Xuất JSON chuẩn với key 'script_outlines'.
         """
         try:
-            res = call_gemini_api([prompt_more], get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, user_level))
+            res = call_gemini_api([prompt_more], get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins))
             new_scripts = res.get("script_outlines", [])
             for i, sc in enumerate(new_scripts): sc["id"] = cur_len + i + 1
             st.session_state.expanded_scripts.extend(new_scripts)
@@ -437,7 +434,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
         except Exception as e:
             st.error(f"Lỗi gọi thêm kịch bản: {e}")
 
-def create_scene_details_for_id(target_id: int, current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float, user_level: str):
+def create_scene_details_for_id(target_id: int, current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float):
     all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
     outline = next((sc for sc in all_sources if isinstance(sc, dict) and sc.get("id") == target_id), None)
     if not outline: return
@@ -488,7 +485,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         }}
         """
         try:
-            sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, user_level)
+            sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins)
             res = call_gemini_api([prompt_detail], sys_inst)
             if isinstance(res, list): res = res[0]
             st.session_state.generated_details[target_id] = res
@@ -511,14 +508,6 @@ st.markdown("""
 if not st.session_state.is_logged_in:
     st.warning("⚠️ **Vui lòng đăng nhập ở thanh Sidebar bên trái để bắt đầu.**")
     st.stop()
-
-# CHỌN TRÌNH ĐỘ NGƯỜI DÙNG (CHUYÊN GIA VS NGHIỆP DƯ)
-user_level = st.radio(
-    "🎚️ Chọn Cấp Độ Người Dùng:",
-    ["Chuyên nghiệp (Master Director)", "Nghiệp dư / Dễ sử dụng (Auto-Pilot)"],
-    horizontal=True,
-    index=0
-)
 
 col_mode, col_style = st.columns([1.5, 1])
 with col_mode:
@@ -669,7 +658,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịc
                     payload.append(types.Part.from_bytes(data=f.getvalue(), mime_type=f.type if f.type else "image/jpeg"))
             payload.append(prompt_text)
             
-            res = call_gemini_api(payload, get_system_instructions(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins, user_level))
+            res = call_gemini_api(payload, get_system_instructions(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins))
             
             st.session_state.content_analysis = res.get("content_analysis")
             st.session_state.all_scripts = res.get("script_outlines", [])
@@ -726,10 +715,10 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
                     st.session_state.active_script_id = sc_id
                     st.rerun()
                 else:
-                    create_scene_details_for_id(sc_id, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins, user_level)
+                    create_scene_details_for_id(sc_id, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
     st.markdown("---")
     if st.button("➕ Gọi Thêm 5 Kịch Bản Khác", key="btn_add_more_1", type="primary", use_container_width=True):
-        add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins, user_level)
+        add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
 
 # GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC ĐIỀU HƯỚNG
 if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
@@ -797,7 +786,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                         target_script = st.session_state.generated_details[selected_win_id]
                         cur_len = len(all_combined_scripts_list)
                         p_clone = f"Dựa trên kịch bản: {json.dumps(target_script, ensure_ascii=False)}. Tạo đúng 5 biến thể mới (id từ {cur_len+1} đến {cur_len+5}). Xuất JSON key 'cloned_outlines'."
-                        res_c = call_gemini_api([p_clone], get_system_instructions(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins, user_level))
+                        res_c = call_gemini_api([p_clone], get_system_instructions(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins))
                         cloned_list = res_c.get("cloned_outlines", [])
                         for idx_c, cl in enumerate(cloned_list): cl["id"] = cur_len + idx_c + 1
                         st.session_state.cloned_scripts.extend(cloned_list)
@@ -815,7 +804,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         """, unsafe_allow_html=True)
 
         if st.button("➕ Gọi Thêm 5 Tình Huống Kịch Bản Mới", key="btn_add_more_phase2", use_container_width=True):
-            add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins, user_level)
+            add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
 
     with col_right:
         st.markdown("""
@@ -834,5 +823,5 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                 st.markdown(f"• **#{it_id}. {item.get('title')}** — <span class='badge-pending'>CHƯA TẠO</span>", unsafe_allow_html=True)
                 
                 if st.button("✨ Tạo chi tiết ngay", key=f"nav_sc_{it_id}", use_container_width=True):
-                    create_scene_details_for_id(it_id, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins, user_level)
+                    create_scene_details_for_id(it_id, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
                 st.markdown("<hr style='margin: 6px 0;'>", unsafe_allow_html=True)
