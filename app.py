@@ -220,6 +220,11 @@ with st.sidebar:
         st.markdown("---")
         st.markdown("### ⚙️ **Quản Lý Tài Khoản (Admin)**")
         
+        # Hiển thị thông báo trạng thái nếu có
+        if "admin_toast_msg" in st.session_state and st.session_state.admin_toast_msg:
+            st.success(st.session_state.admin_toast_msg)
+            st.session_state.admin_toast_msg = "" # Xóa sau khi hiển thị
+
         with st.form("add_license_form"):
             st.markdown("<b>➕ Cấp Quyền Tài Khoản Mới</b>", unsafe_allow_html=True)
             new_account_id = st.text_input("Email / SĐT khách hàng:")
@@ -249,8 +254,12 @@ with st.sidebar:
                         "contact": new_account_id.strip(), "roles": assigned_modules, "expires_at": expiry_date
                     }
                     save_licensed_accounts(st.session_state.licensed_accounts)
-                    st.success("✅ Đã lưu thành công!")
+                    
+                    # Lưu thông báo vào session state để hiện ngay sau khi load lại trang
+                    st.session_state.admin_toast_msg = f"✅ Đã cấp quyền thành công cho tài khoản: {new_account_id.strip()}!"
                     st.rerun()
+                else:
+                    st.warning("⚠️ Vui lòng nhập Email hoặc SĐT hợp lệ!")
 
         # Hiển thị danh sách tài khoản đã cấp và cho phép SỬA / CẬP NHẬT trực tiếp
         if st.session_state.licensed_accounts:
