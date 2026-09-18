@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 st.set_page_config(page_title="Universal AI Video Studio Pro & License Manager", page_icon="🎬", layout="wide")
 
 st.sidebar.markdown("---")
-    st.sidebar.markdown("### 📐 Cấu Hình Khung Hình & Mục Đích")
+st.sidebar.markdown("### 📐 Cấu Hình Khung Hình & Mục Đích")
     
     # 1. Lựa chọn tỷ lệ khung hình
     aspect_ratio_choice = st.sidebar.selectbox(
