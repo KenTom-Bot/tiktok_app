@@ -468,26 +468,31 @@ input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô
 uploaded_files = st.file_uploader("🖼️ Tải ảnh tham chiếu (Tùy chọn):", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
 if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files)):
-    with st.spinner("⏳ Đang xử lý dữ liệu và gọi Gemini API..."):
+    with st.spinner("⏳ Đang phân tích chuyên sâu cấu tạo, nút bấm, kích thước và thông số cơ khí..."):
         try:
             prompt_text = f"""
-            Phân tích chuyên sâu sản phẩm/chủ đề cho thể loại '{selected_mode}' theo phong cách '{selected_style}'. 
-            Thông tin mô tả: "{input_text.strip() if input_text else 'Phân tích từ hình ảnh đính kèm.'}"
+            Phân tích siêu chuyên sâu sản phẩm/chủ đề cho thể loại '{selected_mode}' theo phong cách '{selected_style}'. 
+            Thông tin mô tả: "{input_text.strip() if input_text else 'Phân tích kỹ lưỡng từng chi tiết từ hình ảnh đính kèm.'}"
+
+            YÊU CẦU ĐẶC BIỆT: Phải bóc tách cực kỳ chi tiết về mặt cơ khí và thiết kế vật lý của sản phẩm để phục vụ việc tạo prompt video chân thật (Veo 3):
+            1. Cấu tạo chi tiết: Vị trí, màu sắc và chất liệu của nút bấm nguồn, cổng sạc (vd: Type-C), đèn LED hiển thị pin, cấu trúc cốc chứa rác trong suốt.
+            2. Thông số vật lý: Kích thước cầm tay gọn gàng, trọng lượng nhẹ (vd: ~400g giúp thao tác một tay không mỏi), công thái học của tay cầm.
+            3. Chi tiết phụ kiện & cách dùng: Từng đầu hút chuyên dụng (đầu chổi, khe hẹp, thổi bụi, bơm hơi), cách tháo lắp màng lọc HEPA, hướng dẫn sử dụng chi tiết cho từng chế độ.
 
             BẮT BUỘC TRẢ VỀ ĐỊNH DẠNG JSON CHUẨN GỒM CÁC KEY SAU:
             {{
               "content_analysis": {{
-                "mechanical_and_accessories": "Mô tả chi tiết thông số cốt lõi, màu sắc Hero Color, chất liệu, linh kiện hoặc điểm đặc thù của sản phẩm.",
-                "customer_pain_points": "Phân tích 3 tầng nỗi đau của khách hàng (Chức năng, Tài chính - giá hời tại xưởng, Cảm xúc).",
-                "core_desires": "Mong muốn cốt lõi và khao khát lớn nhất.",
+                "mechanical_and_accessories": "Mô tả siêu chi tiết: Cấu tạo thân máy, vị trí nút bấm, cổng sạc, đèn báo pin, trọng lượng, kích thước cầm nắm và trọn bộ 6 đầu phụ kiện kèm hướng dẫn sử dụng chi tiết từng đầu.",
+                "customer_pain_points": "Phân tích 3 tầng nỗi đau của khách hàng (Chức năng làm sạch ngóc ngách, Tài chính - giá hời tại xưởng, Cảm xúc giải tỏa mệt mỏi).",
+                "core_desires": "Mong muốn cốt lõi và khao khát sở hữu thiết bị tiện ích.",
                 "emotional_or_usp_hook": "Slogan, USP độc quyền hoặc câu hook giật gân chốt đơn.",
-                "visual_physics_rules": "Quy chuẩn vật lý khi chuyển động.",
-                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ toàn bộ video."
+                "visual_physics_rules": "Quy chuẩn vật lý khi chuyển động (lực hút lốc xoáy Vortex, bụi mịn bị hút bay vào cốc trong suốt).",
+                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ toàn bộ video, mô tả rõ màu sắc Hero Color và ánh sáng showroom."
               }},
               "script_outlines": [
                 {{
                   "id": 1,
-                  "title": "Tên kịch bản 1",
+                  "title": "Tên kịch bản 1 (Tập trung thao tác nút bấm & lực hút xưởng)",
                   "setting_style": "Bối cảnh không gian",
                   "angle": "Góc tiếp cận chuyển đổi",
                   "target_hook": "Câu mở đầu giật gân",
@@ -496,7 +501,7 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận K�
                 }},
                 {{
                   "id": 2,
-                  "title": "Tên kịch bản 2",
+                  "title": "Tên kịch bản 2 (Tập trung bộ phụ kiện 6 đầu & đa năng 3 trong 1)",
                   "setting_style": "Bối cảnh không gian",
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
@@ -545,7 +550,7 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận K�
             st.session_state.content_analysis = res.get("content_analysis")
             st.session_state.all_scripts = res.get("script_outlines", [])
             st.session_state.cloned_scripts, st.session_state.expanded_scripts, st.session_state.generated_details, st.session_state.active_script_id = [], [], {}, None
-            st.success("✅ Phân tích thành công!")
+            st.success("✅ Phân tích chi tiết cơ khí và phụ kiện thành công!")
             st.rerun()
         except Exception as e:
             st.error(f"❌ Lỗi thực thi: {e}")
