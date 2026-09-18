@@ -384,17 +384,13 @@ def get_system_instructions(mode: str, style: str) -> str:
 BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
 PHONG CÁCH KẾT XUẤT THỊ GIÁC: {style.upper()}
 
-QUY TẮC ĐẠO DIỄN BỐI CẢNH & LỜI THOẠI LINH HOẠT (100% PHÙ HỢP TÌNH HUỐNG):
-1. BỐI CẢNH THỰC TẾ & ĐA DẠNG: Bối cảnh (setting_style) phải biến đổi linh hoạt theo đúng bản chất sản phẩm và thể loại nội dung:
-   - Nếu là TikTok Shop thiên về xả kho, deal sốc, giá xưởng: Đặt tại Kho hàng, Phân xưởng, Showroom (với lời thoại 'kho bên em', 'xưởng sản xuất trực tiếp').
-   - Nếu là Mẹ & Bé, Đời sống, Chữa lành: Đặt tại không gian gia đình ấm cúng (phòng ngủ, phòng khách, ban công, góc học tập).
-   - Nếu là Du lịch, Xe cộ, Trải nghiệm: Đặt tại ngoại cảnh thiên nhiên, đường phố, nội thất ô tô.
-2. THỜI LƯỢNG MỖI CẢNH: CHỈ DÙNG 3 MỐC: 4s, 6s, 8s (CẤM MỐC 10 GIÂY).
-3. BIỂU CẢM & THAO TÁC CƠ KHÍ: Miêu tả chi tiết vị trí nút bấm, cổng sạc, thao tác thực tế kết hợp biểu cảm gương mặt tự tin, hào hứng của nhân vật.
-4. LỜI THOẠI (VOICEOVER): 100% tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s). Màn hình sạch (không text overlay, không sub nổi, không logo, không watermark).
+🛑 QUY TẮC CHỐNG ẢO GIÁC & KHÓA SẢN PHẨM THỰC TẾ (RẤT QUAN TRỌNG):
+1. TUYỆT ĐỐI KHÔNG THÊU DỆT CHI TIẾT GIẢ: Trong 'image_prompt' và 'video_prompt', CẤM TUYỆT ĐỐI việc tự ý thêm đèn LED phát sáng (trừ khi sản phẩm thực tế có đèn báo pin nhỏ được mô tả), cấm thêm các nút bấm giả, cấm thêm khe tản nhiệt hầm hố hay bất kỳ chi tiết cơ khí nào mà sản phẩm thực tế không có. Sản phẩm phải giống y hệt ảnh/mô tả gốc.
+2. KHÓA CHUẨN MÀU SẮC & KÍCH THƯỚC: Phải lặp lại chính xác tông màu thực tế (Hero Color), chất liệu (nhựa ABS, nhôm, v.v.) và tỷ lệ kích thước cầm tay nhỏ gọn trong mọi prompt. 
+3. BỐI CẢNH LINH HOẠT THEO TÌNH HUỐNG: Bối cảnh phải phù hợp 100% với không gian sử dụng thực tế của sản phẩm (vd: máy hút bụi ô tô thì dùng ở nội thất xe, chăn ga thì dùng ở phòng ngủ, không gian chữa lành thì dùng phòng khách/ban công).
+4. THỜI LƯỢNG MỖI CẢNH: CHỈ DÙNG 3 MỐC: 4s, 6s, 8s (CẤM MỐC 10 GIÂY).
+5. LỜI THOẠI (VOICEOVER): 100% tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s). Màn hình sạch (không text overlay, không sub nổi, không logo, không watermark).
 """
-    if mode == "🛒 TikTok Shop & Bán Hàng":
-        return base + "\n- Riêng thể loại TikTok Shop bán hàng giá hời: Linh hoạt giữa kho xưởng (khi nói về deal/giá) và không gian sử dụng thực tế (khi test tính năng)."
     return base
 def call_gemini_api(contents, system_inst):
     for attempt in range(4):
@@ -457,6 +453,8 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
            - Chỉ dùng kho xưởng/showroom khi nội dung kịch bản là xả kho, báo giá tận xưởng.
         3. Miêu tả cực kỳ chi tiết biểu cảm gương mặt nhân vật và cử chỉ tay thao tác trực tiếp với sản phẩm, nút bấm, phụ kiện.
         4. Lời thoại 100% tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s), chỉ đạo ngữ điệu rõ ràng trong 'voice_director_vn'.
+        5. Trong 'image_prompt' (Imagen 3, 9:16): Miêu tả trung thực tuyệt đối đúng màu sắc, chất liệu, kích thước thực tế của sản phẩm. Tuyệt đối không thêm đèn LED rực rỡ hay chi tiết lạ. Đặt trong không gian thực tế phù hợp.
+        6. Trong 'video_prompt' (Veo 3): Chỉ miêu tả chuyển động vật lý thực tế (bấm nút nguồn cơ khí, thao tác tay, lực hút bụi). CẤM phát sinh thêm đèn sáng, tia lửa điện hay chi tiết công nghệ giả.
         
         Xuất chuẩn 1 Dict JSON duy nhất:
         {{
