@@ -107,7 +107,6 @@ st.markdown("""
     .badge-ready { color: #15803d; font-weight: 700; background: #dcfce7; padding: 2px 8px; border-radius: 4px; }
     .badge-dynamic { color: #1e40af; font-weight: 700; background: #dbeafe; padding: 2px 8px; border-radius: 4px; }
     
-    /* Thanh hỗ trợ nhanh nổi */
     .support-box {
         background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
         border: 1.5px solid #86efac;
@@ -127,6 +126,7 @@ if not api_key:
 client = genai.Client(api_key=api_key)
 
 ACCOUNTS_FILE = "accounts.json"
+ADMIN_EMAIL = "binhnguyenmedia.vn@gmail.com"
 
 def load_licensed_accounts():
     if os.path.exists(ACCOUNTS_FILE):
@@ -136,8 +136,8 @@ def load_licensed_accounts():
         except Exception:
             pass
     default_accounts = {
-        "admin@studiopro.com": {
-            "contact": "admin@studiopro.com",
+        ADMIN_EMAIL: {
+            "contact": ADMIN_EMAIL,
             "roles": ["Tất cả thể loại"],
             "expires_at": "2099-12-31"
         }
@@ -170,6 +170,15 @@ if "projects_library" not in st.session_state:
 if "licensed_accounts" not in st.session_state:
     st.session_state.licensed_accounts = load_licensed_accounts()
 
+# Đảm bảo tài khoản admin luôn có trong file accounts.json
+if ADMIN_EMAIL not in st.session_state.licensed_accounts:
+    st.session_state.licensed_accounts[ADMIN_EMAIL] = {
+        "contact": ADMIN_EMAIL,
+        "roles": ["Tất cả thể loại"],
+        "expires_at": "2099-12-31"
+    }
+    save_licensed_accounts(st.session_state.licensed_accounts)
+
 # ==============================================================================
 # SIDEBAR: ĐĂNG NHẬP, QUẢN TRỊ TÀI KHOẢN, HỖ TRỢ & QUẢN LÝ DỰ ÁN
 # ==============================================================================
@@ -183,11 +192,10 @@ with st.sidebar:
     if not st.session_state.is_logged_in:
         login_input = st.text_input("Nhập Email / SĐT của bạn:", placeholder="vd: user@gmail.com")
         if st.button("🔑 Đăng Nhập", use_container_width=True):
-            ADMIN_EMAILS = ["admin@studiopro.com", "admin"]
             input_val = login_input.strip()
             
-            if input_val in ADMIN_EMAILS or input_val in st.session_state.licensed_accounts:
-                if input_val not in ADMIN_EMAILS:
+            if input_val == ADMIN_EMAIL or input_val in st.session_state.licensed_accounts:
+                if input_val != ADMIN_EMAIL:
                     acc_info = st.session_state.licensed_accounts[input_val]
                     exp_date_str = acc_info.get("expires_at", "2099-12-31")
                     try:
@@ -211,7 +219,7 @@ with st.sidebar:
             st.session_state.current_user_email = ""
             st.rerun()
 
-    # THÔNG TIN HỖ TRỢ NHANH (ZALO, HOTLINE, FACEBOOK, TIKTOK CHỜ SẴN LINK)
+    # THÔNG TIN HỖ TRỢ NHANH (ZALO 096 8484 369, HOTLINE, FB & TIKTOK CHỜ SẴN)
     st.markdown("""
     <div class="support-box">
         <b style="color: #166534; font-size: 0.95rem;">💬 Cần Hỗ Trợ / Mua Gói?</b><br>
@@ -223,8 +231,8 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # Chỉ Admin mới nhìn thấy khu vực quản lý tài khoản
-    IS_ADMIN = st.session_state.current_user_email in ["admin@studiopro.com", "admin"]
+    # Chỉ Admin độc quyền mới nhìn thấy khu vực quản lý tài khoản
+    IS_ADMIN = (st.session_state.current_user_email == ADMIN_EMAIL)
 
     if st.session_state.is_logged_in and IS_ADMIN:
         st.markdown("---")
