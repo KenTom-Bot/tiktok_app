@@ -690,16 +690,16 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịc
 # Hiển thị DNA Phân tích
 if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
     st.divider()
-    st.markdown(f"### 🔍 **Phân Tích DNA Chi Tiết Đa Tầng — [{selected_mode.upper()}]**")
+    st.markdown(f"### 🔍 **Phân Tích Sản Phẩm Chi Tiết Đa Tầng — [{selected_mode.upper()}]**")
     ca = st.session_state.content_analysis
     with st.container(border=True):
-        st.markdown("##### 🏭 **1. Thông số Cốt lõi & Chi tiết đặc thù:**")
+        st.markdown("##### 🏭 **1. Thông số & Chi tiết sản phẩm:**")
         st.markdown(f"<div style='line-height: 1.8;'>{format_analysis_field(ca.get('mechanical_and_accessories', 'N/A'))}</div>", unsafe_allow_html=True)
         st.markdown("---")
-        st.markdown("##### 🎯 **2. Ma trận Nỗi đau & Tâm lý:**")
+        st.markdown("##### 🎯 **2. Nỗi đau & Tâm lý Khách Hàng:**")
         st.markdown(f"<div style='line-height: 1.8;'>{format_analysis_field(ca.get('customer_pain_points', 'N/A'))}</div>", unsafe_allow_html=True)
         st.markdown("---")
-        st.markdown("##### 💡 **3. Mong muốn cốt lõi & USP:**")
+        st.markdown("##### 💡 **3. Mong muốn Khách hàng:**")
         st.markdown(f"<div style='line-height: 1.8;'>• <b>Mong muốn:</b> {format_analysis_field(ca.get('core_desires', 'N/A'))}<br>• <b>USP / Slogan:</b> {format_analysis_field(ca.get('emotional_or_usp_hook', 'N/A'))}</div>", unsafe_allow_html=True)
         st.markdown("---")
         st.markdown("##### ⚙️ **4. Quy chuẩn Vật lý:**")
