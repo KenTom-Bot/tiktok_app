@@ -11,8 +11,6 @@ import time
 import io
 from datetime import datetime, timedelta
 
-st.set_page_config(page_title="Universal AI Video Studio Pro & License Manager", page_icon="🎬", layout="wide")
-
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 📐 Cấu Hình Khung Hình & Mục Đích")
 
@@ -33,9 +31,8 @@ else:
         "Chia sẻ kiến thức / Review chuyên sâu (Education & Deep Review)"
     ]
     content_goal = st.sidebar.selectbox("Mục đích sản xuất video:", content_goal_options, index=0)
-    st.sidebar.info(f"💡 **Chế độ Nội dung Khác:** Tối ưu hóa cho mục tiêu *{content_goal}* với thời lượng dài, cấu trúc theo hồi/chương sâu sắc.")
-
-st.markdown("""
+    st.sidebar.info(f"💡 **Chế độ Nội dung Khác:** Tối ưu hóa cho mục tiêu {content_goal} với thời lượng dài, cấu trúc theo hồi/chương sâu sắc.")
+    
 <style>
     .header-container {
         text-align: center;
