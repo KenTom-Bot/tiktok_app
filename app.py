@@ -438,20 +438,24 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     
     product_ctx = st.session_state.get("current_input_context", "Sản phẩm hiện tại")
     ca_data = st.session_state.get("content_analysis", {})
-    locked_color_info = ca_data.get("mechanical_and_accessories", "giữ nguyên màu sắc thực tế từ ảnh gốc") if isinstance(ca_data, dict) else "giữ nguyên màu sắc thực tế"
     
-    with st.spinner(f"🎬 Đang dựng kịch bản chi tiết cảnh quay #{target_id} (Khóa chặt quy luật vật lý hút/thổi)..."):
+    # Lấy thông tin chi tiết cấu tạo và màu sắc từ phần phân tích DNA để neo cứng
+    exact_color_spec = "Giữ nguyên màu sắc chuẩn xác từ ảnh thực tế"
+    if isinstance(ca_data, dict):
+        exact_color_spec = ca_data.get("mechanical_and_accessories", "Giữ nguyên màu sắc chuẩn xác từ ảnh thực tế")
+    
+    with st.spinner(f"🎬 Đang dựng kịch bản chi tiết cảnh quay #{target_id} (Khóa chặt mã màu tuyệt đối)..."):
         prompt_detail = f"""
-        Sản phẩm gốc & Màu sắc thực tế cần khóa chặt: "{locked_color_info}" (Mô tả chung: {product_ctx})
+        Sản phẩm gốc & MÃ MÀU THỰC TẾ BẮT BUỘC TUÂN THỦ: "{exact_color_spec}" (Ngữ cảnh: {product_ctx})
         Thể loại nội dung: "{current_mode}"
         Ý tưởng kịch bản: ID {target_id} - {outline.get('title')}
         Bối cảnh định hướng: {outline.get('setting_style')} | Góc tiếp cận: {outline.get('angle')} | Hook: {outline.get('target_hook')}
         
-        QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC VỀ VẬT LÝ HÚT / THỔI (RẤT QUAN TRỌNG):
-        1. Thời lượng mỗi cảnh 'duration' chỉ dùng đúng 3 mốc: '4s', '6s', '8s'.
-        2. TUYỆT ĐỐI KHÓA HƯỚNG VẬT LÝ (VORTEX PHYSICS): Trong 'video_prompt' (Veo 3), khi thực hiện tính năng HÚT, bắt buộc phải miêu tả rõ ràng luồng khí hút chặt bụi bẩn từ bề mặt đi ngược vào đầu vòi, xoáy thẳng và gom gọn vào bên trong cốc chứa rác trong suốt. Tuyệt đối cấm hiện tượng bụi bay ngược ra ngoài hoặc thổi tung tóe khi đang ở chế độ hút. Ngược lại, khi ở chế độ THỔI, phải miêu tả luồng gió thổi bay bụi từ khe hẹp ra ngoài.
-        3. 100% VIDEO PROMPT CÓ VOICE & KHẨU HÌNH: Trong 'video_prompt', lồng trực tiếp đoạn thoại (voiceover_vi) và chỉ đạo khẩu hình nhân vật đọc giọng miền Bắc khớp với hành động.
-        4. Giữ nguyên 100% màu sắc gốc của sản phẩm, không đổi màu, không thêm chi tiết thừa.
+        QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC VỀ MÀU SẮC (CỰC KỲ NGHIÊM NGẶT):
+        1. THỜI LƯỢNG MỖI CẢNH: Chỉ dùng 3 mốc: '4s', '6s', '8s'.
+        2. KHÓA CỨNG MÀU SẮC 100% (ANTI-COLOR SHIFT): Trong 'image_prompt' (Imagen 3, tỷ lệ 9:16), PHẢI viết rõ tuyệt đối sắc độ màu nguyên bản của sản phẩm (ví dụ: nếu sản phẩm có thân màu trắng xám kết hợp chi tiết xám đen/tối, phải ghi rõ: 'exact original white-gray body color with dark gray accents, strictly maintain this exact color scheme, zero color deviation'). Cấm tuyệt đối AI tự ý đổi sang màu khác.
+        3. VẬT LÝ HÚT/THỔI ĐÚNG CHIỀU: Mô tả luồng khí hút bụi đi ngược vào đầu vòi và xoáy trực tiếp vào cốc chứa rác trong suốt.
+        4. 100% VIDEO PROMPT CÓ VOICE & KHẨU HÌNH: Trong 'video_prompt', tích hợp đồng thời thao tác tay, biểu cảm gương mặt và lồng trực tiếp đoạn thoại miền Bắc.
         
         Xuất chuẩn 1 Dict JSON duy nhất:
         {{
@@ -464,18 +468,18 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
             {{
               "scene_number": 1, 
               "duration": "4s", 
-              "scene_setting": "Bối cảnh thực tế tình huống sử dụng", 
+              "scene_setting": "Bối cảnh thực tế phù hợp tình huống", 
               "transition_type": "Hard Cut", 
               "voice_director_vn": "Chỉ đạo ngữ điệu miền Bắc", 
               "voiceover_vi": "Lời thoại miền Bắc", 
-              "image_prompt": "Prompt Imagen 3 (9:16) giữ nguyên 100% màu sắc gốc thực tế", 
-              "video_prompt": "Prompt Veo 3 mô tả chính xác hướng vật lý: luồng khí hút sạch bụi bẩn từ bề mặt đi ngược vào đầu vòi và xoáy trực tiếp vào cốc chứa rác trong suốt, kèm lồng tiếng thoại miền Bắc khớp khẩu hình"
+              "image_prompt": "Prompt Imagen 3 (9:16) khóa chặt tuyệt đối màu sắc gốc từ ảnh thực tế, định nghĩa rõ màu thân máy, không được phép thay đổi màu sắc dưới mọi hình thức", 
+              "video_prompt": "Prompt Veo 3 mô tả đúng hướng vật lý hút bụi vào cốc trong suốt, kết hợp lồng tiếng thoại miền Bắc khớp khẩu hình"
             }}
           ]
         }}
         """
         try:
-            res = call_gemini_api([prompt_detail], get_system_instructions(current_mode, current_style))
+            res = call_gemini_api([prompt_detail], get_system_instructions(selected_mode, selected_style))
             if isinstance(res, list): res = res[0]
             st.session_state.generated_details[target_id] = res
             st.session_state.active_script_id = target_id
