@@ -288,8 +288,14 @@ def call_gemini_api(contents, system_inst):
     for attempt in range(4):
         try:
             response = client.models.generate_content(
-                model="gemini-3.6-flash", contents=contents,
-                config=types.GenerateContentConfig(system_instruction=system_inst, response_mime_type="application/json", max_output_tokens=16384, temperature=0.7)
+                model="gemini-3.6-flash", 
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_inst, 
+                    response_mime_type="application/json", 
+                    max_output_tokens=16384, 
+                    temperature=0.7
+                )
             )
             return clean_and_parse_json(response.text)
         except Exception as e:
@@ -352,9 +358,72 @@ input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô
 uploaded_files = st.file_uploader("🖼️ Tải ảnh tham chiếu (Tùy chọn):", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
 if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files)):
-    with st.spinner("⏳ Đang xử lý dữ liệu và gọi Gemini API..."):
+    with st.spinner("⏳ Đang xử lý hình ảnh và phân tích chuyên sâu qua Gemini API..."):
         try:
-            prompt_text = f"Phân tích chuyên sâu cho '{selected_mode}' phong cách '{selected_style}'. Nội dung: '{input_text.strip() if input_text else 'Phân tích hình ảnh đính kèm.'}'. Xuất JSON gồm 'content_analysis' và 'script_outlines' (đúng 5 kịch bản)."
+            # Ép buộc mô hình trả về đầy đủ các trường cấu trúc JSON tránh lỗi N/A
+            prompt_text = f"""
+            Phân tích chuyên sâu sản phẩm/chủ đề cho thể loại '{selected_mode}' theo phong cách '{selected_style}'. 
+            Thông tin mô tả từ người dùng: "{input_text.strip() if input_text else 'Phân tích trực tiếp từ hình ảnh đính kèm.'}"
+
+            BẮT BUỘC TRẢ VỀ ĐỊNH DẠNG JSON CHUẨN GỒM CÁC KEY SAU (Không được để trống hoặc trả về N/A):
+            {{
+              "content_analysis": {{
+                "mechanical_and_accessories": "Mô tả chi tiết thông số cốt lõi, màu sắc Hero Color, chất liệu, linh kiện hoặc điểm đặc thù của sản phẩm.",
+                "customer_pain_points": "Phân tích 3 tầng nỗi đau của khách hàng (Chức năng, Tài chính - giá hời tại xưởng, Cảm xúc).",
+                "core_desires": "Mong muốn cốt lõi và khao khát lớn nhất của khách hàng mục tiêu.",
+                "emotional_or_usp_hook": "Slogan, USP độc quyền hoặc câu hook giật gân chốt đơn.",
+                "visual_physics_rules": "Quy chuẩn vật lý khi chuyển động (vd: lực hút, độ đàn hồi, hiệu ứng ánh sáng showroom/xưởng).",
+                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ toàn bộ video."
+              }},
+              "script_outlines": [
+                {{
+                  "id": 1,
+                  "title": "Tên kịch bản 1 (Nhấn mạnh giá xưởng / deal sốc)",
+                  "setting_style": "Bối cảnh không gian",
+                  "angle": "Góc tiếp cận chuyển đổi",
+                  "target_hook": "Câu mở đầu giật gân",
+                  "recommended_scenes_count": "4",
+                  "voice_profile": {{"gender": "Nữ", "age_range": "25-30", "tone": "Năng lượng cao, thuyết phục"}}
+                }},
+                {{
+                  "id": 2,
+                  "title": "Tên kịch bản 2",
+                  "setting_style": "Bối cảnh không gian",
+                  "angle": "Góc tiếp cận",
+                  "target_hook": "Câu mở đầu",
+                  "recommended_scenes_count": "4",
+                  "voice_profile": {{"gender": "Nam", "age_range": "28-35", "tone": "Trầm ấm, uy tín"}}
+                }},
+                {{
+                  "id": 3,
+                  "title": "Tên kịch bản 3",
+                  "setting_style": "Bối cảnh không gian",
+                  "angle": "Góc tiếp cận",
+                  "target_hook": "Câu mở đầu",
+                  "recommended_scenes_count": "4",
+                  "voice_profile": {{"gender": "Nữ", "age_range": "25-30", "tone": "Hào hứng"}}
+                }},
+                {{
+                  "id": 4,
+                  "title": "Tên kịch bản 4",
+                  "setting_style": "Bối cảnh không gian",
+                  "angle": "Góc tiếp cận",
+                  "target_hook": "Câu mở đầu",
+                  "recommended_scenes_count": "4",
+                  "voice_profile": {{"gender": "Nam", "age_range": "25-30", "tone": "Thuyết phục"}}
+                }},
+                {{
+                  "id": 5,
+                  "title": "Tên kịch bản 5",
+                  "setting_style": "Bối cảnh không gian",
+                  "angle": "Góc tiếp cận",
+                  "target_hook": "Câu mở đầu",
+                  "recommended_scenes_count": "4",
+                  "voice_profile": {{"gender": "Nữ", "age_range": "28-35", "tone": "Tin cậy"}}
+                }}
+              ]
+            }}
+            """
             
             payload = []
             if uploaded_files:
@@ -367,10 +436,10 @@ if st.button("🚀 Bắt Đầu Bóc Tách DNA Chi Tiết & Lên 5 Ma Trận K�
             st.session_state.content_analysis = res.get("content_analysis")
             st.session_state.all_scripts = res.get("script_outlines", [])
             st.session_state.cloned_scripts, st.session_state.expanded_scripts, st.session_state.generated_details, st.session_state.active_script_id = [], [], {}, None
-            st.success("✅ Phân tích thành công!")
+            st.success("✅ Phân tích và bóc tách DNA thành công!")
             st.rerun()
         except Exception as e:
-            st.error(f"❌ Lỗi thực thi: {e}")
+            st.error(f"❌ Lỗi thực thi phân tích: {e}")
 
 # Hiển thị DNA Phân tích
 if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
