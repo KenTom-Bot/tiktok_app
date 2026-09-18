@@ -263,12 +263,30 @@ def clean_and_parse_json(text_content: str):
     return parsed[0] if isinstance(parsed, list) and len(parsed) > 0 else parsed
 
 def format_analysis_field(field_val) -> str:
-    if isinstance(field_val, dict): return "<br>".join([f"• <b>{k.replace('_', ' ').title()}:</b> {v}" for k, v in field_val.items()])
-    elif isinstance(field_val, list): return "<br>".join([f"• {item}" for item in field_val])
-    text = str(field_val)
-    for kw in ["Chức năng:", "Tài chính:", "Cảm xúc:", "1.", "2.", "3.", "•", "-"]:
-        if kw in text and not text.startswith(kw): text = text.replace(kw, f"<br><br>• <b>{kw.replace(':', '')}</b>:")
-    return text.replace("\n", "<br>")
+    if isinstance(field_val, dict):
+        return "<br>".join([f"• <b>{str(k).replace('_', ' ').title()}:</b> {str(v)}" for k, v in field_val.items()])
+    elif isinstance(field_val, list):
+        return "<br>".join([f"• {str(item)}" for item in field_val])
+    
+    text = str(field_val).strip()
+    
+    # Loại bỏ các ký tự lỗi định dạng cũ nếu có
+    text = re.sub(r'<<\.?', '', text)
+    text = text.replace('<br>', '\n').replace('<b>', '').replace('</b>', '')
+    
+    # Tách các ý thành danh sách gạch đầu dòng rõ ràng
+    lines = text.split('\n')
+    formatted_lines = []
+    for line in lines:
+        line_clean = line.strip()
+        if line_clean:
+            # Nếu dòng chứa từ khóa tiêu đề, in đậm từ khóa
+            if any(kw in line_clean for kw in ["Chức năng:", "Tài chính:", "Cảm xúc:", "1.", "2.", "3.", "•"]):
+                formatted_lines.append(f"<br>• {line_clean}")
+            else:
+                formatted_lines.append(line_clean)
+                
+    return " ".join(formatted_lines) if len(formatted_lines) <= 2 else "<br>".join(formatted_lines)
 
 def get_system_instructions(mode: str, style: str) -> str:
     base = f"""
