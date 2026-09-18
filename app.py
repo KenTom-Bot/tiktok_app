@@ -380,17 +380,17 @@ def get_system_instructions(mode: str, style: str) -> str:
     base = f"""
 BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG CHO IMAGEN 3 VÀ VEO 3.
 PHONG CÁCH KẾT XUẤT THỊ GIÁC: {style.upper()}
-QUY TẮC ĐẠO DIỄN, BIỂU CẢM & LỜI THOẠI CHÂN THẬT:
-1. THỜI LƯỢNG MỖI CẢNH: CHỈ DÙNG 3 MỐC: 4s, 6s, 8s (CẤM MỐC 10 GIÂY).
-2. BỐI CẢNH & KÍCH CẦU: Ưu tiên tuyệt đối bối cảnh xưởng sản xuất, kho hàng tổng, showroom trưng bày. Nhấn mạnh giá tận gốc tại xưởng, deal sốc giới hạn giờ.
-3. BIỂU CẢM VÀ HÌNH THỂ NHÂN VẬT: Trong 'video_prompt' và 'scene_setting', miêu tả chi tiết biểu cảm gương mặt (tự tin, hào hứng), cử chỉ tay thao tác trực tiếp với nút bấm, cổng sạc, phụ kiện.
-4. LỜI THOẠI & NGỮ ĐIỆU (VOICEOVER): 100% tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s).
-5. Màn hình sạch: Tuyệt đối không text overlay, không sub nổi, không logo, không watermark.
+
+QUY TẮC KHÓA SẢN PHẨM & TÍNH CHÂN THẬT (VISUAL DNA LOCK):
+1. KHÓA TỈ LỆ & MÀU SẮC THỰC TẾ: Trong mọi 'image_prompt' và 'video_prompt', BẮT BUỘC phải neo giữ chính xác màu sắc chủ đạo (Hero Color), chất liệu (nhựa ABS cao cấp, nhôm xám titan, cốc trong suốt), tỷ lệ kích thước cầm tay gọn gàng và trọng lượng thực tế của sản phẩm. Không được phép để AI tự sinh ra hình dáng sai lệch so với mô tả gốc.
+2. THỜI LƯỢNG MỖI CẢNH: CHỈ DÙNG 3 MỐC: 4s, 6s, 8s (CẤM MỐC 10 GIÂY).
+3. BỐI CẢNH KÍCH CẦU: Ưu tiên bối cảnh xưởng sản xuất, kho hàng tổng hoặc showroom trưng bày trực tiếp. Nhấn mạnh giá tận gốc không qua trung gian.
+4. BIỂU CẢM & THAO TÁC CƠ KHÍ: Miêu tả chi tiết vị trí nút bấm nguồn, cổng sạc, thao tác tháo lắp 6 đầu phụ kiện, kết hợp biểu cảm gương mặt tự tin, hào hứng của nhân vật.
+5. LỜI THOẠI (VOICEOVER): 100% tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s). Màn hình sạch (không text overlay, không sub nổi, không logo, không watermark).
 """
     if mode == "🛒 TikTok Shop & Bán Hàng":
-        return base + "\n- BẮT BUỘC TẬP TRUNG MẠNH VÀO GIÁ XƯỞNG, KHÔNG QUA TRUNG GIAN, DEAL GIẢM SỐC VÀ THƯƠNG HIỆU UY TÍN."
+        return base + "\n- BẮT BUỘC ĐƯA THÔNG SỐ CƠ KHÍ THỰC TẾ VÀO PROMPT ĐỂ ẢNH VÀ VIDEO KHỚP 100% VỚI SẢN PHẨM NGOÀI ĐỜI THỰC."
     return base
-
 def call_gemini_api(contents, system_inst):
     for attempt in range(4):
         try:
