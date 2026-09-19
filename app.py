@@ -80,7 +80,6 @@ st.markdown("""
         margin-bottom: 16px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
-    .card-title-win { color: #dc2626; font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
     .card-title-add { color: #d97706; font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
     
     div[data-testid="stButton"] > button {
@@ -272,6 +271,20 @@ with st.sidebar:
     if st.session_state.is_logged_in:
         st.markdown("---")
         st.markdown("### 🗂️ **Quản Lý Dự Án**")
+        
+        # NÚT TẠO DỰ ÁN MỚI / LÀM SẠCH WORKSPACE
+        if st.button("➕ Tạo Dự Án Mới (Làm Mới)", type="primary", use_container_width=True):
+            st.session_state.content_analysis = None
+            st.session_state.all_scripts = []
+            st.session_state.cloned_scripts = []
+            st.session_state.expanded_scripts = []
+            st.session_state.generated_details = {}
+            st.session_state.active_script_id = None
+            st.session_state.current_input_context = ""
+            st.session_state.active_project_title = "Chiến dịch mới"
+            st.success("✨ Đã tạo dự án mới thành công!")
+            st.rerun()
+
         project_title_input = st.text_input("Tên dự án hiện tại:", value=st.session_state.get("active_project_title", "Chiến dịch mới"))
         col_p1, col_p2 = st.columns(2)
         with col_p1:
@@ -725,7 +738,7 @@ if st.session_state.content_analysis and isinstance(st.session_state.content_ana
     st.code(raw_dna, language="text")
 
 # ==============================================================================
-# GIAO ĐOẠN 1: CHIA 2 VÙNG ĐỘC LẬP CHO DANH SÁCH KỊCH BẢN (Chỉ hiện khi active_script_id là None)
+# GIAI ĐOẠN 1: CHIA 2 VÙNG ĐỘC LẬP CHO DANH SÁCH KỊCH BẢN (Chỉ hiện khi active_script_id là None)
 # ==============================================================================
 all_combined_scripts_list = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
 
@@ -790,7 +803,7 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
     if st.button("➕ Gọi Thêm 5 Kịch Bản Khác", key="btn_add_more_1", type="primary", use_container_width=True):
         add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
 
-# GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC ĐIỀU HƯỚNG
+# GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC ĐIỀU HƯỚNG (ĐÃ BỎ HOÀN TOÀN KHU VỰC NHÂN BẢN PHÍA DƯỚI)
 if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
     st.divider()
     
@@ -840,38 +853,9 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         safe_copy_button(vid_p, f"📋 Sao Chép Prompt Video Cảnh {idx}")
         st.markdown("---")
 
-    st.markdown("### ⚡ **Khu Vực Quản Trị & Mở Rộng Kịch Bản**")
+    # VÙNG MỞ RỘNG (CHỈ GIỮ LẠI NÚT GỌI THÊM 5 KỊCH BẢN MỚI, ĐÃ BỎ HẲN PHẦN NHÂN BẢN DƯỚI ĐÁY)
     col_left, col_right = st.columns([1.1, 0.9])
-
     with col_left:
-        st.markdown("""
-        <div class="custom-card">
-            <div class="card-title-win">🔥 Vùng Nhân Bản Kịch Bản Win (A/B Test)</div>
-            <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 8px;">Nhân bản thành 5 biến thể mở đầu khác nhau.</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        generated_ids = list(st.session_state.generated_details.keys())
-        if generated_ids:
-            options_dict = {gid: f"#{gid}. {st.session_state.generated_details[gid].get('title', '')}" for gid in generated_ids}
-            selected_win_id = st.selectbox("Chọn kịch bản win cần nhân bản:", options=generated_ids, format_func=lambda x: options_dict[x], key="sel_win_cb")
-            
-            if st.button("🚀 Nhân Bản 5 Biến Thể Win", type="primary", use_container_width=True):
-                with st.spinner("Đang nhân bản biến thể..."):
-                    try:
-                        target_script = st.session_state.generated_details[selected_win_id]
-                        cur_len = len(all_combined_scripts_list)
-                        p_clone = f"Dựa trên kịch bản: {json.dumps(target_script, ensure_ascii=False)}. Tạo đúng 5 biến thể mới (id từ {cur_len+1} đến {cur_len+5}). Xuất JSON key 'cloned_outlines'."
-                        res_c = call_gemini_api([p_clone], get_system_instructions(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins))
-                        cloned_list = res_c.get("cloned_outlines", [])
-                        for idx_c, cl in enumerate(cloned_list): cl["id"] = cur_len + idx_c + 1
-                        st.session_state.cloned_scripts.extend(cloned_list)
-                        st.success("✅ Đã nhân bản thành công!")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Lỗi: {e}")
-
-        st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("""
         <div class="custom-card">
             <div class="card-title-add">➕ Vùng Gọi Thêm Kịch Bản Mới</div>
