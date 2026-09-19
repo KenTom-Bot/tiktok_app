@@ -883,6 +883,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                     c_rev, c_clone = st.columns(2)
                     with c_rev:
                         if not is_current:
+                            # SỬA LỖI ĐIỀU HƯỚNG: Bấm vào đây sẽ kích hoạt ngay lệnh chuyển cảnh và cuộn lên đầu
                             if st.button("👁️ Xem lại", key=f"dt_rev_{it_id}", use_container_width=True):
                                 st.session_state.active_script_id = it_id
                                 st.rerun()
