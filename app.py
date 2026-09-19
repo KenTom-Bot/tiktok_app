@@ -155,14 +155,14 @@ def save_licensed_accounts(accounts_dict):
     except Exception as e:
         st.error(f"Lỗi lưu danh sách tài khoản: {e}")
 
-# Khởi tạo Session State an toàn tuyệt đối (Đã bổ sung last_loaded_file_id để chặn vòng lặp)
+# Khởi tạo Session State (Có thêm file_uploader_key để giải quyết triệt để lỗi kẹt file)
 for key, default_val in [
     ("content_analysis", None), ("all_scripts", []), ("cloned_scripts", []), 
     ("expanded_scripts", []), ("generated_details", {}), ("active_script_id", None), 
     ("projects_library", {}), ("licensed_accounts", load_licensed_accounts()), 
     ("current_input_context", ""), ("admin_toast_msg", ""), ("is_logged_in", False),
     ("current_user_email", ""), ("active_project_title", "Chiến dịch mới"),
-    ("last_loaded_file_id", None)
+    ("last_loaded_file_id", None), ("file_uploader_key", 0)
 ]:
     if key not in st.session_state:
         st.session_state[key] = default_val
@@ -216,7 +216,7 @@ def format_analysis_field(field_val) -> str:
     return "".join(formatted_output) if formatted_output else text
 
 # ==============================================================================
-# SIDEBAR - QUẢN LÝ DỰ ÁN & TẢI FILE AN TOÀN
+# SIDEBAR - QUẢN LÝ DỰ ÁN & TẢI FILE
 # ==============================================================================
 with st.sidebar:
     if not st.session_state.is_logged_in:
@@ -228,6 +228,8 @@ with st.sidebar:
     
     if st.session_state.is_logged_in:
         st.markdown("### 🗂️ **Quản Lý Dự Án**")
+        
+        # NÚT TẠO DỰ ÁN MỚI: Xóa dữ liệu VÀ ép file_uploader làm mới
         if st.button("➕ Tạo Dự Án Mới (Làm Mới)", type="primary", use_container_width=True):
             st.session_state.content_analysis = None
             st.session_state.all_scripts = []
@@ -237,7 +239,8 @@ with st.sidebar:
             st.session_state.active_script_id = None
             st.session_state.current_input_context = ""
             st.session_state.active_project_title = "Chiến dịch mới"
-            st.session_state.last_loaded_file_id = None  # Xóa cache file cũ để có thể tải lại
+            st.session_state.last_loaded_file_id = None  
+            st.session_state.file_uploader_key += 1  # Ép hộp thoại up file phải xóa trống
             st.success("✨ Đã tạo dự án mới thành công!")
             st.rerun()
 
@@ -276,17 +279,25 @@ with st.sidebar:
                 st.session_state.expanded_scripts = p_data["expanded_scripts"]
                 st.session_state.generated_details = p_data["generated_details"]
                 st.session_state.active_script_id = None
+                st.session_state.last_loaded_file_id = None
+                st.session_state.file_uploader_key += 1 # Ép hộp thoại up file phải xóa trống
                 st.success("✅ Đã mở dự án thành công!")
                 st.rerun()
 
         st.markdown("<div style='font-size: 0.85rem; color: #64748b; margin-top: 8px;'>Hoặc tải file dự án từ máy tính:</div>", unsafe_allow_html=True)
-        uploaded_project_file = st.file_uploader("📤 Tải file kịch bản (.json)", type=["json"], label_visibility="collapsed")
         
-        # SỬA LỖI VÒNG LẶP NÚT BẤM (Fix nút không hoạt động): 
-        # Chỉ quét và nạp file khi đây là file MỚI, tránh việc đè lại dữ liệu mỗi khi ấn nút
+        # Gán key động để ép Reset khi cần
+        uploaded_project_file = st.file_uploader(
+            "📤 Tải file kịch bản (.json)", 
+            type=["json"], 
+            label_visibility="collapsed",
+            key=f"project_uploader_{st.session_state.file_uploader_key}"
+        )
+        
         if uploaded_project_file is not None:
             file_identifier = f"{uploaded_project_file.name}_{uploaded_project_file.size}"
             
+            # Chỉ nạp lại file nếu đây là một file khác với file vừa nạp (tránh vòng lặp)
             if st.session_state.get("last_loaded_file_id") != file_identifier:
                 try:
                     file_bytes = uploaded_project_file.getvalue()
@@ -565,7 +576,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         }}
         """
         try:
-            sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins)
+            sys_inst = get_system_instructions(current_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
             res = call_gemini_api([prompt_detail], sys_inst)
             if isinstance(res, list): res = res[0]
             
@@ -814,11 +825,11 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
                     st.markdown(f"**#{sc_id}. {outline.get('title')}** — <span class='badge-ready'>ĐÃ HOÀN THIỆN</span>", unsafe_allow_html=True)
                     st.caption(f"🏛️ Bối cảnh: {outline.get('setting_style')} | ⚡ Hook: *\"{outline.get('target_hook')}\"*")
                 with col_btn1:
-                    if st.button("👁️ Xem lại chi tiết", key=f"btn_rev_v1_main_{sc_id}", use_container_width=True):
+                    if st.button("👁️ Xem lại chi tiết", key=f"btn_rev_v1_{sc_id}", use_container_width=True):
                         st.session_state.active_script_id = sc_id
                         st.rerun()
                 with col_btn2:
-                    if st.button("🚀 Nhân bản 5 biến thể", key=f"btn_clone_v1_main_{sc_id}", type="primary", use_container_width=True):
+                    if st.button("🚀 Nhân bản 5 biến thể", key=f"btn_clone_v1_{sc_id}", type="primary", use_container_width=True):
                         with st.spinner("Đang nhân bản biến thể win..."):
                             try:
                                 target_script = st.session_state.generated_details[sc_id]
@@ -847,11 +858,11 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
                     st.markdown(f"**#{sc_id}. {outline.get('title')}** — <span class='badge-pending'>ĐANG CHỜ</span>", unsafe_allow_html=True)
                     st.caption(f"🏛️ Bối cảnh: {outline.get('setting_style')} | ⚡ Hook: *\"{outline.get('target_hook')}\"*")
                 with col_a2:
-                    if st.button("✨ Tạo chi tiết ngay", key=f"btn_cre_v2_main_{sc_id}", use_container_width=True):
+                    if st.button("✨ Tạo chi tiết ngay", key=f"btn_cre_v2_{sc_id}", use_container_width=True):
                         create_scene_details_for_id(sc_id, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
 
     st.markdown("---")
-    if st.button("➕ Gọi Thêm 5 Kịch Bản Khác", key="btn_add_more_1_main", type="primary", use_container_width=True):
+    if st.button("➕ Gọi Thêm 5 Kịch Bản Khác", key="btn_add_more_1", type="primary", use_container_width=True):
         add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
 
 # GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC ĐIỀU HƯỚNG
@@ -872,7 +883,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
     
     st.markdown('<div id="script-detail-anchor"></div>', unsafe_allow_html=True)
 
-    if st.button("⬅️ Quay lại danh sách kịch bản tổng", key="btn_back_to_list_main"):
+    if st.button("⬅️ Quay lại danh sách kịch bản tổng", key="btn_back_to_list"):
         st.session_state.active_script_id = None
         st.rerun()
 
