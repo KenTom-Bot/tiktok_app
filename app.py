@@ -219,6 +219,8 @@ with st.sidebar:
             st.rerun()
 
         project_title_input = st.text_input("Tên dự án hiện tại:", value=st.session_state.get("active_project_title", "Chiến dịch mới"))
+        
+        # BỔ SUNG ĐẦY ĐỦ: Nút Lưu dự án và Nút Tải file JSON xuống
         col_p1, col_p2 = st.columns(2)
         with col_p1:
             if st.button("💾 Lưu Dự Án", use_container_width=True):
@@ -355,11 +357,11 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # 4. NẾU ĐÃ ĐĂNG NHẬP: THÔNG TIN TÀI KHOẢN & ĐĂNG XUẤT ĐẨY XUỐNG DƯỚI CÙNG
+    # 4. NẾU ĐÃ ĐĂNG NHẬP: THÔNG TIN TÀI KHOẢN & ĐĂNG XUẤT ĐẨY XUỐNG DƯỚI CÙNG (ĐÃ GỠ BỎ KÝ TỰ LỖI <br>)
     if st.session_state.is_logged_in:
         st.markdown("---")
         st.markdown("### 👤 **Thông Tin Tài Khoản**")
-        st.success(f"Đang đăng nhập:<br>**{st.session_state.current_user_email}**", icon="✅")
+        st.success(f"Đang đăng nhập: **{st.session_state.current_user_email}**")
         if st.button("🚪 Đăng Xuất", use_container_width=True):
             st.session_state.is_logged_in = False
             st.session_state.current_user_email = ""
