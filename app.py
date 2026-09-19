@@ -220,7 +220,7 @@ with st.sidebar:
 
         project_title_input = st.text_input("Tên dự án hiện tại:", value=st.session_state.get("active_project_title", "Chiến dịch mới"))
         
-        # Nút Lưu dự án và Tải file JSON xuống
+        # Nút Lưu dự án vào bộ nhớ và Nút Tải file JSON xuống máy tính
         col_p1, col_p2 = st.columns(2)
         with col_p1:
             if st.button("💾 Lưu Dự Án", use_container_width=True):
@@ -259,7 +259,7 @@ with st.sidebar:
                 st.success("✅ Đã mở dự án thành công!")
                 st.rerun()
 
-        # BỔ SUNG: Tải file dự án cũ từ máy tính (.json)
+        # Tải file dự án cũ từ máy tính (.json)
         st.markdown("<div style='font-size: 0.85rem; color: #64748b; margin-top: 8px;'>Hoặc tải file dự án từ máy tính:</div>", unsafe_allow_html=True)
         uploaded_project_file = st.file_uploader("📤 Tải file kịch bản (.json)", type=["json"], label_visibility="collapsed")
         if uploaded_project_file is not None:
