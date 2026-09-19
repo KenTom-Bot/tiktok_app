@@ -383,20 +383,14 @@ def format_analysis_field(field_val) -> str:
     text = re.sub(r'<<\.?', '', text)
     text = text.replace('<b>', '').replace('</b>', '')
     
-    # Chỉ định dạng tách dòng chính xác cho các từ khóa chuyên biệt của Ma trận nỗi đau
-    text = re.sub(r'(?i)(?:\b|^)(?:1[\.\)]\s*)?chức năng\s*[:\.-]?', '<br>• <b>Chức năng:</b>', text)
-    text = re.sub(r'(?i)(?:\b|^)(?:2[\.\)]\s*)?tài chính\s*[:\.-]?', '<br>• <b>Tài chính:</b>', text)
-    text = re.sub(r'(?i)(?:\b|^)(?:3[\.\)]\s*)?cảm xúc\s*[:\.-]?', '<br>• <b>Cảm xúc:</b>', text)
-    
-    lines = [l.strip() for l in text.split('<br>') if l.strip()]
+    lines = [l.strip() for l in text.split('\n') if l.strip()]
     formatted_output = []
     
-    for line in lines:
-        if line:
-            if line.startswith('•'):
-                formatted_output.append(f"<div style='margin-top: 6px;'>{line}</div>")
-            else:
-                formatted_output.append(f"<div style='margin-left: 15px; margin-top: 4px;'>• {line}</div>")
+    for idx, line in enumerate(lines):
+        if idx > 0 or re.match(r'^(\d+[\.\)]|[-•])\s*', line):
+            formatted_output.append(f"<div style='margin-left: 15px; margin-top: 6px;'>• {line.lstrip('1234567890. ')}</div>")
+        else:
+            formatted_output.append(f"<div style='margin-top: 4px;'>{line}</div>")
             
     return "".join(formatted_output) if formatted_output else text
 
@@ -410,10 +404,11 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
         total_seconds = int(target_duration_mins * 60)
         duration_rule = f"QUY CHUẨN THỜI LƯỢNG KỂ CHUYỆN / REVIEW DÀI ({target_duration_mins} phút / {total_seconds} giây): Xây dựng cốt truyện có chiều sâu, chia theo cấu trúc Hồi/Chương (Act & Chapter), số lượng phân cảnh trải đều toàn bộ thời lượng."
 
+    # QUY CHUẨN THUYẾT MINH TOÀN DIỆN: Ép buộc lồng ghép lời thuyết minh vào 100% video_prompt
     voiceover_instruction = """
-    7. QUY CHUẨN THUYẾT MINH VIỆT NAM (NARRATION-DRIVEN STYLE): 
-       - Bất kể phân cảnh có xuất hiện con người hay không (ví dụ cảnh quay vật thể tĩnh, phong cảnh, cận cảnh kiến trúc, máy móc, nhà cửa), TOÀN BỘ video BẮT BUỘC mang dạng phim thuyết minh chuyên nghiệp.
-       - Mỗi cảnh phải có lời thuyết minh tiếng Việt chuẩn miền Bắc (giọng đọc truyền cảm, rõ ràng, nhịp độ ~3 từ/s) được lồng ghép chặt chẽ vào 'video_prompt' để mô tả, bình luận hoặc kể chuyện dẫn dắt người xem xuyên suốt không gian hình ảnh.
+    7. QUY CHUẨN THUYẾT MINH TOÀN DIỆN (NARRATION & VOICE OVER MANDATORY): 
+       - 100% các phân cảnh trong video (dù cảnh quay có người hay hoàn toàn là vật thể tĩnh, phong cảnh, kiến trúc, không gian) BẮT BUỘC phải kèm theo lời thuyết minh tiếng Việt chuẩn miền Bắc.
+       - Trong 'video_prompt' của MỖI CẢNH, bắt buộc phải mô tả rõ phần âm thanh/lời đọc (Narration/Voiceover) bằng câu lệnh tiếng Anh hoặc tiếng Việt chỉ định Veo 3 phát ra giọng đọc thuyết minh truyền cảm, rõ ràng, tốc độ chuẩn (~3 từ/s) để dẫn dắt nội dung xuyên suốt.
     """
 
     master_director_directive = "CHẾ ĐỘ CHUYÊN GIA CAO CẤP: Tối ưu hóa sâu sắc các thông số điện ảnh chuyên sâu (Lighting setup, Lens focal length, Color grading, Camera movement physics) cho Imagen 3 và Veo 3 để mọi người dùng dù không biết gì vẫn tạo ra video đạt chuẩn Hollywood."
@@ -501,8 +496,8 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC CHO CÁC CẢNH:
         1. PHÂN RÃ THỜI LƯỢNG & SỐ PHÂN CẢNH: 
            - Tổng thời lượng khớp chính xác {total_sec} giây, số lượng phân cảnh trải đều toàn bộ thời lượng.
-        2. QUY CHUẨN THUYẾT MINH (NARRATION-DRIVEN): 100% các phân cảnh BẮT BUỘC có lời thuyết minh tiếng Việt chuẩn miền Bắc (`voiceover_vi`) để dẫn dắt, kể chuyện hoặc thuyết minh xuyên suốt (ngay cả khi cảnh chỉ có không gian, kiến trúc, sự vật hoặc vật thể tĩnh).
-        3. CHUYỂN CẢNH THÔNG MINH & MÀN HÌNH SẠCH: Ảnh sạch tuyệt đối (`no text, clean screen`), lồng ghép chỉ đạo ngữ điệu miền Bắc vào `video_prompt`.
+        2. QUY CHUẨN THUYẾT MINH TOÀN DIỆN (MANDATORY VOICEOVER): 100% các phân cảnh BẮT BUỘC phải có lời thuyết minh tiếng Việt chuẩn miền Bắc (`voiceover_vi`). Đồng thời trong `video_prompt`, phải viết rõ lệnh yêu cầu Veo 3 phát ra âm thanh thuyết minh đọc câu thoại đó với giọng đọc truyền cảm, rõ ràng.
+        3. MÀN HÌNH SẠCH: Ảnh sạch tuyệt đối (`no text, clean screen`).
         
         Xuất chuẩn 1 Dict JSON duy nhất:
         {{
@@ -520,13 +515,13 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
               "voice_director_vn": "Chỉ đạo ngữ điệu thuyết minh miền Bắc", 
               "voiceover_vi": "Lời thuyết minh tiếng Việt chuẩn miền Bắc dẫn dắt cảnh quay", 
               "image_prompt": "Prompt Imagen 3 ({aspect_ratio}) hiển thị không gian/sự vật chân thực, màn hình sạch, no text, clean screen", 
-              "video_prompt": "Prompt Veo 3 miêu tả chuyển động điện ảnh, kết hợp lồng tiếng thuyết minh miền Bắc chuẩn xác"
+              "video_prompt": "Prompt Veo 3 miêu tả chuyển động điện ảnh, kèm chỉ định audio: professional voiceover narration in Northern Vietnamese reading [voiceover_vi]"
             }}
           ]
         }}
         """
         try:
-            sys_inst = get_system_instructions(current_mode, selected_style, aspect_ratio, goal, target_duration_mins)
+            sys_inst = get_system_instructions(current_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
             res = call_gemini_api([prompt_detail], sys_inst)
             if isinstance(res, list): res = res[0]
             st.session_state.generated_details[target_id] = res
@@ -558,7 +553,6 @@ with col_mode:
         "🍲 Ẩm Thực & Đời Sống", "📖 Đời Sống & Giáo Dục", "🏛️ Lịch Sử & Tín Ngưỡng Di Sản", "🧘 Chữa Lành & Phong Cách Sống"
     ])
 with col_style:
-    # ĐÃ VIỆT HÓA 100% TÊN CÁC PHONG CÁCH ĐỂ NGƯỜI DÙNG DỄ HIỂU
     selected_style_vn = st.selectbox("🎨 Chọn Phong Cách Hình Ảnh:", options=[
         "Điện Ảnh Chân Thực (Người thật / Siêu thực 8K)", 
         "Hoạt Hình 3D (Kiểu Pixar / Disney)", 
@@ -571,7 +565,6 @@ with col_style:
         "Hoạt Hình Cắt Giấy / Tĩnh Vật (Stop Motion)"
     ])
     
-    # Map ánh xạ ngược về giá trị chuẩn để hệ thống xử lý ngầm định
     style_mapping = {
         "Điện Ảnh Chân Thực (Người thật / Siêu thực 8K)": "Cinematic Realism (Người thật / Siêu thực 8K)",
         "Hoạt Hình 3D (Kiểu Pixar / Disney)": "3D Pixar / Disney Animation",
@@ -724,7 +717,34 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịc
         except Exception as e:
             st.error(f"❌ Lỗi thực thi: {e}")
 
-# Hiển thị DNA Phân tích
+# Hiển thị DNA Phân tích (Sử dụng hàm format_analysis_field chuẩn hóa để không bị lệch các mục Chức năng, Tài chính, Cảm xúc)
+def format_analysis_field(field_val) -> str:
+    if isinstance(field_val, dict):
+        return "<br>".join([f"• <b>{str(k).replace('_', ' ').title()}:</b> {str(v)}" for k, v in field_val.items()])
+    elif isinstance(field_val, list):
+        return "<br>".join([f"• {str(item)}" for item in field_val])
+    
+    text = str(field_val).strip()
+    text = re.sub(r'<<\.?', '', text)
+    text = text.replace('<b>', '').replace('</b>', '')
+    
+    # Chỉ định dạng tách dòng chính xác cho các từ khóa chuyên biệt của Ma trận nỗi đau mà không ảnh hưởng thông số kỹ thuật
+    text = re.sub(r'(?i)(?:\b|^)(?:1[\.\)]\s*)?chức năng\s*[:\.-]?', '<br>• <b>Chức năng:</b>', text)
+    text = re.sub(r'(?i)(?:\b|^)(?:2[\.\)]\s*)?tài chính\s*[:\.-]?', '<br>• <b>Tài chính:</b>', text)
+    text = re.sub(r'(?i)(?:\b|^)(?:3[\.\)]\s*)?cảm xúc\s*[:\.-]?', '<br>• <b>Cảm xúc:</b>', text)
+    
+    lines = [l.strip() for l in text.split('<br>') if l.strip()]
+    formatted_output = []
+    
+    for line in lines:
+        if line:
+            if line.startswith('•'):
+                formatted_output.append(f"<div style='margin-top: 6px;'>{line}</div>")
+            else:
+                formatted_output.append(f"<div style='margin-left: 15px; margin-top: 4px;'>• {line}</div>")
+            
+    return "".join(formatted_output) if formatted_output else text
+
 if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
     st.divider()
     st.markdown(f"### 🔍 **Phân Tích DNA Chi Tiết Đa Tầng — [{selected_mode.upper()}]**")
