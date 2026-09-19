@@ -383,7 +383,10 @@ def format_analysis_field(field_val) -> str:
     text = re.sub(r'<<\.?', '', text)
     text = text.replace('<b>', '').replace('</b>', '')
     
+    # Lọc bỏ hoàn toàn các cụm từ "Nỗi đau" lặp lại rườm rà
     text = re.sub(r'(?i)\bnỗi đau\b\s*[:\.-]?', '', text)
+    
+    # Định dạng chuẩn hóa các mục trong Ma trận nỗi đau
     text = re.sub(r'(?i)(?:\b|^)(?:1[\.\)]\s*)?chức năng\s*[:\.-]?', '<br>• <b>Chức năng:</b>', text)
     text = re.sub(r'(?i)(?:\b|^)(?:2[\.\)]\s*)?tài chính\s*[:\.-]?', '<br>• <b>Tài chính:</b>', text)
     text = re.sub(r'(?i)(?:\b|^)(?:3[\.\)]\s*)?cảm xúc\s*[:\.-]?', '<br>• <b>Cảm xúc:</b>', text)
@@ -606,7 +609,7 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
 if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
     st.divider()
     
-    # ĐIỂM NEO HTML/JS ĐỂ TỰ ĐỘNG CUỘN TRANG LÊN ĐẦU NGAY KHI VỪA TẠO HOẶC XEM CHI TIẾT
+    # ĐIỂM NEO HTML/JS ĐỂ TỰ ĐỘNG CUỘN TRANG LÊN ĐẦU KHI VỪA TẠO HOẶC XEM CHI TIẾT
     components.html("""
         <script>
             const doc = window.parent.document;
@@ -707,7 +710,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                                     cloned_list = res_c.get("cloned_outlines", [])
                                     for idx_c, cl in enumerate(cloned_list): cl["id"] = cur_len + idx_c + 1
                                     st.session_state.cloned_scripts.extend(cloned_list)
-                                    st.success("✅ Đã nhân bản 5 biến thể mới!")
+                                    st.success("✅ Đã nhân bản thành công 5 biến thể mới!")
                                     st.rerun()
                                 except Exception as e:
                                     st.error(f"Lỗi: {e}")
