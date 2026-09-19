@@ -195,7 +195,6 @@ def process_login(login_val):
 # SIDEBAR - ĐIỀU HƯỚNG THỨ TỰ THEO TRẠNG THÁI ĐĂNG NHẬP
 # ==============================================================================
 with st.sidebar:
-    # 1. NẾU CHƯA ĐĂNG NHẬP: ĐĂNG NHẬP Ở TRÊN CÙNG
     if not st.session_state.is_logged_in:
         st.markdown("### 🔐 **Đăng Nhập Hệ Thống**")
         with st.form("login_form"):
@@ -203,7 +202,6 @@ with st.sidebar:
             if st.form_submit_button("🔑 Đăng Nhập", use_container_width=True):
                 process_login(login_input)
     
-    # 2. NẾU ĐÃ ĐĂNG NHẬP THÀNH CÔNG: QUẢN LÝ DỰ ÁN & QUẢN TRỊ HIỆN Ở TRÊN
     if st.session_state.is_logged_in:
         st.markdown("### 🗂️ **Quản Lý Dự Án**")
         if st.button("➕ Tạo Dự Án Mới (Làm Mới)", type="primary", use_container_width=True):
@@ -220,7 +218,6 @@ with st.sidebar:
 
         project_title_input = st.text_input("Tên dự án hiện tại:", value=st.session_state.get("active_project_title", "Chiến dịch mới"))
         
-        # LUÔN HIỂN THỊ CẢ 2 NÚT LƯU VÀ TẢI XUỐNG BẤT KỂ ĐÃ CÓ KỊCH BẢN HAY CHƯA
         col_p1, col_p2 = st.columns(2)
         with col_p1:
             if st.button("💾 Lưu Dự Án", use_container_width=True):
@@ -257,7 +254,6 @@ with st.sidebar:
                 st.success("✅ Đã mở dự án thành công!")
                 st.rerun()
 
-        # Tải file dự án cũ từ máy tính (.json)
         st.markdown("<div style='font-size: 0.85rem; color: #64748b; margin-top: 8px;'>Hoặc tải file dự án từ máy tính:</div>", unsafe_allow_html=True)
         uploaded_project_file = st.file_uploader("📤 Tải file kịch bản (.json)", type=["json"], label_visibility="collapsed")
         if uploaded_project_file is not None:
@@ -293,7 +289,6 @@ with st.sidebar:
             except Exception as e:
                 st.error(f"❌ Lỗi đọc file JSON: {e}")
 
-        # QUẢN LÝ TÀI KHOẢN (ADMIN)
         IS_ADMIN = (st.session_state.current_user_email == ADMIN_EMAIL)
         if IS_ADMIN:
             st.markdown("---")
@@ -343,7 +338,6 @@ with st.sidebar:
                                 st.rerun()
                         st.markdown("---")
 
-    # 3. LIÊN HỆ MUA GÓI (HỖ TRỢ)
     st.markdown("---")
     st.markdown("""
     <div class="support-box">
@@ -356,7 +350,6 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # 4. NẾU ĐÃ ĐĂNG NHẬP: THÔNG TIN TÀI KHOẢN & ĐĂNG XUẤT ĐẨY XUỐNG DƯỚI CÙNG
     if st.session_state.is_logged_in:
         st.markdown("---")
         st.markdown("### 👤 **Thông Tin Tài Khoản**")
@@ -390,18 +383,10 @@ def format_analysis_field(field_val) -> str:
     text = re.sub(r'<<\.?', '', text)
     text = text.replace('<b>', '').replace('</b>', '')
     
-    lines = text.split('\n')
-    processed_lines = []
-    for line in lines:
-        line_clean = line.strip()
-        if not line_clean: continue
-        sub_parts = re.split(r'(?=\s*(?:\d+\.|Tông màu|Kích thước|Trọng lượng|Thao tác|Bộ phụ kiện|Chất liệu)\b)', line_clean)
-        for part in sub_parts:
-            p_clean = part.strip()
-            if p_clean: processed_lines.append(p_clean)
-
+    lines = [l.strip() for l in text.split('\n') if l.strip()]
     formatted_output = []
-    for idx, line in enumerate(processed_lines):
+    
+    for idx, line in enumerate(lines):
         if idx > 0 or re.match(r'^(\d+[\.\)]|[-•])\s*', line):
             formatted_output.append(f"<div style='margin-left: 15px; margin-top: 6px;'>• {line.lstrip('1234567890. ')}</div>")
         else:
@@ -745,7 +730,7 @@ if st.session_state.content_analysis and isinstance(st.session_state.content_ana
     st.code(raw_dna, language="text")
 
 # ==============================================================================
-# GIAI ĐOẠN 1: CHIA 2 VÙNG ĐỘC LẬP CHO DANH SÁCH KỊCH BẢN (Chỉ hiện khi active_script_id là None)
+# GIAI ĐOẠN 1: CHIA 2 VÙNG ĐỘC LẬP CHO DANH SÁCH KỊCH BẢN (Chỉ hiện khi active_script_id is None)
 # ==============================================================================
 all_combined_scripts_list = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
 
@@ -814,6 +799,21 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
 if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
     st.divider()
     
+    # ĐIỂM NEO HTML/JS ĐỂ TỰ ĐỘNG CUỘN TRANG LÊN ĐẦU KHI VỪA TẠO HOẶC XEM CHI TIẾT
+    components.html("""
+        <script>
+            const doc = window.parent.document;
+            setTimeout(() => {
+                const target = doc.getElementById('script-detail-anchor');
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100);
+        </script>
+    """, height=0)
+    
+    st.markdown('<div id="script-detail-anchor"></div>', unsafe_allow_html=True)
+
     # Nút quay lại danh sách tổng
     if st.button("⬅️ Quay lại danh sách kịch bản tổng", key="btn_back_to_list"):
         st.session_state.active_script_id = None
@@ -860,8 +860,53 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         safe_copy_button(vid_p, f"📋 Sao Chép Prompt Video Cảnh {idx}")
         st.markdown("---")
 
+    # BỐ CỤC HAI CỘT: CỘT TRÁI LÀ VÙNG KỊCH BẢN ĐÃ TẠO & GỌI THÊM, CỘT PHẢI LÀ KỊCH BẢN CHƯA TẠO
     col_left, col_right = st.columns([1.1, 0.9])
+    
     with col_left:
+        # VÙNG KỊCH BẢN ĐÃ TẠO (ĐẶT Ở TRÊN VÙNG GỌI THÊM 5 KỊCH BẢN NHƯ BẠN YÊU CẦU)
+        st.markdown("""
+        <div class="custom-card" style="background: #f0fdf4; border-color: #86efac;">
+            <div style="color: #166534; font-weight: 800; font-size: 1.1rem; margin-bottom: 10px;">🎬 Kịch Bản Đã Tạo Chi Tiết</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        completed_scripts_in_detail = [sc for sc in all_combined_scripts_list if sc.get("id") in st.session_state.generated_details]
+        if not completed_scripts_in_detail:
+            st.caption("Chưa có kịch bản nào khác được tạo.")
+        else:
+            for item in completed_scripts_in_detail:
+                it_id = item.get("id")
+                is_current = (it_id == st.session_state.active_script_id)
+                prefix = "👉 " if is_current else "• "
+                st.markdown(f"{prefix}<b>#{it_id}. {item.get('title')}</b>", unsafe_allow_html=True)
+                
+                c_rev, c_clone = st.columns(2)
+                with c_rev:
+                    if not is_current:
+                        if st.button("👁️ Xem lại", key=f"dt_rev_{it_id}", use_container_width=True):
+                            st.session_state.active_script_id = it_id
+                            st.rerun()
+                with c_clone:
+                    if st.button("🚀 Nhân bản", key=f"dt_clone_{it_id}", type="primary", use_container_width=True):
+                        with st.spinner("Đang nhân bản..."):
+                            try:
+                                target_script = st.session_state.generated_details[it_id]
+                                cur_len = len(all_combined_scripts_list)
+                                p_clone = f"Dựa trên kịch bản: {json.dumps(target_script, ensure_ascii=False)}. Tạo đúng 5 biến thể mới (id từ {cur_len+1} đến {cur_len+5}). Xuất JSON key 'cloned_outlines'."
+                                res_c = call_gemini_api([p_clone], get_system_instructions(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins))
+                                cloned_list = res_c.get("cloned_outlines", [])
+                                for idx_c, cl in enumerate(cloned_list): cl["id"] = cur_len + idx_c + 1
+                                st.session_state.cloned_scripts.extend(cloned_list)
+                                st.success("✅ Đã nhân bản 5 biến thể mới!")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Lỗi: {e}")
+                st.markdown("<hr style='margin: 4px 0;'>", unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # VÙNG GỌI THÊM 5 KỊCH BẢN MỚI
         st.markdown("""
         <div class="custom-card">
             <div class="card-title-add">➕ Vùng Gọi Thêm Kịch Bản Mới</div>
