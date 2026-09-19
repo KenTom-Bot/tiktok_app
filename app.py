@@ -312,6 +312,7 @@ with st.sidebar:
                 
                 st.session_state.active_script_id = None
                 
+                # SỬA LỖI TẢI FILE: Bổ sung st.rerun() để tự động làm mới giao diện hiển thị ngay lập tức
                 st.success("🎉 Đã khôi phục thành công dự án từ file!")
                 st.rerun()
             except Exception as e:
@@ -913,7 +914,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                             st.markdown("<div style='text-align: center; color: #15803d; font-size: 12px; font-weight: 700; padding: 6px;'>Đang hiển thị</div>", unsafe_allow_html=True)
                     with c_clone:
                         if st.button("🚀 Nhân bản", key=f"dt_clone_{it_id}", type="primary", use_container_width=True):
-                            with st.spinner("Đang nhân bản..."):
+                            with st.spinner("Dang nhân bản..."):
                                 try:
                                     target_script = st.session_state.generated_details[it_id]
                                     cur_len = len(all_combined_scripts_list)
