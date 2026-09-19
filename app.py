@@ -162,7 +162,7 @@ for key, default_val in [
     ("expanded_scripts", []), ("generated_details", {}), ("active_script_id", None), 
     ("projects_library", {}), ("licensed_accounts", load_licensed_accounts()), 
     ("current_input_context", ""), ("admin_toast_msg", ""), ("is_logged_in", False),
-    ("current_user_email", "")
+    ("current_user_email", ""), ("active_project_title", "Chiến dịch mới")
 ]:
     if key not in st.session_state:
         st.session_state[key] = default_val
@@ -191,7 +191,7 @@ def process_login(login_val):
     else:
         st.error("❌ Tài khoản chưa được cấp quyền!")
 
-# Hàm hỗ trợ định dạng trường phân tích dữ liệu (Lọc sạch triệt để chữ 'Nỗi đau' thừa)
+# Hàm định dạng trường phân tích dữ liệu (Lọc sạch chữ 'Nỗi đau' thừa)
 def format_analysis_field(field_val) -> str:
     if isinstance(field_val, dict):
         return "<br>".join([f"• <b>{str(k).replace('_', ' ').title()}:</b> {str(v)}" for k, v in field_val.items()])
@@ -289,17 +289,11 @@ with st.sidebar:
                 file_bytes = uploaded_project_file.getvalue()
                 loaded_proj = json.loads(file_bytes.decode("utf-8"))
                 
-                # BÓC TÁCH ĐA TẦNG: Nhận diện cả file tải từ máy lẫn file lưu trong bộ nhớ
+                # BÓC TÁCH HOÀN HẢO MỌI CẤU TRÚC FILE (Dự án từ máy tính hoặc bộ nhớ)
                 proj_data = loaded_proj
                 if "projects_library" in loaded_proj and isinstance(loaded_proj["projects_library"], dict) and len(loaded_proj["projects_library"]) > 0:
                     first_key = list(loaded_proj["projects_library"].keys())[0]
                     proj_data = loaded_proj["projects_library"][first_key]
-                elif "all_scripts" not in loaded_proj and "script_outlines" not in loaded_proj and isinstance(loaded_proj, dict):
-                    # Quét tìm kiếm nếu cấu trúc nằm sâu bên trong
-                    for k, v in loaded_proj.items():
-                        if isinstance(v, dict) and ("all_scripts" in v or "content_analysis" in v):
-                            proj_data = v
-                            break
 
                 st.session_state.active_project_title = proj_data.get("title", proj_data.get("project_title", "Dự án tải lên"))
                 st.session_state.content_analysis = proj_data.get("content_analysis", proj_data.get("analysis", None))
@@ -334,7 +328,7 @@ with st.sidebar:
                 cloned = proj_data.get("cloned_scripts", [])
                 st.session_state.cloned_scripts = cloned if isinstance(cloned, list) else []
                 
-                # Trích xuất dữ liệu chi tiết các cảnh đã dựng
+                # Trích xuất chi tiết phân cảnh đã dựng
                 raw_details = proj_data.get("generated_details", proj_data.get("details", {}))
                 st.session_state.generated_details = {int(k): v for k, v in raw_details.items()} if isinstance(raw_details, dict) else {}
                 
