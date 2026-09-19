@@ -155,7 +155,7 @@ def save_licensed_accounts(accounts_dict):
     except Exception as e:
         st.error(f"Lỗi lưu danh sách tài khoản: {e}")
 
-# Khởi tạo Session State an toàn
+# Khởi tạo Session State an toàn tuyệt đối
 for key, default_val in [
     ("content_analysis", None), ("all_scripts", []), ("cloned_scripts", []), 
     ("expanded_scripts", []), ("generated_details", {}), ("active_script_id", None), 
@@ -551,7 +551,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
             res = call_gemini_api([prompt_detail], sys_inst)
             if isinstance(res, list): res = res[0]
             
-            # Lưu vào session_state và kích hoạt chuyển view hiển thị ngay lập tức
+            # Gán dữ liệu chi tiết vào session_state và kích hoạt mở giao diện chi tiết
             st.session_state.generated_details[target_id] = res
             st.session_state.active_script_id = target_id
             st.success(f"✅ Đã dựng thành công chi tiết kịch bản #{target_id}!")
