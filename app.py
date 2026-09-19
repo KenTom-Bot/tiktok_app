@@ -289,7 +289,6 @@ with st.sidebar:
                 file_bytes = uploaded_project_file.getvalue()
                 loaded_proj = json.loads(file_bytes.decode("utf-8"))
                 
-                # CHUẨN HÓA DỮ LIỆU TẢI LÊN THÔNG MINH CHO MỌI ĐỊNH DẠNG FILE
                 proj_data = loaded_proj
                 if "projects_library" in loaded_proj and isinstance(loaded_proj["projects_library"], dict) and len(loaded_proj["projects_library"]) > 0:
                     first_key = list(loaded_proj["projects_library"].keys())[0]
@@ -298,24 +297,22 @@ with st.sidebar:
                 st.session_state.active_project_title = proj_data.get("title", proj_data.get("project_title", "Dự án tải lên"))
                 st.session_state.content_analysis = proj_data.get("content_analysis", proj_data.get("analysis", None))
                 
-                # Quét an toàn danh sách kịch bản
+                # Quét an toàn toàn bộ danh sách kịch bản từ file cũ
                 scripts = proj_data.get("all_scripts", [])
                 if not scripts and "script_outlines" in proj_data:
                     scripts = proj_data.get("script_outlines", [])
                 if not scripts and "outlines" in proj_data:
                     scripts = proj_data.get("outlines", [])
                 
-                # Ép kiểu dữ liệu voice_profile an toàn chống lỗi chuỗi/từ điển
                 cleaned_scripts = []
                 for sc in (scripts if isinstance(scripts, list) else []):
                     if isinstance(sc, dict):
                         vp = sc.get("voice_profile", {})
                         if isinstance(vp, str):
-                            sc["voice_profile"] = {"gender": "Nam/Nữ", "age_range": "25-35", "tone": vp}
+                            sc["voice_profile"] = {"gender": "Nam", "age_range": "25-35", "tone": vp}
                         cleaned_scripts.append(sc)
                 st.session_state.all_scripts = cleaned_scripts
                 
-                # Xử lý tương tự cho expanded_scripts
                 expanded = proj_data.get("expanded_scripts", [])
                 cleaned_expanded = []
                 for sc in (expanded if isinstance(expanded, list) else []):
@@ -954,7 +951,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                                     cloned_list = res_c.get("cloned_outlines", [])
                                     for idx_c, cl in enumerate(cloned_list): cl["id"] = cur_len + idx_c + 1
                                     st.session_state.cloned_scripts.extend(cloned_list)
-                                    st.success("✅ Đã nhân bản thành công 5 biến thể mới!")
+                                    st.success("✅ Đã nhân bản 5 biến thể mới!")
                                     st.rerun()
                                 except Exception as e:
                                     st.error(f"Lỗi: {e}")
