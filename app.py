@@ -289,30 +289,37 @@ with st.sidebar:
                 file_bytes = uploaded_project_file.getvalue()
                 loaded_proj = json.loads(file_bytes.decode("utf-8"))
                 
+                # BÓC TÁCH DỮ LIỆU ĐA TẦNG THÔNG MINH CHO MỌI ĐỊNH DẠNG FILE JSON CŨ/MỚI
                 proj_data = loaded_proj
-                if "projects_library" in loaded_proj and len(loaded_proj["projects_library"]) > 0:
+                if "projects_library" in loaded_proj and isinstance(loaded_proj["projects_library"], dict) and len(loaded_proj["projects_library"]) > 0:
                     first_key = list(loaded_proj["projects_library"].keys())[0]
                     proj_data = loaded_proj["projects_library"][first_key]
-                elif "all_scripts" not in loaded_proj and isinstance(loaded_proj, dict):
+                elif "all_scripts" not in loaded_proj and "script_outlines" not in loaded_proj and isinstance(loaded_proj, dict):
+                    # Trường hợp file chỉ chứa trực tiếp dữ liệu thô
                     proj_data = loaded_proj
 
-                st.session_state.active_project_title = proj_data.get("title", "Dự án tải lên")
-                st.session_state.content_analysis = proj_data.get("content_analysis")
+                st.session_state.active_project_title = proj_data.get("title", proj_data.get("project_title", "Dự án tải lên"))
+                st.session_state.content_analysis = proj_data.get("content_analysis", proj_data.get("analysis", None))
                 
+                # Quét tất cả các tên biến thể của danh sách kịch bản
                 scripts = proj_data.get("all_scripts", [])
                 if not scripts and "script_outlines" in proj_data:
                     scripts = proj_data.get("script_outlines", [])
-                st.session_state.all_scripts = scripts
+                if not scripts and "outlines" in proj_data:
+                    scripts = proj_data.get("outlines", [])
+                st.session_state.all_scripts = scripts if isinstance(scripts, list) else []
                 
-                st.session_state.cloned_scripts = proj_data.get("cloned_scripts", [])
-                st.session_state.expanded_scripts = proj_data.get("expanded_scripts", [])
+                cloned = proj_data.get("cloned_scripts", [])
+                st.session_state.cloned_scripts = cloned if isinstance(cloned, list) else []
                 
-                raw_details = proj_data.get("generated_details", {})
-                st.session_state.generated_details = {int(k): v for k, v in raw_details.items()} if raw_details else {}
+                expanded = proj_data.get("expanded_scripts", [])
+                st.session_state.expanded_scripts = expanded if isinstance(expanded, list) else []
+                
+                raw_details = proj_data.get("generated_details", proj_data.get("details", {}))
+                st.session_state.generated_details = {int(k): v for k, v in raw_details.items()} if isinstance(raw_details, dict) else {}
                 
                 st.session_state.active_script_id = None
                 
-                # SỬA LỖI TẢI FILE: Bổ sung st.rerun() để tự động làm mới giao diện hiển thị ngay lập tức
                 st.success("🎉 Đã khôi phục thành công dự án từ file!")
                 st.rerun()
             except Exception as e:
@@ -914,7 +921,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                             st.markdown("<div style='text-align: center; color: #15803d; font-size: 12px; font-weight: 700; padding: 6px;'>Đang hiển thị</div>", unsafe_allow_html=True)
                     with c_clone:
                         if st.button("🚀 Nhân bản", key=f"dt_clone_{it_id}", type="primary", use_container_width=True):
-                            with st.spinner("Dang nhân bản..."):
+                            with st.spinner("Đang nhân bản..."):
                                 try:
                                     target_script = st.session_state.generated_details[it_id]
                                     cur_len = len(all_combined_scripts_list)
@@ -923,7 +930,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                                     cloned_list = res_c.get("cloned_outlines", [])
                                     for idx_c, cl in enumerate(cloned_list): cl["id"] = cur_len + idx_c + 1
                                     st.session_state.cloned_scripts.extend(cloned_list)
-                                    st.success("✅ Đã nhân bản 5 biến thể mới!")
+                                    st.success("✅ Đã nhân bản thành công 5 biến thể mới!")
                                     st.rerun()
                                 except Exception as e:
                                     st.error(f"Lỗi: {e}")
