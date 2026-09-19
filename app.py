@@ -155,13 +155,14 @@ def save_licensed_accounts(accounts_dict):
     except Exception as e:
         st.error(f"Lỗi lưu danh sách tài khoản: {e}")
 
-# Khởi tạo Session State an toàn tuyệt đối
+# Khởi tạo Session State an toàn tuyệt đối (Đã bổ sung last_loaded_file_id để chặn vòng lặp)
 for key, default_val in [
     ("content_analysis", None), ("all_scripts", []), ("cloned_scripts", []), 
     ("expanded_scripts", []), ("generated_details", {}), ("active_script_id", None), 
     ("projects_library", {}), ("licensed_accounts", load_licensed_accounts()), 
     ("current_input_context", ""), ("admin_toast_msg", ""), ("is_logged_in", False),
-    ("current_user_email", ""), ("active_project_title", "Chiến dịch mới")
+    ("current_user_email", ""), ("active_project_title", "Chiến dịch mới"),
+    ("last_loaded_file_id", None)
 ]:
     if key not in st.session_state:
         st.session_state[key] = default_val
@@ -236,6 +237,7 @@ with st.sidebar:
             st.session_state.active_script_id = None
             st.session_state.current_input_context = ""
             st.session_state.active_project_title = "Chiến dịch mới"
+            st.session_state.last_loaded_file_id = None  # Xóa cache file cũ để có thể tải lại
             st.success("✨ Đã tạo dự án mới thành công!")
             st.rerun()
 
@@ -279,52 +281,68 @@ with st.sidebar:
 
         st.markdown("<div style='font-size: 0.85rem; color: #64748b; margin-top: 8px;'>Hoặc tải file dự án từ máy tính:</div>", unsafe_allow_html=True)
         uploaded_project_file = st.file_uploader("📤 Tải file kịch bản (.json)", type=["json"], label_visibility="collapsed")
+        
+        # SỬA LỖI VÒNG LẶP NÚT BẤM (Fix nút không hoạt động): 
+        # Chỉ quét và nạp file khi đây là file MỚI, tránh việc đè lại dữ liệu mỗi khi ấn nút
         if uploaded_project_file is not None:
-            try:
-                file_bytes = uploaded_project_file.getvalue()
-                loaded_proj = json.loads(file_bytes.decode("utf-8"))
-                
-                proj_data = loaded_proj
-                if "projects_library" in loaded_proj and isinstance(loaded_proj["projects_library"], dict) and len(loaded_proj["projects_library"]) > 0:
-                    first_key = list(loaded_proj["projects_library"].keys())[0]
-                    proj_data = loaded_proj["projects_library"][first_key]
+            file_identifier = f"{uploaded_project_file.name}_{uploaded_project_file.size}"
+            
+            if st.session_state.get("last_loaded_file_id") != file_identifier:
+                try:
+                    file_bytes = uploaded_project_file.getvalue()
+                    loaded_proj = json.loads(file_bytes.decode("utf-8"))
+                    
+                    proj_data = loaded_proj
+                    if "projects_library" in loaded_proj and isinstance(loaded_proj["projects_library"], dict) and len(loaded_proj["projects_library"]) > 0:
+                        first_key = list(loaded_proj["projects_library"].keys())[0]
+                        proj_data = loaded_proj["projects_library"][first_key]
+                    elif "all_scripts" not in loaded_proj and "script_outlines" not in loaded_proj and isinstance(loaded_proj, dict):
+                        for k, v in loaded_proj.items():
+                            if isinstance(v, dict) and ("all_scripts" in v or "content_analysis" in v):
+                                proj_data = v
+                                break
 
-                st.session_state.active_project_title = proj_data.get("title", proj_data.get("project_title", "Dự án tải lên"))
-                st.session_state.content_analysis = proj_data.get("content_analysis", proj_data.get("analysis", None))
-                
-                scripts = proj_data.get("all_scripts", [])
-                if not scripts and "script_outlines" in proj_data:
-                    scripts = proj_data.get("script_outlines", [])
-                
-                cleaned_scripts = []
-                for sc in (scripts if isinstance(scripts, list) else []):
-                    if isinstance(sc, dict):
-                        vp = sc.get("voice_profile", {})
-                        if isinstance(vp, str):
-                            sc["voice_profile"] = {"gender": "Nam", "age_range": "25-35", "tone": vp}
-                        cleaned_scripts.append(sc)
-                st.session_state.all_scripts = cleaned_scripts
-                
-                expanded = proj_data.get("expanded_scripts", [])
-                cleaned_expanded = []
-                for sc in (expanded if isinstance(expanded, list) else []):
-                    if isinstance(sc, dict):
-                        vp = sc.get("voice_profile", {})
-                        if isinstance(vp, str):
-                            sc["voice_profile"] = {"gender": "Nam", "age_range": "25-35", "tone": vp}
-                        cleaned_expanded.append(sc)
-                st.session_state.expanded_scripts = cleaned_expanded
+                    st.session_state.active_project_title = proj_data.get("title", proj_data.get("project_title", "Dự án tải lên"))
+                    st.session_state.content_analysis = proj_data.get("content_analysis", proj_data.get("analysis", None))
+                    
+                    scripts = proj_data.get("all_scripts", [])
+                    if not scripts and "script_outlines" in proj_data:
+                        scripts = proj_data.get("script_outlines", [])
+                    if not scripts and "outlines" in proj_data:
+                        scripts = proj_data.get("outlines", [])
+                    
+                    cleaned_scripts = []
+                    for sc in (scripts if isinstance(scripts, list) else []):
+                        if isinstance(sc, dict):
+                            vp = sc.get("voice_profile", {})
+                            if isinstance(vp, str):
+                                sc["voice_profile"] = {"gender": "Nam", "age_range": "25-35", "tone": vp}
+                            cleaned_scripts.append(sc)
+                    st.session_state.all_scripts = cleaned_scripts
+                    
+                    expanded = proj_data.get("expanded_scripts", [])
+                    cleaned_expanded = []
+                    for sc in (expanded if isinstance(expanded, list) else []):
+                        if isinstance(sc, dict):
+                            vp = sc.get("voice_profile", {})
+                            if isinstance(vp, str):
+                                sc["voice_profile"] = {"gender": "Nam", "age_range": "25-35", "tone": vp}
+                            cleaned_expanded.append(sc)
+                    st.session_state.expanded_scripts = cleaned_expanded
 
-                cloned = proj_data.get("cloned_scripts", [])
-                st.session_state.cloned_scripts = cloned if isinstance(cloned, list) else []
-                
-                raw_details = proj_data.get("generated_details", proj_data.get("details", {}))
-                st.session_state.generated_details = {int(k): v for k, v in raw_details.items()} if isinstance(raw_details, dict) else {}
-                
-                st.session_state.active_script_id = None
-                st.success("🎉 Đã khôi phục thành công dự án từ file!")
-            except Exception as e:
-                st.error(f"❌ Lỗi đọc file JSON: {e}")
+                    cloned = proj_data.get("cloned_scripts", [])
+                    st.session_state.cloned_scripts = cloned if isinstance(cloned, list) else []
+                    
+                    raw_details = proj_data.get("generated_details", proj_data.get("details", {}))
+                    st.session_state.generated_details = {int(k): v for k, v in raw_details.items()} if isinstance(raw_details, dict) else {}
+                    
+                    st.session_state.active_script_id = None
+                    st.session_state.last_loaded_file_id = file_identifier
+                    
+                    st.success("🎉 Đã khôi phục thành công dự án từ file!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"❌ Lỗi đọc file JSON: {e}")
 
         IS_ADMIN = (st.session_state.current_user_email == ADMIN_EMAIL)
         if IS_ADMIN:
@@ -547,11 +565,10 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         }}
         """
         try:
-            sys_inst = get_system_instructions(current_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
+            sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins)
             res = call_gemini_api([prompt_detail], sys_inst)
             if isinstance(res, list): res = res[0]
             
-            # Gán dữ liệu chi tiết vào session_state và kích hoạt mở giao diện chi tiết
             st.session_state.generated_details[target_id] = res
             st.session_state.active_script_id = target_id
             st.success(f"✅ Đã dựng thành công chi tiết kịch bản #{target_id}!")
@@ -797,11 +814,11 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
                     st.markdown(f"**#{sc_id}. {outline.get('title')}** — <span class='badge-ready'>ĐÃ HOÀN THIỆN</span>", unsafe_allow_html=True)
                     st.caption(f"🏛️ Bối cảnh: {outline.get('setting_style')} | ⚡ Hook: *\"{outline.get('target_hook')}\"*")
                 with col_btn1:
-                    if st.button("👁️ Xem lại chi tiết", key=f"btn_rev_v1_{sc_id}", use_container_width=True):
+                    if st.button("👁️ Xem lại chi tiết", key=f"btn_rev_v1_main_{sc_id}", use_container_width=True):
                         st.session_state.active_script_id = sc_id
                         st.rerun()
                 with col_btn2:
-                    if st.button("🚀 Nhân bản 5 biến thể", key=f"btn_clone_v1_{sc_id}", type="primary", use_container_width=True):
+                    if st.button("🚀 Nhân bản 5 biến thể", key=f"btn_clone_v1_main_{sc_id}", type="primary", use_container_width=True):
                         with st.spinner("Đang nhân bản biến thể win..."):
                             try:
                                 target_script = st.session_state.generated_details[sc_id]
@@ -830,11 +847,11 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
                     st.markdown(f"**#{sc_id}. {outline.get('title')}** — <span class='badge-pending'>ĐANG CHỜ</span>", unsafe_allow_html=True)
                     st.caption(f"🏛️ Bối cảnh: {outline.get('setting_style')} | ⚡ Hook: *\"{outline.get('target_hook')}\"*")
                 with col_a2:
-                    if st.button("✨ Tạo chi tiết ngay", key=f"btn_cre_v2_{sc_id}", use_container_width=True):
+                    if st.button("✨ Tạo chi tiết ngay", key=f"btn_cre_v2_main_{sc_id}", use_container_width=True):
                         create_scene_details_for_id(sc_id, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
 
     st.markdown("---")
-    if st.button("➕ Gọi Thêm 5 Kịch Bản Khác", key="btn_add_more_1", type="primary", use_container_width=True):
+    if st.button("➕ Gọi Thêm 5 Kịch Bản Khác", key="btn_add_more_1_main", type="primary", use_container_width=True):
         add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
 
 # GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC ĐIỀU HƯỚNG
@@ -855,7 +872,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
     
     st.markdown('<div id="script-detail-anchor"></div>', unsafe_allow_html=True)
 
-    if st.button("⬅️ Quay lại danh sách kịch bản tổng", key="btn_back_to_list"):
+    if st.button("⬅️ Quay lại danh sách kịch bản tổng", key="btn_back_to_list_main"):
         st.session_state.active_script_id = None
         st.rerun()
 
@@ -929,13 +946,13 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                     c_rev, c_clone = st.columns(2)
                     with c_rev:
                         if not is_current:
-                            if st.button("👁️ Xem lại", key=f"dt_rev_{it_id}", use_container_width=True):
+                            if st.button("👁️ Xem lại", key=f"dt_rev_detail_{it_id}", use_container_width=True):
                                 st.session_state.active_script_id = it_id
                                 st.rerun()
                         else:
                             st.markdown("<div style='text-align: center; color: #15803d; font-size: 12px; font-weight: 700; padding: 6px;'>Đang hiển thị</div>", unsafe_allow_html=True)
                     with c_clone:
-                        if st.button("🚀 Nhân bản", key=f"dt_clone_{it_id}", type="primary", use_container_width=True):
+                        if st.button("🚀 Nhân bản", key=f"dt_clone_detail_{it_id}", type="primary", use_container_width=True):
                             with st.spinner("Đang nhân bản..."):
                                 try:
                                     target_script = st.session_state.generated_details[it_id]
@@ -959,7 +976,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         </div>
         """, unsafe_allow_html=True)
 
-        if st.button("➕ Gọi Thêm 5 Tình Huống Kịch Bản Mới", key="btn_add_more_phase2", use_container_width=True):
+        if st.button("➕ Gọi Thêm 5 Tình Huống Kịch Bản Mới", key="btn_add_more_phase2_detail", use_container_width=True):
             add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
 
     with col_right:
@@ -980,5 +997,5 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                     st.markdown(f"**#{it_id}. {item.get('title')}** — <span class='badge-pending'>CHƯA TẠO</span>", unsafe_allow_html=True)
                     st.caption(f"🏛️ {item.get('setting_style')}")
                     
-                    if st.button("✨ Tạo chi tiết ngay", key=f"nav_sc_{it_id}", use_container_width=True):
+                    if st.button("✨ Tạo chi tiết ngay", key=f"nav_sc_detail_{it_id}", use_container_width=True):
                         create_scene_details_for_id(it_id, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
