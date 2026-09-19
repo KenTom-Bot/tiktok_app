@@ -220,7 +220,7 @@ with st.sidebar:
 
         project_title_input = st.text_input("Tên dự án hiện tại:", value=st.session_state.get("active_project_title", "Chiến dịch mới"))
         
-        # BỔ SUNG ĐẦY ĐỦ: Nút Lưu dự án và Nút Tải file JSON xuống
+        # Nút Lưu dự án và Tải file JSON xuống
         col_p1, col_p2 = st.columns(2)
         with col_p1:
             if st.button("💾 Lưu Dự Án", use_container_width=True):
@@ -259,8 +259,9 @@ with st.sidebar:
                 st.success("✅ Đã mở dự án thành công!")
                 st.rerun()
 
-        st.markdown("<div style='font-size: 0.85rem; color: #64748b; margin-top: 8px;'>Hoặc tải file dự án cũ từ máy tính:</div>", unsafe_allow_html=True)
-        uploaded_project_file = st.file_uploader("📤 Chọn file kịch bản (.json)", type=["json"], label_visibility="collapsed")
+        # BỔ SUNG: Tải file dự án cũ từ máy tính (.json)
+        st.markdown("<div style='font-size: 0.85rem; color: #64748b; margin-top: 8px;'>Hoặc tải file dự án từ máy tính:</div>", unsafe_allow_html=True)
+        uploaded_project_file = st.file_uploader("📤 Tải file kịch bản (.json)", type=["json"], label_visibility="collapsed")
         if uploaded_project_file is not None:
             try:
                 file_bytes = uploaded_project_file.getvalue()
@@ -357,7 +358,7 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # 4. NẾU ĐÃ ĐĂNG NHẬP: THÔNG TIN TÀI KHOẢN & ĐĂNG XUẤT ĐẨY XUỐNG DƯỚI CÙNG (ĐÃ GỠ BỎ KÝ TỰ LỖI <br>)
+    # 4. NẾU ĐÃ ĐĂNG NHẬP: THÔNG TIN TÀI KHOẢN & ĐĂNG XUẤT ĐẨY XUỐNG DƯỚI CÙNG
     if st.session_state.is_logged_in:
         st.markdown("---")
         st.markdown("### 👤 **Thông Tin Tài Khoản**")
@@ -541,7 +542,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         }}
         """
         try:
-            sys_inst = get_system_instructions(current_mode, selected_style, aspect_ratio, goal, target_duration_mins)
+            sys_inst = get_system_instructions(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
             res = call_gemini_api([prompt_detail], sys_inst)
             if isinstance(res, list): res = res[0]
             st.session_state.generated_details[target_id] = res
