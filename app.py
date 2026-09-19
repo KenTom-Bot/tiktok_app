@@ -404,10 +404,11 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
         total_seconds = int(target_duration_mins * 60)
         duration_rule = f"QUY CHUẨN THỜI LƯỢNG KỂ CHUYỆN / REVIEW DÀI ({target_duration_mins} phút / {total_seconds} giây): Xây dựng cốt truyện có chiều sâu, chia theo cấu trúc Hồi/Chương (Act & Chapter), số lượng phân cảnh trải đều toàn bộ thời lượng."
 
-    outfit_rule = """
-    2. QUY CHUẨN TRANG PHỤC CỐ ĐỊNH (SALES OUTFIT LOCK): Nhân vật BẮT BUỘC mặc CÙNG MỘT BỘ TRANG PHỤC cố định xuyên suốt tất cả các cảnh để tối ưu nhận diện thương hiệu và chốt đơn.
-    """ if is_sales else """
-    2. QUY CHUẨN TRANG PHỤC LINH HOẠT THEO THỜI GIAN/BỐI CẢNH: Nếu kịch bản có mốc thời gian mới (ví dụ: ngày hôm sau, đổi bối cảnh), nhân vật ĐƯỢC PHÉP thay đổi trang phục mới phù hợp, nhưng KHUÔN MẶT và vóc dáng cốt lõi giữ nguyên 100%.
+    # QUY CHUẨN THUYẾT MINH TOÀN DIỆN (LUÔN CÓ VOICE TIẾNG VIỆT MIỀN BẮC KỂ CẢ KHI KHÔNG CÓ NGƯỜI TRONG CẢNH)
+    voiceover_instruction = """
+    7. QUY CHUẨN THUYẾT MINH VIỆT NAM (NARRATION-DRIVEN STYLE): 
+       - Bất kể phân cảnh có xuất hiện con người hay không (ví dụ cảnh quay vật thể tĩnh, phong cảnh, cận cảnh kiến trúc, máy móc, nhà cửa), TOÀN BỘ video BẮT BUỘC mang dạng phim thuyết minh chuyên nghiệp.
+       - Mỗi cảnh phải có lời thuyết minh tiếng Việt chuẩn miền Bắc (giọng đọc truyền cảm, rõ ràng, nhịp độ ~3 từ/s) được lồng ghép chặt chẽ vào 'video_prompt' để mô tả, bình luận hoặc kể chuyện dẫn dắt người xem xuyên suốt không gian hình ảnh.
     """
 
     master_director_directive = "CHẾ ĐỘ CHUYÊN GIA CAO CẤP: Tối ưu hóa sâu sắc các thông số điện ảnh chuyên sâu (Lighting setup, Lens focal length, Color grading, Camera movement physics) cho Imagen 3 và Veo 3 để mọi người dùng dù không biết gì vẫn tạo ra video đạt chuẩn Hollywood."
@@ -421,17 +422,16 @@ MỤC TIÊU CHIẾN DỊCH: {goal}
 {master_director_directive}
 
 🛑 QUY TẮC BẮT BUỘC 100% (KHÔNG ĐƯỢC VI PHẠM):
-1. KHÓA CỨNG KHUÔN MẶT & VÓC DÁNG (IDENTITY ANCHOR): Nhân vật 100% người Việt Nam, biểu cảm chân thực, hình thể chuẩn xác, có mô tả nhận diện riêng và giữ nguyên 100% qua mọi cảnh.
-{outfit_rule}
-3. MÀN HÌNH SẠCH (ZERO TEXT LOCK): Trong mọi 'image_prompt', bắt buộc cài đặt lệnh chống chữ: 'no text, zero typography, clean screen, no watermarks, no logos'.
-4. KHÓA MÀU SẢN PHẨM & VẬT LÝ HÚT/THỔI: Giữ nguyên 100% màu sắc sản phẩm gốc từ ảnh tham chiếu (Anti-Color Shift), mô tả đúng hướng luồng khí hút bụi đi ngược vào đầu vòi và xoáy trực tiếp vào cốc chứa rác trong suốt.
-5. CHUYỂN CẢNH THÔNG MINH (SMART TRANSITIONS): 
-   - 'Cắt cứng dồn dập (Hard Cut)': Dùng cho hành động nhanh, dồn dập, chốt sale.
-   - 'Chuyển cảnh khớp hành động mượt mà (Match Cut)': Dùng để nối tiếp hành động hoặc hình khối uyển chuyển giữa các cảnh.
-   - 'Chuyển cảnh bước ngoặt thời gian (Time-jump)': Dùng khi sang ngày mới hoặc đổi bối cảnh lớn.
-   Mỗi cảnh ưu tiên dùng mốc 4s, 6s, 8s.
-6. CHIẾN LƯỢC GIỮ CHÂN NGƯỜI XEM (GOLDEN HOOK & RETENTION): Phân cảnh số 1 phải có hook giật gân, câu hỏi kích thích tò mò hoặc hành động thị giác mạnh mẽ trong 3 giây đầu để giữ chân tuyệt đối.
-7. VOICE & KHẨU HÌNH: 100% video prompt có lồng tiếng Việt miền Bắc chuẩn Hà Nội (~3 từ/s) kèm chỉ đạo khẩu hình khớp nhân vật.
+1. KHÓA CỨNG KHUÔN MẶT & VÓC DÁNG (IDENTITY ANCHOR): Nếu có nhân vật xuất hiện, 100% người Việt Nam, biểu cảm chân thực, hình thể chuẩn xác, giữ nguyên 100% qua mọi cảnh.
+2. MÀN HÌNH SẠCH (ZERO TEXT LOCK): Trong mọi 'image_prompt', bắt buộc cài đặt lệnh chống chữ: 'no text, zero typography, clean screen, no watermarks, no logos'.
+3. KHÓA MÀU SẢN PHẨM & VẬT LÝ ĐẶC THÙ: Giữ nguyên 100% màu sắc gốc từ ảnh tham chiếu (Anti-Color Shift), mô tả chuyển động vật lý chính xác.
+4. CHUYỂN CẢNH THÔNG MINH (SMART TRANSITIONS): 
+   - 'Cắt cứng dồn dập (Hard Cut)': Dùng cho hành động nhanh, dồn dập.
+   - 'Chuyển cảnh khớp hành động mượt mà (Match Cut)': Dùng để nối tiếp không gian, hình khối uyển chuyển.
+   - 'Chuyển cảnh bước ngoặt thời gian (Time-jump)': Dùng khi đổi bối cảnh lớn.
+5. CHIẾN LƯỢC GIỮ CHÂN NGƯỜI XEM (GOLDEN HOOK & RETENTION): Phân cảnh số 1 phải có hook giật gân, câu hỏi kích thích tò mò trong 3 giây đầu.
+6. KHẨU HÌNH & HÌNH ẢNH SẠCH: Hình ảnh tuyệt đối không chứa chữ thừa.
+{voiceover_instruction}
 """
     return base
 
@@ -495,13 +495,9 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         
         QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC CHO CÁC CẢNH:
         1. PHÂN RÃ THỜI LƯỢNG & SỐ PHÂN CẢNH: 
-           - Nếu là Bán hàng (Sales): Tổng thời lượng từ 24s - 35s chia thành 4 đến 6 phân cảnh.
-           - Nếu là Kể chuyện dài tập / Review chuyên sâu: Tổng thời lượng khớp chính xác {total_sec} giây, số lượng phân cảnh phải đủ nhiều để trải đều toàn bộ thời lượng.
-        2. CHUYỂN CẢNH THÔNG MINH: AI tự quyết định `transition_type` phù hợp ('Cắt cứng dồn dập - Hard Cut', 'Chuyển cảnh khớp hành động mượt mà - Match Cut', hoặc 'Chuyển cảnh bước ngoặt thời gian - Time-jump').
-        3. NHÂN VẬT & TRANG PHỤC: Giữ nguyên 100% khuôn mặt, biểu cảm và vóc dáng nhân vật người Việt Nam xuyên suốt. Nếu nội dung Bán hàng, bắt buộc mặc cùng một bộ trang phục cố định. Nếu nội dung Khác, được phép đổi trang phục theo mốc thời gian/bối cảnh.
-        4. KHÓA MÀU SẢN PHẨM & VẬT LÝ HÚT BỤI: Giữ nguyên màu sản phẩm gốc, hướng hút bụi xoáy thẳng vào cốc trong suốt.
-        5. MÀN HÌNH SẠCH & VOICE MIỀN BẮC: Ảnh sạch tuyệt đối, không có chữ (`no text, zero typography, clean screen`). Tích hợp lồng tiếng miền Bắc trong `video_prompt`.
-        6. THAM CHIẾU KHUNG HÌNH (FRAME CHAINING): Đối với các phân cảnh nối tiếp, chú ý giữ tính liên tục tuyệt đối về không gian và hành động của sản phẩm.
+           - Tổng thời lượng khớp chính xác {total_sec} giây, số lượng phân cảnh trải đều toàn bộ thời lượng.
+        2. QUY CHUẨN THUYẾT MINH (NARRATION-DRIVEN): 100% các phân cảnh BẮT BUỘC có lời thuyết minh tiếng Việt chuẩn miền Bắc (`voiceover_vi`) để dẫn dắt, kể chuyện hoặc thuyết minh xuyên suốt (ngay cả khi cảnh chỉ có không gian, kiến trúc, sự vật hoặc vật thể tĩnh).
+        3. CHUYỂN CẢNH THÔNG MINH & MÀN HÌNH SẠCH: Ảnh sạch tuyệt đối (`no text, clean screen`), lồng ghép chỉ đạo ngữ điệu miền Bắc vào `video_prompt`.
         
         Xuất chuẩn 1 Dict JSON duy nhất:
         {{
@@ -516,16 +512,16 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
               "duration": "6s", 
               "scene_setting": "Bối cảnh thực tế", 
               "transition_type": "Cắt cứng dồn dập (Hard Cut) hoặc Chuyển cảnh khớp hành động mượt mà (Match Cut)", 
-              "voice_director_vn": "Chỉ đạo ngữ điệu miền Bắc", 
-              "voiceover_vi": "Lời thoại miền Bắc", 
-              "image_prompt": "Prompt Imagen 3 ({aspect_ratio}) hiển thị nhân vật nữ người Việt Nam (giữ nguyên khuôn mặt), trang phục phù hợp quy định, giữ nguyên màu sắc sản phẩm gốc, màn hình sạch, no text, clean screen", 
-              "video_prompt": "Prompt Veo 3 miêu tả chuyển động, hành động hút bụi đúng chiều vật lý, đọc lời thoại miền Bắc khớp khẩu hình"
+              "voice_director_vn": "Chỉ đạo ngữ điệu thuyết minh miền Bắc", 
+              "voiceover_vi": "Lời thuyết minh tiếng Việt chuẩn miền Bắc dẫn dắt cảnh quay", 
+              "image_prompt": "Prompt Imagen 3 ({aspect_ratio}) hiển thị không gian/sự vật chân thực, màn hình sạch, no text, clean screen", 
+              "video_prompt": "Prompt Veo 3 miêu tả chuyển động điện ảnh, kết hợp lồng tiếng thuyết minh miền Bắc chuẩn xác"
             }}
           ]
         }}
         """
         try:
-            sys_inst = get_system_instructions(current_mode, selected_style, aspect_ratio, goal, target_duration_mins)
+            sys_inst = get_system_instructions(current_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
             res = call_gemini_api([prompt_detail], sys_inst)
             if isinstance(res, list): res = res[0]
             st.session_state.generated_details[target_id] = res
@@ -650,7 +646,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịc
                   "angle": "Góc tiếp cận chuyển đổi",
                   "target_hook": "Câu mở đầu giật gân",
                   "recommended_scenes_count": "5",
-                  "voice_profile": {{"gender": "Nữ", "age_range": "25-30", "tone": "Năng lượng cao"}}
+                  "voice_profile": {{"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Truyền cảm, thuyết minh chuyên nghiệp"}}
                 }},
                 {{
                   "id": 2,
@@ -659,7 +655,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịc
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
                   "recommended_scenes_count": "5",
-                  "voice_profile": {{"gender": "Nam", "age_range": "28-35", "tone": "Trầm ấm"}}
+                  "voice_profile": {{"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Trầm ấm, thuyết minh"}}
                 }},
                 {{
                   "id": 3,
@@ -668,7 +664,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịc
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
                   "recommended_scenes_count": "5",
-                  "voice_profile": {{"gender": "Nữ", "age_range": "25-30", "tone": "Hào hứng"}}
+                  "voice_profile": {{"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Hào hứng"}}
                 }},
                 {{
                   "id": 4,
@@ -677,7 +673,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịc
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
                   "recommended_scenes_count": "5",
-                  "voice_profile": {{"gender": "Nam", "age_range": "25-30", "tone": "Thuyết phục"}}
+                  "voice_profile": {{"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Thuyết phục"}}
                 }},
                 {{
                   "id": 5,
@@ -686,7 +682,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịc
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
                   "recommended_scenes_count": "5",
-                  "voice_profile": {{"gender": "Nữ", "age_range": "28-35", "tone": "Tin cậy"}}
+                  "voice_profile": {{"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Tin cậy"}}
                 }}
               ]
             }}
@@ -796,7 +792,7 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
 if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
     st.divider()
     
-    # ĐIỂM NEO HTML/JS ĐỂ TỰ ĐỘNG CUỘN TRANG LÊN ĐẦU KHI VỪA TẠO HOẶC XEM CHI TIẾT
+    # ĐIỂM NEO HTML/JS ĐỂ TỰ ĐỘNG CUỘN TRANG LÊN ĐẦU KHI VỪA TẠO HOẶC XEM CHI TIẾT (ĐÃ FIX ĐẢM BẢO CHẠY 100%)
     components.html("""
         <script>
             const doc = window.parent.document;
@@ -805,7 +801,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                 if (target) {
                     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
-            }, 150);
+            }, 100);
         </script>
     """, height=0)
     
@@ -832,7 +828,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
     total_dur = active_script.get('total_estimated_duration', '24s') if isinstance(active_script, dict) else '24s'
 
     st.markdown(f"### 🎬 **KỊCH BẢN CHI TIẾT: {str(script_title).upper()}**")
-    st.info(f"⏱️ Tổng thời lượng: **{total_dur}** | 🎙️ Giọng: **{vp.get('gender', 'Nữ')} miền Bắc ({vp.get('age_range', '25-30')})** | 📐 Khung hình: **{selected_aspect}**")
+    st.info(f"⏱️ Tổng thời lượng: **{total_dur}** | 🎙️ Giọng thuyết minh: **Miền Bắc ({vp.get('tone', 'Truyền cảm')})** | 📐 Khung hình: **{selected_aspect}**")
 
     scenes_list = active_script.get("scenes", []) if isinstance(active_script, dict) else []
     if isinstance(scenes_list, dict): scenes_list = [scenes_list]
@@ -841,9 +837,9 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         if not isinstance(scene, dict): continue
         dur = scene.get("duration", "6s")
         st.markdown(f"#### **📍 Phân cảnh {idx} ({dur}) — [ {scene.get('transition_type', 'Cắt cứng dồn dập')} ]**")
-        st.markdown(f"🏛️ **Bối cảnh & Biểu cảm nhân vật:** *{scene.get('scene_setting')}*")
+        st.markdown(f"🏛️ **Bối cảnh & Miêu tả:** *{scene.get('scene_setting')}*")
         st.markdown(f"**🎙️ Đạo diễn ngữ điệu:** *{scene.get('voice_director_vn')}*")
-        st.markdown(f"**💬 Lời thoại:** `\"{scene.get('voiceover_vi')}\"`")
+        st.markdown(f"**💬 Lời thuyết minh (Voiceover):** `\"{scene.get('voiceover_vi')}\"`")
         
         img_p = scene.get('image_prompt', '')
         if img_p:
@@ -852,7 +848,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
             safe_copy_button(img_p, f"📋 Sao Chép Prompt Ảnh Cảnh {idx}")
             
         vid_p = scene.get('video_prompt', '')
-        st.markdown(f"**🎥 Prompt Video (Veo 3):**")
+        st.markdown(f"**🎥 Prompt Video (Veo 3 - Thuyết minh):**")
         st.code(vid_p, language="text")
         safe_copy_button(vid_p, f"📋 Sao Chép Prompt Video Cảnh {idx}")
         st.markdown("---")
@@ -883,7 +879,6 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                     c_rev, c_clone = st.columns(2)
                     with c_rev:
                         if not is_current:
-                            # SỬA LỖI ĐIỀU HƯỚNG: Bấm vào đây sẽ kích hoạt ngay lệnh chuyển cảnh và cuộn lên đầu
                             if st.button("👁️ Xem lại", key=f"dt_rev_{it_id}", use_container_width=True):
                                 st.session_state.active_script_id = it_id
                                 st.rerun()
