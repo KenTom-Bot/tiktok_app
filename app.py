@@ -155,17 +155,35 @@ def save_licensed_accounts(accounts_dict):
     except Exception as e:
         st.error(f"Lỗi lưu danh sách tài khoản: {e}")
 
-# Khởi tạo Session State (Có thêm file_uploader_key để giải quyết triệt để lỗi kẹt file)
+# ==============================================================================
+# KHỞI TẠO SESSION STATE AN TOÀN
+# ==============================================================================
 for key, default_val in [
     ("content_analysis", None), ("all_scripts", []), ("cloned_scripts", []), 
     ("expanded_scripts", []), ("generated_details", {}), ("active_script_id", None), 
     ("projects_library", {}), ("licensed_accounts", load_licensed_accounts()), 
     ("current_input_context", ""), ("admin_toast_msg", ""), ("is_logged_in", False),
     ("current_user_email", ""), ("active_project_title", "Chiến dịch mới"),
-    ("last_loaded_file_id", None), ("file_uploader_key", 0)
+    ("last_loaded_file_id", None), ("file_uploader_key", 0), ("scroll_to_top", False)
 ]:
     if key not in st.session_state:
         st.session_state[key] = default_val
+
+# Hàm ép cuộn trang lên đầu mượt mà
+if st.session_state.scroll_to_top:
+    components.html("""
+        <script>
+            const parent = window.parent;
+            if (parent) {
+                parent.scrollTo({top: 0, behavior: 'smooth'});
+                const scrollNodes = parent.document.querySelectorAll('.main, .block-container, [data-testid="stAppViewContainer"]');
+                scrollNodes.forEach(node => {
+                    node.scrollTo({top: 0, behavior: 'smooth'});
+                });
+            }
+        </script>
+    """, height=0)
+    st.session_state.scroll_to_top = False
 
 if ADMIN_EMAIL not in st.session_state.licensed_accounts:
     st.session_state.licensed_accounts[ADMIN_EMAIL] = {
@@ -228,8 +246,6 @@ with st.sidebar:
     
     if st.session_state.is_logged_in:
         st.markdown("### 🗂️ **Quản Lý Dự Án**")
-        
-        # NÚT TẠO DỰ ÁN MỚI: Xóa dữ liệu VÀ ép file_uploader làm mới
         if st.button("➕ Tạo Dự Án Mới (Làm Mới)", type="primary", use_container_width=True):
             st.session_state.content_analysis = None
             st.session_state.all_scripts = []
@@ -240,8 +256,10 @@ with st.sidebar:
             st.session_state.current_input_context = ""
             st.session_state.active_project_title = "Chiến dịch mới"
             st.session_state.last_loaded_file_id = None  
-            st.session_state.file_uploader_key += 1  # Ép hộp thoại up file phải xóa trống
+            st.session_state.file_uploader_key += 1
+            st.session_state.scroll_to_top = True
             st.success("✨ Đã tạo dự án mới thành công!")
+            time.sleep(0.3)
             st.rerun()
 
         project_title_input = st.text_input("Tên dự án hiện tại:", value=st.session_state.get("active_project_title", "Chiến dịch mới"))
@@ -280,13 +298,14 @@ with st.sidebar:
                 st.session_state.generated_details = p_data["generated_details"]
                 st.session_state.active_script_id = None
                 st.session_state.last_loaded_file_id = None
-                st.session_state.file_uploader_key += 1 # Ép hộp thoại up file phải xóa trống
+                st.session_state.file_uploader_key += 1
+                st.session_state.scroll_to_top = True
                 st.success("✅ Đã mở dự án thành công!")
+                time.sleep(0.3)
                 st.rerun()
 
         st.markdown("<div style='font-size: 0.85rem; color: #64748b; margin-top: 8px;'>Hoặc tải file dự án từ máy tính:</div>", unsafe_allow_html=True)
         
-        # Gán key động để ép Reset khi cần
         uploaded_project_file = st.file_uploader(
             "📤 Tải file kịch bản (.json)", 
             type=["json"], 
@@ -297,7 +316,7 @@ with st.sidebar:
         if uploaded_project_file is not None:
             file_identifier = f"{uploaded_project_file.name}_{uploaded_project_file.size}"
             
-            # Chỉ nạp lại file nếu đây là một file khác với file vừa nạp (tránh vòng lặp)
+            # Chỉ nạp lại file nếu file ID thay đổi (Tránh chặn tiến trình khi ấn các nút bấm)
             if st.session_state.get("last_loaded_file_id") != file_identifier:
                 try:
                     file_bytes = uploaded_project_file.getvalue()
@@ -349,8 +368,10 @@ with st.sidebar:
                     
                     st.session_state.active_script_id = None
                     st.session_state.last_loaded_file_id = file_identifier
+                    st.session_state.scroll_to_top = True
                     
                     st.success("🎉 Đã khôi phục thành công dự án từ file!")
+                    time.sleep(0.4)
                     st.rerun()
                 except Exception as e:
                     st.error(f"❌ Lỗi đọc file JSON: {e}")
@@ -410,8 +431,6 @@ with st.sidebar:
         <b style="color: #166534; font-size: 0.95rem;">💬 Cần Hỗ Trợ / Mua Gói?</b><br>
         <p style="font-size: 0.85rem; color: #15803d; margin: 6px 0 8px 0;">Kết nối ngay với chúng tôi:</p>
         <a href="https://zalo.me/0968484369" target="_blank" style="display: inline-block; background: #0068ff; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 11px; margin: 2px;">📱 Zalo Chat</a>
-        <a href="#" target="_blank" style="display: inline-block; background: #1877f2; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 11px; margin: 2px;">📘 Facebook</a>
-        <a href="#" target="_blank" style="display: inline-block; background: #010101; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 11px; margin: 2px;">🎬 TikTok</a>
         <div style="font-weight: 700; color: #166534; font-size: 12px; margin-top: 8px;">📞 Hotline: 096 8484 369</div>
     </div>
     """, unsafe_allow_html=True)
@@ -513,7 +532,9 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
             new_scripts = res.get("script_outlines", [])
             for i, sc in enumerate(new_scripts): sc["id"] = cur_len + i + 1
             st.session_state.expanded_scripts.extend(new_scripts)
+            st.session_state.scroll_to_top = True
             st.success("✅ Đã bổ sung 5 kịch bản mới bám sát sản phẩm & kho xưởng!")
+            time.sleep(0.3)
             st.rerun()
         except Exception as e:
             st.error(f"Lỗi gọi thêm kịch bản: {e}")
@@ -582,12 +603,13 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
             
             st.session_state.generated_details[target_id] = res
             st.session_state.active_script_id = target_id
+            st.session_state.scroll_to_top = True # Kích hoạt cờ tự động trượt lên đầu
             st.success(f"✅ Đã dựng thành công chi tiết kịch bản #{target_id}!")
             time.sleep(0.3)
             st.rerun()
         except Exception as e:
             st.error(f"❌ Lỗi dựng chi tiết kịch bản: {e}")
-            
+
 # ==============================================================================
 # GIAO DIỆN CHÍNH
 # ==============================================================================
@@ -776,6 +798,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết Sản Phẩm & Lên Kịc
             st.session_state.content_analysis = res.get("content_analysis")
             st.session_state.all_scripts = res.get("script_outlines", [])
             st.session_state.cloned_scripts, st.session_state.expanded_scripts, st.session_state.generated_details, st.session_state.active_script_id = [], [], {}, None
+            st.session_state.scroll_to_top = True
             st.success("✅ Đã quét màu sắc thực tế và phân tích DNA thành công!")
             st.rerun()
         except Exception as e:
@@ -827,6 +850,7 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
                 with col_btn1:
                     if st.button("👁️ Xem lại chi tiết", key=f"btn_rev_v1_{sc_id}", use_container_width=True):
                         st.session_state.active_script_id = sc_id
+                        st.session_state.scroll_to_top = True
                         st.rerun()
                 with col_btn2:
                     if st.button("🚀 Nhân bản 5 biến thể", key=f"btn_clone_v1_{sc_id}", type="primary", use_container_width=True):
@@ -839,6 +863,7 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
                                 cloned_list = res_c.get("cloned_outlines", [])
                                 for idx_c, cl in enumerate(cloned_list): cl["id"] = cur_len + idx_c + 1
                                 st.session_state.cloned_scripts.extend(cloned_list)
+                                st.session_state.scroll_to_top = True
                                 st.success("✅ Đã nhân bản thành công 5 biến thể mới!")
                                 st.rerun()
                             except Exception as e:
@@ -868,23 +893,10 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
 # GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC ĐIỀU HƯỚNG
 if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
     st.divider()
-    
-    components.html("""
-        <script>
-            const doc = window.parent.document;
-            setTimeout(() => {
-                const target = doc.getElementById('script-detail-anchor');
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            }, 100);
-        </script>
-    """, height=0)
-    
-    st.markdown('<div id="script-detail-anchor"></div>', unsafe_allow_html=True)
 
     if st.button("⬅️ Quay lại danh sách kịch bản tổng", key="btn_back_to_list"):
         st.session_state.active_script_id = None
+        st.session_state.scroll_to_top = True
         st.rerun()
 
     raw_active_data = st.session_state.generated_details[st.session_state.active_script_id]
@@ -959,6 +971,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                         if not is_current:
                             if st.button("👁️ Xem lại", key=f"dt_rev_detail_{it_id}", use_container_width=True):
                                 st.session_state.active_script_id = it_id
+                                st.session_state.scroll_to_top = True
                                 st.rerun()
                         else:
                             st.markdown("<div style='text-align: center; color: #15803d; font-size: 12px; font-weight: 700; padding: 6px;'>Đang hiển thị</div>", unsafe_allow_html=True)
@@ -973,6 +986,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                                     cloned_list = res_c.get("cloned_outlines", [])
                                     for idx_c, cl in enumerate(cloned_list): cl["id"] = cur_len + idx_c + 1
                                     st.session_state.cloned_scripts.extend(cloned_list)
+                                    st.session_state.scroll_to_top = True
                                     st.success("✅ Đã nhân bản thành công 5 biến thể mới!")
                                     st.rerun()
                                 except Exception as e:
