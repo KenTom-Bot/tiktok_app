@@ -289,31 +289,45 @@ with st.sidebar:
                 file_bytes = uploaded_project_file.getvalue()
                 loaded_proj = json.loads(file_bytes.decode("utf-8"))
                 
-                # BÓC TÁCH DỮ LIỆU ĐA TẦNG THÔNG MINH CHO MỌI ĐỊNH DẠNG FILE JSON CŨ/MỚI
+                # CHUẨN HÓA DỮ LIỆU TẢI LÊN THÔNG MINH CHO MỌI ĐỊNH DẠNG FILE
                 proj_data = loaded_proj
                 if "projects_library" in loaded_proj and isinstance(loaded_proj["projects_library"], dict) and len(loaded_proj["projects_library"]) > 0:
                     first_key = list(loaded_proj["projects_library"].keys())[0]
                     proj_data = loaded_proj["projects_library"][first_key]
-                elif "all_scripts" not in loaded_proj and "script_outlines" not in loaded_proj and isinstance(loaded_proj, dict):
-                    # Trường hợp file chỉ chứa trực tiếp dữ liệu thô
-                    proj_data = loaded_proj
 
                 st.session_state.active_project_title = proj_data.get("title", proj_data.get("project_title", "Dự án tải lên"))
                 st.session_state.content_analysis = proj_data.get("content_analysis", proj_data.get("analysis", None))
                 
-                # Quét tất cả các tên biến thể của danh sách kịch bản
+                # Quét an toàn danh sách kịch bản
                 scripts = proj_data.get("all_scripts", [])
                 if not scripts and "script_outlines" in proj_data:
                     scripts = proj_data.get("script_outlines", [])
                 if not scripts and "outlines" in proj_data:
                     scripts = proj_data.get("outlines", [])
-                st.session_state.all_scripts = scripts if isinstance(scripts, list) else []
                 
+                # Ép kiểu dữ liệu voice_profile an toàn chống lỗi chuỗi/từ điển
+                cleaned_scripts = []
+                for sc in (scripts if isinstance(scripts, list) else []):
+                    if isinstance(sc, dict):
+                        vp = sc.get("voice_profile", {})
+                        if isinstance(vp, str):
+                            sc["voice_profile"] = {"gender": "Nam/Nữ", "age_range": "25-35", "tone": vp}
+                        cleaned_scripts.append(sc)
+                st.session_state.all_scripts = cleaned_scripts
+                
+                # Xử lý tương tự cho expanded_scripts
+                expanded = proj_data.get("expanded_scripts", [])
+                cleaned_expanded = []
+                for sc in (expanded if isinstance(expanded, list) else []):
+                    if isinstance(sc, dict):
+                        vp = sc.get("voice_profile", {})
+                        if isinstance(vp, str):
+                            sc["voice_profile"] = {"gender": "Nam", "age_range": "25-35", "tone": vp}
+                        cleaned_expanded.append(sc)
+                st.session_state.expanded_scripts = cleaned_expanded
+
                 cloned = proj_data.get("cloned_scripts", [])
                 st.session_state.cloned_scripts = cloned if isinstance(cloned, list) else []
-                
-                expanded = proj_data.get("expanded_scripts", [])
-                st.session_state.expanded_scripts = expanded if isinstance(expanded, list) else []
                 
                 raw_details = proj_data.get("generated_details", proj_data.get("details", {}))
                 st.session_state.generated_details = {int(k): v for k, v in raw_details.items()} if isinstance(raw_details, dict) else {}
@@ -498,8 +512,13 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     exact_color_spec = ca_data.get("mechanical_and_accessories", "Giữ nguyên màu sắc chuẩn xác từ ảnh thực tế") if isinstance(ca_data, dict) else "Giữ nguyên màu sắc"
     
     v_profile = outline.get("voice_profile", {})
-    fixed_gender = v_profile.get("gender", "Nam/Nữ") if isinstance(v_profile, dict) else "Nam/Nữ"
-    fixed_tone = v_profile.get("tone", "Truyền cảm chuyên nghiệp") if isinstance(v_profile, dict) else "Truyền cảm chuyên nghiệp"
+    if isinstance(v_profile, str):
+        fixed_gender, fixed_tone = "Nam", v_profile
+    elif isinstance(v_profile, dict):
+        fixed_gender = v_profile.get("gender", "Nam/Nữ")
+        fixed_tone = v_profile.get("tone", "Truyền cảm chuyên nghiệp")
+    else:
+        fixed_gender, fixed_tone = "Nam/Nữ", "Truyền cảm"
     
     total_sec = int(target_duration_mins * 60)
     duration_str = f"{total_sec}s ({target_duration_mins} phút)" if target_duration_mins > 0.5 else "24s - 35s (Chuyển đổi bán hàng)"
@@ -859,7 +878,12 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         active_script = {}
 
     raw_vp = active_script.get("voice_profile", {}) if isinstance(active_script, dict) else {}
-    vp = raw_vp if isinstance(raw_vp, dict) else {"gender": "Nữ", "age_range": "25-30", "tone": "Năng lượng cao"}
+    if isinstance(raw_vp, str):
+        vp = {"gender": "Nam", "tone": raw_vp}
+    elif isinstance(raw_vp, dict):
+        vp = raw_vp
+    else:
+        vp = {"gender": "Nữ", "age_range": "25-30", "tone": "Năng lượng cao"}
 
     script_title = active_script.get('title', 'Kịch bản chi tiết') if isinstance(active_script, dict) else 'Kịch bản chi tiết'
     total_dur = active_script.get('total_estimated_duration', '24s') if isinstance(active_script, dict) else '24s'
