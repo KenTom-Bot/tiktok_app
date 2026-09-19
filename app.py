@@ -220,29 +220,27 @@ with st.sidebar:
 
         project_title_input = st.text_input("Tên dự án hiện tại:", value=st.session_state.get("active_project_title", "Chiến dịch mới"))
         
-        # Nút Lưu dự án vào bộ nhớ và Nút Tải file JSON xuống máy tính
+        # LUÔN HIỂN THỊ CẢ 2 NÚT LƯU VÀ TẢI XUỐNG BẤT KỂ ĐÃ CÓ KỊCH BẢN HAY CHƯA
         col_p1, col_p2 = st.columns(2)
         with col_p1:
             if st.button("💾 Lưu Dự Án", use_container_width=True):
-                if st.session_state.all_scripts:
-                    p_id = f"proj_{int(time.time())}"
-                    st.session_state.projects_library[p_id] = {
-                        "title": project_title_input, "mode": st.session_state.get("selected_mode"),
-                        "style": st.session_state.get("selected_style"), "content_analysis": st.session_state.content_analysis,
-                        "all_scripts": st.session_state.all_scripts, "cloned_scripts": st.session_state.cloned_scripts,
-                        "expanded_scripts": st.session_state.expanded_scripts, "generated_details": st.session_state.generated_details
-                    }
-                    st.success("✅ Đã lưu vào bộ nhớ ứng dụng!")
-        with col_p2:
-            if st.session_state.all_scripts:
-                export_data = {
+                p_id = f"proj_{int(time.time())}"
+                st.session_state.projects_library[p_id] = {
                     "title": project_title_input, "mode": st.session_state.get("selected_mode"),
                     "style": st.session_state.get("selected_style"), "content_analysis": st.session_state.content_analysis,
                     "all_scripts": st.session_state.all_scripts, "cloned_scripts": st.session_state.cloned_scripts,
                     "expanded_scripts": st.session_state.expanded_scripts, "generated_details": st.session_state.generated_details
                 }
-                json_str = json.dumps(export_data, ensure_ascii=False, indent=2)
-                st.download_button(label="📥 Tải File JSON", data=json_str, file_name=f"{project_title_input.replace(' ', '_')}.json", mime="application/json", use_container_width=True)
+                st.success("✅ Đã lưu vào bộ nhớ ứng dụng!")
+        with col_p2:
+            export_data = {
+                "title": project_title_input, "mode": st.session_state.get("selected_mode"),
+                "style": st.session_state.get("selected_style"), "content_analysis": st.session_state.content_analysis,
+                "all_scripts": st.session_state.all_scripts, "cloned_scripts": st.session_state.cloned_scripts,
+                "expanded_scripts": st.session_state.expanded_scripts, "generated_details": st.session_state.generated_details
+            }
+            json_str = json.dumps(export_data, ensure_ascii=False, indent=2)
+            st.download_button(label="📥 Tải JSON", data=json_str, file_name=f"{project_title_input.replace(' ', '_')}.json", mime="application/json", use_container_width=True)
 
         if st.session_state.projects_library:
             proj_keys = list(st.session_state.projects_library.keys())
@@ -542,7 +540,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         }}
         """
         try:
-            sys_inst = get_system_instructions(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
+            sys_inst = get_system_instructions(current_mode, selected_style, aspect_ratio, goal, target_duration_mins)
             res = call_gemini_api([prompt_detail], sys_inst)
             if isinstance(res, list): res = res[0]
             st.session_state.generated_details[target_id] = res
