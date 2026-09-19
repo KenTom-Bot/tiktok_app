@@ -383,14 +383,23 @@ def format_analysis_field(field_val) -> str:
     text = re.sub(r'<<\.?', '', text)
     text = text.replace('<b>', '').replace('</b>', '')
     
-    lines = [l.strip() for l in text.split('\n') if l.strip()]
+    # Tự động loại bỏ các từ "Nỗi đau" hoặc "Nỗi đau:" bị lặp lại thừa thãi do AI trả về
+    text = re.sub(r'(?i)\bnỗi đau\b\s*[:\.-]?', '', text)
+    
+    # Định dạng tách dòng chính xác cho các từ khóa chuyên biệt của Ma trận
+    text = re.sub(r'(?i)(?:\b|^)(?:1[\.\)]\s*)?chức năng\s*[:\.-]?', '<br>• <b>Chức năng:</b>', text)
+    text = re.sub(r'(?i)(?:\b|^)(?:2[\.\)]\s*)?tài chính\s*[:\.-]?', '<br>• <b>Tài chính:</b>', text)
+    text = re.sub(r'(?i)(?:\b|^)(?:3[\.\)]\s*)?cảm xúc\s*[:\.-]?', '<br>• <b>Cảm xúc:</b>', text)
+    
+    lines = [l.strip() for l in text.split('<br>') if l.strip()]
     formatted_output = []
     
-    for idx, line in enumerate(lines):
-        if idx > 0 or re.match(r'^(\d+[\.\)]|[-•])\s*', line):
-            formatted_output.append(f"<div style='margin-left: 15px; margin-top: 6px;'>• {line.lstrip('1234567890. ')}</div>")
-        else:
-            formatted_output.append(f"<div style='margin-top: 4px;'>{line}</div>")
+    for line in lines:
+        if line:
+            if line.startswith('•'):
+                formatted_output.append(f"<div style='margin-top: 6px;'>{line}</div>")
+            else:
+                formatted_output.append(f"<div style='margin-left: 15px; margin-top: 4px;'>• {line}</div>")
             
     return "".join(formatted_output) if formatted_output else text
 
