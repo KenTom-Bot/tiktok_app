@@ -109,7 +109,6 @@ st.markdown("""
     .stCodeBlock { margin-top: -6px !important; margin-bottom: 4px !important; }
     .badge-pending { color: #d97706; font-weight: 700; background: #fef3c7; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
     .badge-ready { color: #15803d; font-weight: 700; background: #dcfce7; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
-    .badge-dynamic { color: #1e40af; font-weight: 700; background: #dbeafe; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
     
     .support-box {
         background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
@@ -156,7 +155,7 @@ def save_licensed_accounts(accounts_dict):
     except Exception as e:
         st.error(f"Lỗi lưu danh sách tài khoản: {e}")
 
-# Khởi tạo Session State
+# Khởi tạo Session State an toàn
 for key, default_val in [
     ("content_analysis", None), ("all_scripts", []), ("cloned_scripts", []), 
     ("expanded_scripts", []), ("generated_details", {}), ("active_script_id", None), 
@@ -191,7 +190,6 @@ def process_login(login_val):
     else:
         st.error("❌ Tài khoản chưa được cấp quyền!")
 
-# Hàm định dạng trường phân tích dữ liệu (Lọc sạch chữ 'Nỗi đau' thừa)
 def format_analysis_field(field_val) -> str:
     if isinstance(field_val, dict):
         return "<br>".join([f"• <b>{str(k).replace('_', ' ').title()}:</b> {str(v)}" for k, v in field_val.items()])
@@ -201,7 +199,6 @@ def format_analysis_field(field_val) -> str:
     text = str(field_val).strip()
     text = re.sub(r'<<\.?', '', text)
     text = text.replace('<b>', '').replace('</b>', '')
-    
     text = re.sub(r'(?i)\bnỗi đau\b\s*[:\.-]?', '', text)
     text = re.sub(r'(?i)(?:\b|^)(?:1[\.\)]\s*)?chức năng\s*[:\.-]?', '<br>• <b>Chức năng:</b>', text)
     text = re.sub(r'(?i)(?:\b|^)(?:2[\.\)]\s*)?tài chính\s*[:\.-]?', '<br>• <b>Tài chính:</b>', text)
@@ -209,18 +206,16 @@ def format_analysis_field(field_val) -> str:
     
     lines = [l.strip() for l in text.split('<br>') if l.strip()]
     formatted_output = []
-    
     for line in lines:
         if line:
             if line.startswith('•'):
                 formatted_output.append(f"<div style='margin-top: 6px;'>{line}</div>")
             else:
                 formatted_output.append(f"<div style='margin-left: 15px; margin-top: 4px;'>• {line}</div>")
-            
     return "".join(formatted_output) if formatted_output else text
 
 # ==============================================================================
-# SIDEBAR - ĐIỀU HƯỚNG THỨ TỰ THEO TRẠNG THÁI ĐĂNG NHẬP
+# SIDEBAR - QUẢN LÝ DỰ ÁN & TẢI FILE AN TOÀN
 # ==============================================================================
 with st.sidebar:
     if not st.session_state.is_logged_in:
@@ -289,7 +284,6 @@ with st.sidebar:
                 file_bytes = uploaded_project_file.getvalue()
                 loaded_proj = json.loads(file_bytes.decode("utf-8"))
                 
-                # BÓC TÁCH HOÀN HẢO MỌI CẤU TRÚC FILE (Dự án từ máy tính hoặc bộ nhớ)
                 proj_data = loaded_proj
                 if "projects_library" in loaded_proj and isinstance(loaded_proj["projects_library"], dict) and len(loaded_proj["projects_library"]) > 0:
                     first_key = list(loaded_proj["projects_library"].keys())[0]
@@ -298,12 +292,9 @@ with st.sidebar:
                 st.session_state.active_project_title = proj_data.get("title", proj_data.get("project_title", "Dự án tải lên"))
                 st.session_state.content_analysis = proj_data.get("content_analysis", proj_data.get("analysis", None))
                 
-                # Trích xuất danh sách kịch bản chính an toàn
                 scripts = proj_data.get("all_scripts", [])
                 if not scripts and "script_outlines" in proj_data:
                     scripts = proj_data.get("script_outlines", [])
-                if not scripts and "outlines" in proj_data:
-                    scripts = proj_data.get("outlines", [])
                 
                 cleaned_scripts = []
                 for sc in (scripts if isinstance(scripts, list) else []):
@@ -314,7 +305,6 @@ with st.sidebar:
                         cleaned_scripts.append(sc)
                 st.session_state.all_scripts = cleaned_scripts
                 
-                # Trích xuất kịch bản mở rộng
                 expanded = proj_data.get("expanded_scripts", [])
                 cleaned_expanded = []
                 for sc in (expanded if isinstance(expanded, list) else []):
@@ -328,14 +318,13 @@ with st.sidebar:
                 cloned = proj_data.get("cloned_scripts", [])
                 st.session_state.cloned_scripts = cloned if isinstance(cloned, list) else []
                 
-                # Trích xuất chi tiết phân cảnh đã dựng
                 raw_details = proj_data.get("generated_details", proj_data.get("details", {}))
                 st.session_state.generated_details = {int(k): v for k, v in raw_details.items()} if isinstance(raw_details, dict) else {}
                 
                 st.session_state.active_script_id = None
                 
+                # KHÔNG DÙNG st.rerun() Ở ĐÂY NỮA TRÁNH LỖI KẸT LOAD
                 st.success("🎉 Đã khôi phục thành công dự án từ file!")
-                st.rerun()
             except Exception as e:
                 st.error(f"❌ Lỗi đọc file JSON: {e}")
 
@@ -848,7 +837,6 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
 if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
     st.divider()
     
-    # ĐIỂM NEO HTML/JS ĐỂ TỰ ĐỘNG CUỘN TRANG LÊN ĐẦU KHI VỪA TẠO HOẶC XEM CHI TIẾT
     components.html("""
         <script>
             const doc = window.parent.document;
@@ -863,7 +851,6 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
     
     st.markdown('<div id="script-detail-anchor"></div>', unsafe_allow_html=True)
 
-    # Nút quay lại danh sách tổng
     if st.button("⬅️ Quay lại danh sách kịch bản tổng", key="btn_back_to_list"):
         st.session_state.active_script_id = None
         st.rerun()
