@@ -289,16 +289,22 @@ with st.sidebar:
                 file_bytes = uploaded_project_file.getvalue()
                 loaded_proj = json.loads(file_bytes.decode("utf-8"))
                 
-                # BÓC TÁCH HOÀN HẢO MỌI CẤU TRÚC FILE JSON CŨ HOẶC MỚI
+                # BÓC TÁCH ĐA TẦNG: Nhận diện cả file tải từ máy lẫn file lưu trong bộ nhớ
                 proj_data = loaded_proj
                 if "projects_library" in loaded_proj and isinstance(loaded_proj["projects_library"], dict) and len(loaded_proj["projects_library"]) > 0:
                     first_key = list(loaded_proj["projects_library"].keys())[0]
                     proj_data = loaded_proj["projects_library"][first_key]
+                elif "all_scripts" not in loaded_proj and "script_outlines" not in loaded_proj and isinstance(loaded_proj, dict):
+                    # Quét tìm kiếm nếu cấu trúc nằm sâu bên trong
+                    for k, v in loaded_proj.items():
+                        if isinstance(v, dict) and ("all_scripts" in v or "content_analysis" in v):
+                            proj_data = v
+                            break
 
                 st.session_state.active_project_title = proj_data.get("title", proj_data.get("project_title", "Dự án tải lên"))
                 st.session_state.content_analysis = proj_data.get("content_analysis", proj_data.get("analysis", None))
                 
-                # Trích xuất toàn bộ kịch bản
+                # Trích xuất danh sách kịch bản chính an toàn
                 scripts = proj_data.get("all_scripts", [])
                 if not scripts and "script_outlines" in proj_data:
                     scripts = proj_data.get("script_outlines", [])
@@ -314,6 +320,7 @@ with st.sidebar:
                         cleaned_scripts.append(sc)
                 st.session_state.all_scripts = cleaned_scripts
                 
+                # Trích xuất kịch bản mở rộng
                 expanded = proj_data.get("expanded_scripts", [])
                 cleaned_expanded = []
                 for sc in (expanded if isinstance(expanded, list) else []):
@@ -327,6 +334,7 @@ with st.sidebar:
                 cloned = proj_data.get("cloned_scripts", [])
                 st.session_state.cloned_scripts = cloned if isinstance(cloned, list) else []
                 
+                # Trích xuất dữ liệu chi tiết các cảnh đã dựng
                 raw_details = proj_data.get("generated_details", proj_data.get("details", {}))
                 st.session_state.generated_details = {int(k): v for k, v in raw_details.items()} if isinstance(raw_details, dict) else {}
                 
