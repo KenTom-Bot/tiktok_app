@@ -404,7 +404,6 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
         total_seconds = int(target_duration_mins * 60)
         duration_rule = f"QUY CHUẨN THỜI LƯỢNG KỂ CHUYỆN / REVIEW DÀI ({target_duration_mins} phút / {total_seconds} giây): Xây dựng cốt truyện có chiều sâu, chia theo cấu trúc Hồi/Chương (Act & Chapter), số lượng phân cảnh trải đều toàn bộ thời lượng."
 
-    # QUY CHUẨN THUYẾT MINH TOÀN DIỆN (LUÔN CÓ VOICE TIẾNG VIỆT MIỀN BẮC KỂ CẢ KHI KHÔNG CÓ NGƯỜI TRONG CẢNH)
     voiceover_instruction = """
     7. QUY CHUẨN THUYẾT MINH VIỆT NAM (NARRATION-DRIVEN STYLE): 
        - Bất kể phân cảnh có xuất hiện con người hay không (ví dụ cảnh quay vật thể tĩnh, phong cảnh, cận cảnh kiến trúc, máy móc, nhà cửa), TOÀN BỘ video BẮT BUỘC mang dạng phim thuyết minh chuyên nghiệp.
@@ -521,7 +520,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         }}
         """
         try:
-            sys_inst = get_system_instructions(current_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
+            sys_inst = get_system_instructions(current_mode, selected_style, aspect_ratio, goal, target_duration_mins)
             res = call_gemini_api([prompt_detail], sys_inst)
             if isinstance(res, list): res = res[0]
             st.session_state.generated_details[target_id] = res
@@ -792,21 +791,6 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
 if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
     st.divider()
     
-    # ĐIỂM NEO HTML/JS ĐỂ TỰ ĐỘNG CUỘN TRANG LÊN ĐẦU KHI VỪA TẠO HOẶC XEM CHI TIẾT (ĐÃ FIX ĐẢM BẢO CHẠY 100%)
-    components.html("""
-        <script>
-            const doc = window.parent.document;
-            setTimeout(() => {
-                const target = doc.getElementById('script-detail-anchor');
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            }, 100);
-        </script>
-    """, height=0)
-    
-    st.markdown('<div id="script-detail-anchor"></div>', unsafe_allow_html=True)
-
     # Nút quay lại danh sách tổng
     if st.button("⬅️ Quay lại danh sách kịch bản tổng", key="btn_back_to_list"):
         st.session_state.active_script_id = None
@@ -853,11 +837,9 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         safe_copy_button(vid_p, f"📋 Sao Chép Prompt Video Cảnh {idx}")
         st.markdown("---")
 
-    # BỐ CỤC HAI CỘT THÔNG MINH, ĐÓNG KHUNG CONTAINER SẠCH SẼ
     col_left, col_right = st.columns([1.1, 0.9])
     
     with col_left:
-        # 1. VÙNG KỊCH BẢN ĐÃ TẠO (ĐẶT Ở TRÊN CỘT TRÁI)
         st.markdown("""
         <div class="custom-card" style="background: #f0fdf4; border-color: #86efac;">
             <div style="color: #166534; font-weight: 800; font-size: 1.1rem; margin-bottom: 4px;">🎬 Kịch Bản Đã Hoàn Thiện</div>
@@ -902,7 +884,6 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # 2. VÙNG GỌI THÊM 5 KỊCH BẢN MỚI (ĐẶT DƯỚI)
         st.markdown("""
         <div class="custom-card">
             <div class="card-title-add">➕ Vùng Gọi Thêm Kịch Bản Mới</div>
