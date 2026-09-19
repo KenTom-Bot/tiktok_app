@@ -383,18 +383,18 @@ def format_analysis_field(field_val) -> str:
     text = re.sub(r'<<\.?', '', text)
     text = text.replace('<b>', '').replace('</b>', '')
     
-    # Tự động tách các ý chính dựa trên từ khóa hoặc số thứ tự dạng "1.", "2.", "3." hoặc "Chức năng:", "Tài chính:", "Cảm xúc:"
-    # Tách dòng thông minh bằng cách chèn ngắt dòng trước các mốc phân loại phổ biến
-    text = re.sub(r'(?i)(\b(?:chức năng|tài chính|cảm xúc|\d+[\.\)]))\s*[:\.-]?', r'<br>• <b>\1:</b>', text)
+    # Làm sạch các khoảng trắng thừa
+    text = re.sub(r'\s+', ' ', text)
+    
+    # Tách dòng thông minh dựa trên từ khóa hoặc số thứ tự, giữ nguyên tiêu đề và nội dung trên cùng một dòng
+    text = re.sub(r'(?i)(?:\b|\d+[\.\)]\s*)*(chức năng|tài chính|cảm xúc|\d+[\.\)])\s*[:\.-]?\s*', r'<br>• <b>\1: </b>', text)
     
     lines = [l.strip() for l in text.split('<br>') if l.strip()]
     formatted_output = []
     
     for line in lines:
-        if line.startswith('•'):
+        if line:
             formatted_output.append(f"<div style='margin-top: 6px;'>{line}</div>")
-        else:
-            formatted_output.append(f"<div style='margin-left: 15px; margin-top: 4px;'>• {line}</div>")
             
     return "".join(formatted_output) if formatted_output else text
 
