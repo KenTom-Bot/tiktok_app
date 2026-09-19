@@ -483,21 +483,26 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     ca_data = st.session_state.get("content_analysis", {})
     exact_color_spec = ca_data.get("mechanical_and_accessories", "Giữ nguyên màu sắc chuẩn xác từ ảnh thực tế") if isinstance(ca_data, dict) else "Giữ nguyên màu sắc"
     
+    # Lấy thông tin giới tính và sắc thái giọng đọc đã định hướng sẵn cho kịch bản này
+    v_profile = outline.get("voice_profile", {})
+    fixed_gender = v_profile.get("gender", "Nam/Nữ") if isinstance(v_profile, dict) else "Nam/Nữ"
+    fixed_tone = v_profile.get("tone", "Truyền cảm chuyên nghiệp") if isinstance(v_profile, dict) else "Truyền cảm chuyên nghiệp"
+    
     total_sec = int(target_duration_mins * 60)
     duration_str = f"{total_sec}s ({target_duration_mins} phút)" if target_duration_mins > 0.5 else "24s - 35s (Chuyển đổi bán hàng)"
     
-    with st.spinner(f"🎬 Đang dựng chi tiết cảnh quay #{target_id} (Thời lượng: {duration_str} | Khung hình {aspect_ratio})..."):
+    with st.spinner(f"🎬 Đang dựng chi tiết cảnh quay #{target_id} (Thời lượng: {duration_str} | Giọng cố định: {fixed_gender})..."):
         prompt_detail = f"""
         Sản phẩm gốc & MÃ MÀU THỰC TẾ: "{exact_color_spec}" (Ngữ cảnh: {product_ctx})
         Thể loại nội dung: "{current_mode}" | Mục tiêu chiến dịch: "{goal}" | Tỷ lệ khung hình: "{aspect_ratio}" | Tổng thời lượng yêu cầu: {duration_str}
         Ý tưởng kịch bản: ID {target_id} - {outline.get('title')}
         Bối cảnh định hướng: {outline.get('setting_style')} | Góc tiếp cận: {outline.get('angle')} | Hook: {outline.get('target_hook')}
         
-        QUY ĐỊNH ĐẠO DIỄN BẮT BUỘC CHO CÁC CẢNH:
-        1. PHÂN RÃ THỜI LƯỢNG & SỐ PHÂN CẢNH: 
-           - Tổng thời lượng khớp chính xác {total_sec} giây, số lượng phân cảnh trải đều toàn bộ thời lượng.
-        2. QUY CHUẨN THUYẾT MINH TOÀN DIỆN (MANDATORY VOICEOVER): 100% các phân cảnh BẮT BUỘC phải có lời thuyết minh tiếng Việt chuẩn miền Bắc (`voiceover_vi`). Đồng thời trong `video_prompt`, phải viết rõ lệnh yêu cầu Veo 3 phát ra âm thanh thuyết minh đọc câu thoại đó với giọng đọc truyền cảm, rõ ràng.
-        3. MÀN HÌNH SẠCH: Ảnh sạch tuyệt đối (`no text, clean screen`).
+        QUY ĐỊNH ĐẠO DIỄN & GIỌNG ĐỌC CỐ ĐỊNH (BẮT BUỘC):
+        1. KHÓA CỨNG GIỚI TÍNH & TÔNG GIỌNG THUYẾT MINH: Kịch bản này BẮT BUỘC sử dụng 100% giọng đọc của **{fixed_gender}** với tông giọng **{fixed_tone}** xuyên suốt qua MỌI PHÂN CẢNH. TUYỆT ĐỐI KHÔNG được phép đổi lẫn lộn giữa Nam và Nữ giữa các cảnh.
+        2. PHÂN RÃ THỜI LƯỢNG: Tổng thời lượng khớp chính xác {total_sec} giây, số lượng phân cảnh trải đều toàn bộ thời lượng.
+        3. QUY CHUẨN THUYẾT MINH TOÀN DIỆN: 100% các phân cảnh có lời thuyết minh tiếng Việt chuẩn miền Bắc (`voiceover_vi`). Trong `video_prompt`, chỉ định rõ ràng Veo 3 phát ra âm thanh thuyết minh bởi giọng đọc **{fixed_gender}** miền Bắc.
+        4. MÀN HÌNH SẠCH: Ảnh sạch tuyệt đối (`no text, clean screen`).
         
         Xuất chuẩn 1 Dict JSON duy nhất:
         {{
@@ -512,10 +517,10 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
               "duration": "6s", 
               "scene_setting": "Bối cảnh thực tế", 
               "transition_type": "Cắt cứng dồn dập (Hard Cut) hoặc Chuyển cảnh khớp hành động mượt mà (Match Cut)", 
-              "voice_director_vn": "Chỉ đạo ngữ điệu thuyết minh miền Bắc", 
+              "voice_director_vn": "Chỉ đạo ngữ điệu thuyết minh miền Bắc ({fixed_gender})", 
               "voiceover_vi": "Lời thuyết minh tiếng Việt chuẩn miền Bắc dẫn dắt cảnh quay", 
               "image_prompt": "Prompt Imagen 3 ({aspect_ratio}) hiển thị không gian/sự vật chân thực, màn hình sạch, no text, clean screen", 
-              "video_prompt": "Prompt Veo 3 miêu tả chuyển động điện ảnh, kèm chỉ định audio: professional voiceover narration in Northern Vietnamese reading [voiceover_vi]"
+              "video_prompt": "Prompt Veo 3 miêu tả chuyển động điện ảnh, kèm chỉ định audio: professional voiceover narration in Northern Vietnamese read by a {fixed_gender} speaker with {fixed_tone} tone, reading [voiceover_vi]"
             }}
           ]
         }}
