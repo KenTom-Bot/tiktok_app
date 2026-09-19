@@ -192,33 +192,98 @@ def process_login(login_val):
         st.error("❌ Tài khoản chưa được cấp quyền!")
 
 # ==============================================================================
-# SIDEBAR - ĐĂNG NHẬP, QUẢN TRỊ & QUẢN LÝ DỰ ÁN
+# SIDEBAR - SẮP XẾP LẠI THỨ TỰ THEO YÊU CẦU
 # ==============================================================================
 with st.sidebar:
-    st.markdown("### 🔐 **Đăng Nhập Hệ Thống**")
-    if not st.session_state.is_logged_in:
-        with st.form("login_form"):
-            login_input = st.text_input("Nhập Email / SĐT:", placeholder="vd: user@gmail.com")
-            if st.form_submit_button("🔑 Đăng Nhập", use_container_width=True):
-                process_login(login_input)
-    else:
-        st.success(f"👤 Đang đăng nhập: **{st.session_state.current_user_email}**")
-        if st.button("🚪 Đăng Xuất", use_container_width=True):
-            st.session_state.is_logged_in = False
-            st.session_state.current_user_email = ""
+    # 1. QUẢN LÝ DỰ ÁN (LÊN TRÊN CÙNG)
+    st.markdown("### 🗂️ **Quản Lý Dự Án**")
+    if st.button("➕ Tạo Dự Án Mới (Làm Mới)", type="primary", use_container_width=True):
+        st.session_state.content_analysis = None
+        st.session_state.all_scripts = []
+        st.session_state.cloned_scripts = []
+        st.session_state.expanded_scripts = []
+        st.session_state.generated_details = {}
+        st.session_state.active_script_id = None
+        st.session_state.current_input_context = ""
+        st.session_state.active_project_title = "Chiến dịch mới"
+        st.success("✨ Đã tạo dự án mới thành công!")
+        st.rerun()
+
+    project_title_input = st.text_input("Tên dự án hiện tại:", value=st.session_state.get("active_project_title", "Chiến dịch mới"))
+    col_p1, col_p2 = st.columns(2)
+    with col_p1:
+        if st.button("💾 Lưu Dự Án", use_container_width=True):
+            if st.session_state.all_scripts:
+                p_id = f"proj_{int(time.time())}"
+                st.session_state.projects_library[p_id] = {
+                    "title": project_title_input, "mode": st.session_state.get("selected_mode"),
+                    "style": st.session_state.get("selected_style"), "content_analysis": st.session_state.content_analysis,
+                    "all_scripts": st.session_state.all_scripts, "cloned_scripts": st.session_state.cloned_scripts,
+                    "expanded_scripts": st.session_state.expanded_scripts, "generated_details": st.session_state.generated_details
+                }
+                st.success("✅ Đã lưu vào bộ nhớ ứng dụng!")
+    with col_p2:
+        if st.session_state.all_scripts:
+            export_data = {
+                "title": project_title_input, "mode": st.session_state.get("selected_mode"),
+                "style": st.session_state.get("selected_style"), "content_analysis": st.session_state.content_analysis,
+                "all_scripts": st.session_state.all_scripts, "cloned_scripts": st.session_state.cloned_scripts,
+                "expanded_scripts": st.session_state.expanded_scripts, "generated_details": st.session_state.generated_details
+            }
+            json_str = json.dumps(export_data, ensure_ascii=False, indent=2)
+            st.download_button(label="📥 Tải File JSON", data=json_str, file_name=f"{project_title_input.replace(' ', '_')}.json", mime="application/json", use_container_width=True)
+
+    if st.session_state.projects_library:
+        proj_keys = list(st.session_state.projects_library.keys())
+        selected_load_id = st.selectbox("📂 Chọn dự án đã lưu:", options=proj_keys, format_func=lambda x: st.session_state.projects_library[x]["title"])
+        if st.button("📂 Mở Dự Án Này", use_container_width=True):
+            p_data = st.session_state.projects_library[selected_load_id]
+            st.session_state.active_project_title = p_data["title"]
+            st.session_state.content_analysis = p_data["content_analysis"]
+            st.session_state.all_scripts = p_data["all_scripts"]
+            st.session_state.cloned_scripts = p_data["cloned_scripts"]
+            st.session_state.expanded_scripts = p_data["expanded_scripts"]
+            st.session_state.generated_details = p_data["generated_details"]
+            st.session_state.active_script_id = None
+            st.success("✅ Đã mở dự án thành công!")
             st.rerun()
 
-    st.markdown("""
-    <div class="support-box">
-        <b style="color: #166534; font-size: 0.95rem;">💬 Cần Hỗ Trợ / Mua Gói?</b><br>
-        <p style="font-size: 0.85rem; color: #15803d; margin: 6px 0 8px 0;">Kết nối ngay với chúng tôi:</p>
-        <a href="https://zalo.me/0968484369" target="_blank" style="display: inline-block; background: #0068ff; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 11px; margin: 2px;">📱 Zalo Chat</a>
-        <a href="#" target="_blank" style="display: inline-block; background: #1877f2; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 11px; margin: 2px;">📘 Facebook</a>
-        <a href="#" target="_blank" style="display: inline-block; background: #010101; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 11px; margin: 2px;">🎬 TikTok</a>
-        <div style="font-weight: 700; color: #166534; font-size: 12px; margin-top: 8px;">📞 Hotline: 096 8484 369</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<div style='font-size: 0.85rem; color: #64748b; margin-top: 8px;'>Hoặc tải file dự án cũ từ máy tính:</div>", unsafe_allow_html=True)
+    uploaded_project_file = st.file_uploader("📤 Chọn file kịch bản (.json)", type=["json"], label_visibility="collapsed")
+    if uploaded_project_file is not None:
+        try:
+            file_bytes = uploaded_project_file.getvalue()
+            loaded_proj = json.loads(file_bytes.decode("utf-8"))
+            
+            proj_data = loaded_proj
+            if "projects_library" in loaded_proj and len(loaded_proj["projects_library"]) > 0:
+                first_key = list(loaded_proj["projects_library"].keys())[0]
+                proj_data = loaded_proj["projects_library"][first_key]
+            elif "all_scripts" not in loaded_proj and isinstance(loaded_proj, dict):
+                proj_data = loaded_proj
 
+            st.session_state.active_project_title = proj_data.get("title", "Dự án tải lên")
+            st.session_state.content_analysis = proj_data.get("content_analysis")
+            
+            scripts = proj_data.get("all_scripts", [])
+            if not scripts and "script_outlines" in proj_data:
+                scripts = proj_data.get("script_outlines", [])
+            st.session_state.all_scripts = scripts
+            
+            st.session_state.cloned_scripts = proj_data.get("cloned_scripts", [])
+            st.session_state.expanded_scripts = proj_data.get("expanded_scripts", [])
+            
+            raw_details = proj_data.get("generated_details", {})
+            st.session_state.generated_details = {int(k): v for k, v in raw_details.items()} if raw_details else {}
+            
+            st.session_state.active_script_id = None
+            
+            st.success("🎉 Đã khôi phục thành công dự án từ file!")
+            st.rerun()
+        except Exception as e:
+            st.error(f"❌ Lỗi đọc file JSON: {e}")
+
+    # 2. QUẢN LÝ TÀI KHOẢN (BÊN DƯỚI DỰ ÁN)
     IS_ADMIN = (st.session_state.current_user_email == ADMIN_EMAIL)
     if st.session_state.is_logged_in and IS_ADMIN:
         st.markdown("---")
@@ -268,96 +333,33 @@ with st.sidebar:
                             st.rerun()
                     st.markdown("---")
 
-    if st.session_state.is_logged_in:
-        st.markdown("---")
-        st.markdown("### 🗂️ **Quản Lý Dự Án**")
-        
-        # NÚT TẠO DỰ ÁN MỚI / LÀM SẠCH WORKSPACE
-        if st.button("➕ Tạo Dự Án Mới (Làm Mới)", type="primary", use_container_width=True):
-            st.session_state.content_analysis = None
-            st.session_state.all_scripts = []
-            st.session_state.cloned_scripts = []
-            st.session_state.expanded_scripts = []
-            st.session_state.generated_details = {}
-            st.session_state.active_script_id = None
-            st.session_state.current_input_context = ""
-            st.session_state.active_project_title = "Chiến dịch mới"
-            st.success("✨ Đã tạo dự án mới thành công!")
+    # 3. LIÊN HỆ MUA GÓI (BÊN DƯỚI QUẢN LÝ TÀI KHOẢN)
+    st.markdown("---")
+    st.markdown("""
+    <div class="support-box">
+        <b style="color: #166534; font-size: 0.95rem;">💬 Cần Hỗ Trợ / Mua Gói?</b><br>
+        <p style="font-size: 0.85rem; color: #15803d; margin: 6px 0 8px 0;">Kết nối ngay với chúng tôi:</p>
+        <a href="https://zalo.me/0968484369" target="_blank" style="display: inline-block; background: #0068ff; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 11px; margin: 2px;">📱 Zalo Chat</a>
+        <a href="#" target="_blank" style="display: inline-block; background: #1877f2; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 11px; margin: 2px;">📘 Facebook</a>
+        <a href="#" target="_blank" style="display: inline-block; background: #010101; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 11px; margin: 2px;">🎬 TikTok</a>
+        <div style="font-weight: 700; color: #166534; font-size: 12px; margin-top: 8px;">📞 Hotline: 096 8484 369</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 4. THÔNG TIN ĐĂNG NHẬP, ĐĂNG XUẤT (DƯỚI CÙNG)
+    st.markdown("---")
+    st.markdown("### 🔐 **Đăng Nhập Hệ Thống**")
+    if not st.session_state.is_logged_in:
+        with st.form("login_form"):
+            login_input = st.text_input("Nhập Email / SĐT:", placeholder="vd: user@gmail.com")
+            if st.form_submit_button("🔑 Đăng Nhập", use_container_width=True):
+                process_login(login_input)
+    else:
+        st.success(f"👤 Đang đăng nhập: **{st.session_state.current_user_email}**")
+        if st.button("🚪 Đăng Xuất", use_container_width=True):
+            st.session_state.is_logged_in = False
+            st.session_state.current_user_email = ""
             st.rerun()
-
-        project_title_input = st.text_input("Tên dự án hiện tại:", value=st.session_state.get("active_project_title", "Chiến dịch mới"))
-        col_p1, col_p2 = st.columns(2)
-        with col_p1:
-            if st.button("💾 Lưu Dự Án", use_container_width=True):
-                if st.session_state.all_scripts:
-                    p_id = f"proj_{int(time.time())}"
-                    st.session_state.projects_library[p_id] = {
-                        "title": project_title_input, "mode": st.session_state.get("selected_mode"),
-                        "style": st.session_state.get("selected_style"), "content_analysis": st.session_state.content_analysis,
-                        "all_scripts": st.session_state.all_scripts, "cloned_scripts": st.session_state.cloned_scripts,
-                        "expanded_scripts": st.session_state.expanded_scripts, "generated_details": st.session_state.generated_details
-                    }
-                    st.success("✅ Đã lưu vào bộ nhớ ứng dụng!")
-        with col_p2:
-            if st.session_state.all_scripts:
-                export_data = {
-                    "title": project_title_input, "mode": st.session_state.get("selected_mode"),
-                    "style": st.session_state.get("selected_style"), "content_analysis": st.session_state.content_analysis,
-                    "all_scripts": st.session_state.all_scripts, "cloned_scripts": st.session_state.cloned_scripts,
-                    "expanded_scripts": st.session_state.expanded_scripts, "generated_details": st.session_state.generated_details
-                }
-                json_str = json.dumps(export_data, ensure_ascii=False, indent=2)
-                st.download_button(label="📥 Tải File JSON", data=json_str, file_name=f"{project_title_input.replace(' ', '_')}.json", mime="application/json", use_container_width=True)
-
-        if st.session_state.projects_library:
-            proj_keys = list(st.session_state.projects_library.keys())
-            selected_load_id = st.selectbox("📂 Chọn dự án đã lưu:", options=proj_keys, format_func=lambda x: st.session_state.projects_library[x]["title"])
-            if st.button("📂 Mở Dự Án Này", use_container_width=True):
-                p_data = st.session_state.projects_library[selected_load_id]
-                st.session_state.active_project_title = p_data["title"]
-                st.session_state.content_analysis = p_data["content_analysis"]
-                st.session_state.all_scripts = p_data["all_scripts"]
-                st.session_state.cloned_scripts = p_data["cloned_scripts"]
-                st.session_state.expanded_scripts = p_data["expanded_scripts"]
-                st.session_state.generated_details = p_data["generated_details"]
-                st.session_state.active_script_id = None
-                st.success("✅ Đã mở dự án thành công!")
-                st.rerun()
-
-        st.markdown("<div style='font-size: 0.85rem; color: #64748b; margin-top: 8px;'>Hoặc tải file dự án cũ từ máy tính:</div>", unsafe_allow_html=True)
-        uploaded_project_file = st.file_uploader("📤 Chọn file kịch bản (.json)", type=["json"], label_visibility="collapsed")
-        if uploaded_project_file is not None:
-            try:
-                file_bytes = uploaded_project_file.getvalue()
-                loaded_proj = json.loads(file_bytes.decode("utf-8"))
-                
-                proj_data = loaded_proj
-                if "projects_library" in loaded_proj and len(loaded_proj["projects_library"]) > 0:
-                    first_key = list(loaded_proj["projects_library"].keys())[0]
-                    proj_data = loaded_proj["projects_library"][first_key]
-                elif "all_scripts" not in loaded_proj and isinstance(loaded_proj, dict):
-                    proj_data = loaded_proj
-
-                st.session_state.active_project_title = proj_data.get("title", "Dự án tải lên")
-                st.session_state.content_analysis = proj_data.get("content_analysis")
-                
-                scripts = proj_data.get("all_scripts", [])
-                if not scripts and "script_outlines" in proj_data:
-                    scripts = proj_data.get("script_outlines", [])
-                st.session_state.all_scripts = scripts
-                
-                st.session_state.cloned_scripts = proj_data.get("cloned_scripts", [])
-                st.session_state.expanded_scripts = proj_data.get("expanded_scripts", [])
-                
-                raw_details = proj_data.get("generated_details", {})
-                st.session_state.generated_details = {int(k): v for k, v in raw_details.items()} if raw_details else {}
-                
-                st.session_state.active_script_id = None
-                
-                st.success("🎉 Đã khôi phục thành công dự án từ file!")
-                st.rerun()
-            except Exception as e:
-                st.error(f"❌ Lỗi đọc file JSON: {e}")
 
 def safe_copy_button(text_to_copy: str, button_label: str = "📋 Sao Chép Prompt"):
     b64 = base64.b64encode(text_to_copy.encode('utf-8')).decode('utf-8')
@@ -803,7 +805,7 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
     if st.button("➕ Gọi Thêm 5 Kịch Bản Khác", key="btn_add_more_1", type="primary", use_container_width=True):
         add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
 
-# GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC ĐIỀU HƯỚNG (ĐÃ BỎ HOÀN TOÀN KHU VỰC NHÂN BẢN PHÍA DƯỚI)
+# GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC ĐIỀU HƯỚNG
 if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
     st.divider()
     
@@ -853,7 +855,6 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         safe_copy_button(vid_p, f"📋 Sao Chép Prompt Video Cảnh {idx}")
         st.markdown("---")
 
-    # VÙNG MỞ RỘNG (CHỈ GIỮ LẠI NÚT GỌI THÊM 5 KỊCH BẢN MỚI, ĐÃ BỎ HẲN PHẦN NHÂN BẢN DƯỚI ĐÁY)
     col_left, col_right = st.columns([1.1, 0.9])
     with col_left:
         st.markdown("""
