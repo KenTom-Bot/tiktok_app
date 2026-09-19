@@ -552,11 +552,32 @@ with col_mode:
         "🍲 Ẩm Thực & Đời Sống", "📖 Đời Sống & Giáo Dục", "🏛️ Lịch Sử & Tín Ngưỡng Di Sản", "🧘 Chữa Lành & Phong Cách Sống"
     ])
 with col_style:
-    selected_style = st.selectbox("🎨 Chọn Phong Cách Hình Ảnh:", options=[
-        "Cinematic Realism (Người thật / Siêu thực 8K)", "3D Pixar / Disney Animation", "2D Ghibli / Anime Art",
-        "Tranh Thủy Mặc Cổ Phong", "Cyberpunk / Sci-Fi Neon", "Vintage / Retro Film 1980s-90s",
-        "Minimalist Studio / Commercial Clean", "Dark Moody / Noir", "Paper Cut-out / Stop Motion"
+    # ĐÃ VIỆT HÓA 100% TÊN CÁC PHONG CÁCH ĐỂ NGƯỜI DÙNG DỄ HIỂU
+    selected_style_vn = st.selectbox("🎨 Chọn Phong Cách Hình Ảnh:", options=[
+        "Điện Ảnh Chân Thực (Người thật / Siêu thực 8K)", 
+        "Hoạt Hình 3D (Kiểu Pixar / Disney)", 
+        "Hoạt Hình 2D (Phong cách Ghibli / Anime Nhật Bản)", 
+        "Tranh Thủy Mặc Cổ Phong (Truyền thống Á Đông)", 
+        "Viễn Tưởng Tương Lai (Cyberpunk / Đèn Neon rực rỡ)", 
+        "Phim Cổ Điển Hoài Niệm (Thập niên 80 - 90)", 
+        "Studio Tối Giản (Hiện đại, Sạch sẽ, Thương mại)", 
+        "Trầm Buồn / Kịch Tính (Tông màu tối, Sınıs động)", 
+        "Hoạt Hình Cắt Giấy / Tĩnh Vật (Stop Motion)"
     ])
+    
+    # Map ánh xạ ngược về giá trị chuẩn để hệ thống xử lý ngầm định
+    style_mapping = {
+        "Điện Ảnh Chân Thực (Người thật / Siêu thực 8K)": "Cinematic Realism (Người thật / Siêu thực 8K)",
+        "Hoạt Hình 3D (Kiểu Pixar / Disney)": "3D Pixar / Disney Animation",
+        "Hoạt Hình 2D (Phong cách Ghibli / Anime Nhật Bản)": "2D Ghibli / Anime Art",
+        "Tranh Thủy Mặc Cổ Phong (Truyền thống Á Đông)": "Tranh Thủy Mặc Cổ Phong",
+        "Viễn Tưởng Tương Lai (Cyberpunk / Đèn Neon rực rỡ)": "Cyberpunk / Sci-Fi Neon",
+        "Phim Cổ Điển Hoài Niệm (Thập niên 80 - 90)": "Vintage / Retro Film 1980s-90s",
+        "Studio Tối Giản (Hiện đại, Sạch sẽ, Thương mại)": "Minimalist Studio / Commercial Clean",
+        "Trầm Buồn / Kịch Tính (Tông màu tối, Sınıs động)": "Dark Moody / Noir",
+        "Hoạt Hình Cắt Giấy / Tĩnh Vật (Stop Motion)": "Paper Cut-out / Stop Motion"
+    }
+    selected_style = style_mapping.get(selected_style_vn, "Cinematic Realism (Người thật / Siêu thực 8K)")
 
 # BẢNG CẨM NANG PHỐI HỢP THỂ LOẠI & PHONG CÁCH
 with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp 'Thể Loại & Phong Cách' Chuẩn Xác Nhất", expanded=False):
@@ -564,16 +585,10 @@ with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp '
     <div style="background-color: #f8fafc; padding: 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 0.95rem; color: #334155;">
         <h4 style="color: #0f172a; margin-top: 0; margin-bottom: 12px; font-size: 1.05rem;">🎯 Cẩm Nang Phối Hợp Sáng Tạo Nội Dung Đa Vũ Trụ</h4>
         <ul style="padding-left: 20px; line-height: 1.8; margin-bottom: 0;">
-            <li><b>🛒 TikTok Shop & Bán Hàng:</b> Phù hợp nhất với <code style="color: #e11d48;">Minimalist Studio / Commercial Clean</code> hoặc <code style="color: #e11d48;">Cyberpunk / Sci-Fi Neon</code> (đồ công nghệ).</li>
-            <li><b>👶 Mẹ & Bé & Cùng Con Học:</b> Tối ưu với <code style="color: #e11d48;">Paper Cut-out / Stop Motion</code> hoặc <code style="color: #e11d48;">3D Pixar / Disney Animation</code> (ấm áp, an toàn).</li>
-            <li><b>📺 TVC Quảng Cáo Cao Cấp:</b> Nên chọn <code style="color: #e11d48;">Cinematic Realism (8K)</code> hoặc <code style="color: #e11d48;">Dark Moody / Noir</code> (sang trọng, kịch tính).</li>
-            <li><b>🏡 Nhà Cửa & Kiến Trúc:</b> Kết hợp <code style="color: #e11d48;">Cinematic Realism</code> (hiện đại) hoặc <code style="color: #e11d48;">Vintage / Retro Film</code> (hoài niệm).</li>
-            <li><b>🌿 Du Lịch & Phong Cảnh:</b> Sử dụng <code style="color: #e11d48;">Cinematic Realism</code> (hùng vĩ) hoặc <code style="color: #e11d48;">Tranh Thủy Mặc Cổ Phong</code> (vùng cao, tâm linh).</li>
-            <li><b>🚗 Xe Cộ & Trải Nghiệm Lái:</b> Tối ưu với <code style="color: #e11d48;">Cinematic Realism</code> kết hợp <code style="color: #e11d48;">Cyberpunk / Sci-Fi Neon</code> (tốc độ, ánh sáng đèn).</li>
-            <li><b>🍲 Ẩm Thực & Đời Sống:</b> Sử dụng <code style="color: #e11d48;">Vintage / Retro Film</code> hoặc <code style="color: #e11d48;">Minimalist Studio</code> (tôn vinh món ăn).</li>
-            <li><b>📖 Đời Sống & Giáo Dục:</b> Phù hợp với <code style="color: #e11d48;">2D Ghibli / Anime Art</code> hoặc <code style="color: #e11d48;">Paper Cut-out</code> (gần gũi, nhân văn).</li>
-            <li><b>🏛️ Lịch Sử & Tín Ngưỡng Di Sản:</b> Tối ưu tuyệt đối bằng <code style="color: #e11d48;">Tranh Thủy Mặc Cổ Phong</code> hoặc <code style="color: #e11d48;">Dark Moody / Noir</code> (cổ kính, huyền bí).</li>
-            <li><b>🧘 Chữa Lành & Lifestyle:</b> Kết hợp <code style="color: #e11d48;">Minimalist Studio</code> hoặc <code style="color: #e11d48;">Cinematic Realism</code> (bình yên, thư thái).</li>
+            <li><b>🛒 TikTok Shop & Bán Hàng:</b> Phù hợp nhất với <code>Studio Tối Giản (Hiện đại, Sạch sẽ)</code> hoặc <code>Viễn Tưởng Tương Lai (Neon rực rỡ)</code>.</li>
+            <li><b>👶 Mẹ & Bé & Cùng Con Học:</b> Tối ưu với <code>Hoạt Hình Cắt Giấy / Tĩnh Vật</code> hoặc <code>Hoạt Hình 3D (Kiểu Pixar)</code>.</li>
+            <li><b>📺 TVC Quảng Cáo Cao Cấp:</b> Nên chọn <code>Điện Ảnh Chân Thực (8K)</code> hoặc <code>Trầm Buồn / Kịch Tính</code>.</li>
+            <li><b>🏛️ Lịch Sử & Tín Ngưỡng Di Sản:</b> Tối ưu tuyệt đối bằng <code>Tranh Thủy Mặc Cổ Phong</code> hoặc <code>Điện Ảnh Chân Thực</code>.</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -791,6 +806,21 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
 if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
     st.divider()
     
+    # ĐIỂM NEO HTML/JS ĐỂ TỰ ĐỘNG CUỘN TRANG LÊN ĐẦU KHI VỪA TẠO HOẶC XEM CHI TIẾT
+    components.html("""
+        <script>
+            const doc = window.parent.document;
+            setTimeout(() => {
+                const target = doc.getElementById('script-detail-anchor');
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100);
+        </script>
+    """, height=0)
+    
+    st.markdown('<div id="script-detail-anchor"></div>', unsafe_allow_html=True)
+
     # Nút quay lại danh sách tổng
     if st.button("⬅️ Quay lại danh sách kịch bản tổng", key="btn_back_to_list"):
         st.session_state.active_script_id = None
