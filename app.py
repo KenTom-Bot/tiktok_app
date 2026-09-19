@@ -289,6 +289,7 @@ with st.sidebar:
                 file_bytes = uploaded_project_file.getvalue()
                 loaded_proj = json.loads(file_bytes.decode("utf-8"))
                 
+                # BÓC TÁCH LINH HOẠT CHO CẢ FILE DỰ ÁN CŨ & MỚI
                 proj_data = loaded_proj
                 if "projects_library" in loaded_proj and isinstance(loaded_proj["projects_library"], dict) and len(loaded_proj["projects_library"]) > 0:
                     first_key = list(loaded_proj["projects_library"].keys())[0]
@@ -297,7 +298,7 @@ with st.sidebar:
                 st.session_state.active_project_title = proj_data.get("title", proj_data.get("project_title", "Dự án tải lên"))
                 st.session_state.content_analysis = proj_data.get("content_analysis", proj_data.get("analysis", None))
                 
-                # Quét an toàn toàn bộ danh sách kịch bản từ file cũ
+                # Quét danh sách kịch bản
                 scripts = proj_data.get("all_scripts", [])
                 if not scripts and "script_outlines" in proj_data:
                     scripts = proj_data.get("script_outlines", [])
@@ -951,7 +952,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                                     cloned_list = res_c.get("cloned_outlines", [])
                                     for idx_c, cl in enumerate(cloned_list): cl["id"] = cur_len + idx_c + 1
                                     st.session_state.cloned_scripts.extend(cloned_list)
-                                    st.success("✅ Đã nhân bản 5 biến thể mới!")
+                                    st.success("✅ Đã nhân bản thành công 5 biến thể mới!")
                                     st.rerun()
                                 except Exception as e:
                                     st.error(f"Lỗi: {e}")
@@ -983,6 +984,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
             for item in pending_scripts:
                 it_id = item.get("id")
                 with st.container(border=True):
+                    st.markdown(f"**#{it_id}. {item.get('title')}** — <span class='badge-pending'>CHƯA TẠO</span>", unsafe_app=True) if False else None
                     st.markdown(f"**#{it_id}. {item.get('title')}** — <span class='badge-pending'>CHƯA TẠO</span>", unsafe_allow_html=True)
                     st.caption(f"🏛️ {item.get('setting_style')}")
                     
