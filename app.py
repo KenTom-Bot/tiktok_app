@@ -322,8 +322,6 @@ with st.sidebar:
                 st.session_state.generated_details = {int(k): v for k, v in raw_details.items()} if isinstance(raw_details, dict) else {}
                 
                 st.session_state.active_script_id = None
-                
-                # KHÔNG DÙNG st.rerun() Ở ĐÂY NỮA TRÁNH LỖI KẸT LOAD
                 st.success("🎉 Đã khôi phục thành công dự án từ file!")
             except Exception as e:
                 st.error(f"❌ Lỗi đọc file JSON: {e}")
@@ -494,9 +492,11 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
 def create_scene_details_for_id(target_id: int, current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float):
     all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
     outline = next((sc for sc in all_sources if isinstance(sc, dict) and sc.get("id") == target_id), None)
-    if not outline: return
+    if not outline:
+        st.error(f"Không tìm thấy thông tin cho kịch bản #{target_id}")
+        return
     
-    product_ctx = st.session_state.get("current_input_context", "Sản phẩm hiện tại")
+    product_ctx = st.session_state.get("current_input_context", "Sản phẩm ổ cắm điện đa năng & thiết bị gia dụng")
     ca_data = st.session_state.get("content_analysis", {})
     exact_color_spec = ca_data.get("mechanical_and_accessories", "Giữ nguyên màu sắc chuẩn xác từ ảnh thực tế") if isinstance(ca_data, dict) else "Giữ nguyên màu sắc"
     
@@ -504,10 +504,10 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     if isinstance(v_profile, str):
         fixed_gender, fixed_tone = "Nam", v_profile
     elif isinstance(v_profile, dict):
-        fixed_gender = v_profile.get("gender", "Nam/Nữ")
+        fixed_gender = v_profile.get("gender", "Nam")
         fixed_tone = v_profile.get("tone", "Truyền cảm chuyên nghiệp")
     else:
-        fixed_gender, fixed_tone = "Nam/Nữ", "Truyền cảm"
+        fixed_gender, fixed_tone = "Nam", "Truyền cảm"
     
     total_sec = int(target_duration_mins * 60)
     duration_str = f"{total_sec}s ({target_duration_mins} phút)" if target_duration_mins > 0.5 else "24s - 35s (Chuyển đổi bán hàng)"
@@ -552,9 +552,11 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
             if isinstance(res, list): res = res[0]
             st.session_state.generated_details[target_id] = res
             st.session_state.active_script_id = target_id
+            st.success(f"✅ Đã dựng thành công chi tiết kịch bản #{target_id}!")
+            time.sleep(0.5)
             st.rerun()
         except Exception as e:
-            st.error(f"Lỗi dựng chi tiết kịch bản: {e}")
+            st.error(f"❌ Lỗi dựng chi tiết kịch bản: {e}")
             
 # ==============================================================================
 # GIAO DIỆN CHÍNH
