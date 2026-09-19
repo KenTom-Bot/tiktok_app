@@ -550,10 +550,12 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
             sys_inst = get_system_instructions(current_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
             res = call_gemini_api([prompt_detail], sys_inst)
             if isinstance(res, list): res = res[0]
+            
+            # Lưu vào session_state và kích hoạt chuyển view hiển thị ngay lập tức
             st.session_state.generated_details[target_id] = res
             st.session_state.active_script_id = target_id
             st.success(f"✅ Đã dựng thành công chi tiết kịch bản #{target_id}!")
-            time.sleep(0.5)
+            time.sleep(0.3)
             st.rerun()
         except Exception as e:
             st.error(f"❌ Lỗi dựng chi tiết kịch bản: {e}")
