@@ -192,26 +192,19 @@ def process_login(login_val):
         st.error("❌ Tài khoản chưa được cấp quyền!")
 
 # ==============================================================================
-# SIDEBAR - ĐĂNG NHẬP LÊN TRÊN CÙNG, CHỈ HIỆN QUẢN LÝ DỰ ÁN KHI ĐÃ ĐĂNG NHẬP
+# SIDEBAR - ĐIỀU HƯỚNG THỨ TỰ THEO TRẠNG THÁI ĐĂNG NHẬP
 # ==============================================================================
 with st.sidebar:
-    # 1. ĐĂNG NHẬP / ĐĂNG XUẤT (LÊN TRÊN CÙNG)
-    st.markdown("### 🔐 **Đăng Nhập Hệ Thống**")
+    # 1. NẾU CHƯA ĐĂNG NHẬP: ĐĂNG NHẬP Ở TRÊN CÙNG
     if not st.session_state.is_logged_in:
+        st.markdown("### 🔐 **Đăng Nhập Hệ Thống**")
         with st.form("login_form"):
             login_input = st.text_input("Nhập Email / SĐT:", placeholder="vd: user@gmail.com")
             if st.form_submit_button("🔑 Đăng Nhập", use_container_width=True):
                 process_login(login_input)
-    else:
-        st.success(f"👤 Đang đăng nhập: **{st.session_state.current_user_email}**")
-        if st.button("🚪 Đăng Xuất", use_container_width=True):
-            st.session_state.is_logged_in = False
-            st.session_state.current_user_email = ""
-            st.rerun()
-
-    # 2. QUẢN LÝ DỰ ÁN (CHỈ HIỆN KHI ĐÃ ĐĂNG NHẬP THÀNH CÔNG)
+    
+    # 2. NẾU ĐÃ ĐĂNG NHẬP THÀNH CÔNG: QUẢN LÝ DỰ ÁN & QUẢN TRỊ HIỆN Ở TRÊN
     if st.session_state.is_logged_in:
-        st.markdown("---")
         st.markdown("### 🗂️ **Quản Lý Dự Án**")
         if st.button("➕ Tạo Dự Án Mới (Làm Mới)", type="primary", use_container_width=True):
             st.session_state.content_analysis = None
@@ -299,57 +292,57 @@ with st.sidebar:
             except Exception as e:
                 st.error(f"❌ Lỗi đọc file JSON: {e}")
 
-    # 3. QUẢN LÝ TÀI KHOẢN (DÀNH CHO ADMIN KHI ĐÃ ĐĂNG NHẬP)
-    IS_ADMIN = (st.session_state.current_user_email == ADMIN_EMAIL)
-    if st.session_state.is_logged_in and IS_ADMIN:
-        st.markdown("---")
-        st.markdown("### ⚙️ **Quản Lý Tài Khoản (Quản Trị)**")
-        if st.session_state.admin_toast_msg:
-            st.success(st.session_state.admin_toast_msg)
-            st.session_state.admin_toast_msg = ""
+        # QUẢN LÝ TÀI KHOẢN (ADMIN)
+        IS_ADMIN = (st.session_state.current_user_email == ADMIN_EMAIL)
+        if IS_ADMIN:
+            st.markdown("---")
+            st.markdown("### ⚙️ **Quản Lý Tài Khoản (Quản Trị)**")
+            if st.session_state.admin_toast_msg:
+                st.success(st.session_state.admin_toast_msg)
+                st.session_state.admin_toast_msg = ""
 
-        with st.form("add_license_form"):
-            st.markdown("<b>➕ Cấp Quyền Tài Khoản Mới</b>", unsafe_allow_html=True)
-            new_account_id = st.text_input("Email / SĐT khách hàng:")
-            assigned_modules = st.multiselect("Phân quyền chức năng:", options=[
-                "🛒 TikTok Shop & Bán Hàng", "👶 Mẹ & Bé & Cùng Con Học", "📺 TVC Quảng Cáo & Thương Hiệu",
-                "🏡 Nhà Cửa & Kiến Trúc", "🌿 Du Lịch & Phong Cảnh", "🚗 Xe Cộ & Trải Nghiệm Lái",
-                "🍲 Ẩm Thực & Đời Sống", "📖 Đời Sống & Giáo Dục", "🏛️ Lịch Sử & Tín Ngưỡng Di Sản", "🧘 Chữa Lành & Lifestyle"
-            ], default=["🛒 TikTok Shop & Bán Hàng"])
-            duration_option = st.selectbox("Thời hạn:", options=["Dùng thử 3 ngày", "1 Tháng", "3 Tháng", "6 Tháng", "1 Năm", "2 Năm", "3 Năm", "5 Năm", "10 Năm", "Vĩnh viễn (Trọn đời)"], index=0)
-            
-            if st.form_submit_button("💾 Lưu / Cấp Quyền Mới", use_container_width=True):
-                if new_account_id.strip():
-                    if "Vĩnh viễn" in duration_option:
-                        expiry_date = "2099-12-31"
-                    elif "Dùng thử" in duration_option:
-                        expiry_date = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
-                    else:
-                        month_map = {"1 Tháng": 30, "3 Tháng": 90, "6 Tháng": 180, "1 Năm": 365, "2 Năm": 730, "3 Năm": 1095, "5 Năm": 1825, "10 Năm": 3650}
-                        days_add = month_map.get(duration_option, 30)
-                        expiry_date = (datetime.now() + timedelta(days=days_add)).strftime("%Y-%m-%d")
+            with st.form("add_license_form"):
+                st.markdown("<b>➕ Cấp Quyền Tài Khoản Mới</b>", unsafe_allow_html=True)
+                new_account_id = st.text_input("Email / SĐT khách hàng:")
+                assigned_modules = st.multiselect("Phân quyền chức năng:", options=[
+                    "🛒 TikTok Shop & Bán Hàng", "👶 Mẹ & Bé & Cùng Con Học", "📺 TVC Quảng Cáo & Thương Hiệu",
+                    "🏡 Nhà Cửa & Kiến Trúc", "🌿 Du Lịch & Phong Cảnh", "🚗 Xe Cộ & Trải Nghiệm Lái",
+                    "🍲 Ẩm Thực & Đời Sống", "📖 Đời Sống & Giáo Dục", "🏛️ Lịch Sử & Tín Ngưỡng Di Sản", "🧘 Chữa Lành & Lifestyle"
+                ], default=["🛒 TikTok Shop & Bán Hàng"])
+                duration_option = st.selectbox("Thời hạn:", options=["Dùng thử 3 ngày", "1 Tháng", "3 Tháng", "6 Tháng", "1 Năm", "2 Năm", "3 Năm", "5 Năm", "10 Năm", "Vĩnh viễn (Trọn đời)"], index=0)
+                
+                if st.form_submit_button("💾 Lưu / Cấp Quyền Mới", use_container_width=True):
+                    if new_account_id.strip():
+                        if "Vĩnh viễn" in duration_option:
+                            expiry_date = "2099-12-31"
+                        elif "Dùng thử" in duration_option:
+                            expiry_date = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
+                        else:
+                            month_map = {"1 Tháng": 30, "3 Tháng": 90, "6 Tháng": 180, "1 Năm": 365, "2 Năm": 730, "3 Năm": 1095, "5 Năm": 1825, "10 Năm": 3650}
+                            days_add = month_map.get(duration_option, 30)
+                            expiry_date = (datetime.now() + timedelta(days=days_add)).strftime("%Y-%m-%d")
 
-                    st.session_state.licensed_accounts[new_account_id.strip()] = {
-                        "contact": new_account_id.strip(), "roles": assigned_modules, "expires_at": expiry_date
-                    }
-                    save_licensed_accounts(st.session_state.licensed_accounts)
-                    st.session_state.admin_toast_msg = f"✅ Đã cấp quyền thành công cho tài khoản: {new_account_id.strip()}!"
-                    st.rerun()
+                        st.session_state.licensed_accounts[new_account_id.strip()] = {
+                            "contact": new_account_id.strip(), "roles": assigned_modules, "expires_at": expiry_date
+                        }
+                        save_licensed_accounts(st.session_state.licensed_accounts)
+                        st.session_state.admin_toast_msg = f"✅ Đã cấp quyền thành công cho tài khoản: {new_account_id.strip()}!"
+                        st.rerun()
 
-        if st.session_state.licensed_accounts:
-            with st.expander(f"📋 Danh sách tài khoản đã cấp ({len(st.session_state.licensed_accounts)})"):
-                for acc, info in list(st.session_state.licensed_accounts.items()):
-                    st.markdown(f"**👤 {acc}**")
-                    st.caption(f"• Quyền: {', '.join(info.get('roles', []))}<br>• Hết hạn: {info.get('expires_at')}", unsafe_allow_html=True)
-                    if acc != ADMIN_EMAIL:
-                        if st.button(f"🗑️ Xóa {acc}", key=f"del_acc_{acc}"):
-                            del st.session_state.licensed_accounts[acc]
-                            save_licensed_accounts(st.session_state.licensed_accounts)
-                            st.session_state.admin_toast_msg = f"Đã xóa tài khoản {acc}!"
-                            st.rerun()
-                    st.markdown("---")
+            if st.session_state.licensed_accounts:
+                with st.expander(f"📋 Danh sách tài khoản đã cấp ({len(st.session_state.licensed_accounts)})"):
+                    for acc, info in list(st.session_state.licensed_accounts.items()):
+                        st.markdown(f"**👤 {acc}**")
+                        st.caption(f"• Quyền: {', '.join(info.get('roles', []))}<br>• Hết hạn: {info.get('expires_at')}", unsafe_allow_html=True)
+                        if acc != ADMIN_EMAIL:
+                            if st.button(f"🗑️ Xóa {acc}", key=f"del_acc_{acc}"):
+                                del st.session_state.licensed_accounts[acc]
+                                save_licensed_accounts(st.session_state.licensed_accounts)
+                                st.session_state.admin_toast_msg = f"Đã xóa tài khoản {acc}!"
+                                st.rerun()
+                        st.markdown("---")
 
-    # 4. LIÊN HỆ MUA GÓI (HỖ TRỢ)
+    # 3. LIÊN HỆ MUA GÓI (HỖ TRỢ)
     st.markdown("---")
     st.markdown("""
     <div class="support-box">
@@ -361,6 +354,16 @@ with st.sidebar:
         <div style="font-weight: 700; color: #166534; font-size: 12px; margin-top: 8px;">📞 Hotline: 096 8484 369</div>
     </div>
     """, unsafe_allow_html=True)
+
+    # 4. NẾU ĐÃ ĐĂNG NHẬP: THÔNG TIN TÀI KHOẢN & ĐĂNG XUẤT ĐẨY XUỐNG DƯỚI CÙNG
+    if st.session_state.is_logged_in:
+        st.markdown("---")
+        st.markdown("### 👤 **Thông Tin Tài Khoản**")
+        st.success(f"Đang đăng nhập:<br>**{st.session_state.current_user_email}**", icon="✅")
+        if st.button("🚪 Đăng Xuất", use_container_width=True):
+            st.session_state.is_logged_in = False
+            st.session_state.current_user_email = ""
+            st.rerun()
 
 def safe_copy_button(text_to_copy: str, button_label: str = "📋 Sao Chép Prompt"):
     b64 = base64.b64encode(text_to_copy.encode('utf-8')).decode('utf-8')
