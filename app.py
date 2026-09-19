@@ -156,7 +156,7 @@ def save_licensed_accounts(accounts_dict):
         st.error(f"Lỗi lưu danh sách tài khoản: {e}")
 
 # ==============================================================================
-# KHỞI TẠO SESSION STATE AN TOÀN
+# KHỞI TẠO SESSION STATE & CƠ CHẾ CUỘN TRANG (SCROLL_TO_TOP)
 # ==============================================================================
 for key, default_val in [
     ("content_analysis", None), ("all_scripts", []), ("cloned_scripts", []), 
@@ -169,18 +169,20 @@ for key, default_val in [
     if key not in st.session_state:
         st.session_state[key] = default_val
 
-# Hàm ép cuộn trang lên đầu mượt mà
+# Hàm ép cuộn trang lên đầu an toàn với mã định danh động (chống cache)
 if st.session_state.scroll_to_top:
-    components.html("""
+    components.html(f"""
         <script>
-            const parent = window.parent;
-            if (parent) {
-                parent.scrollTo({top: 0, behavior: 'smooth'});
-                const scrollNodes = parent.document.querySelectorAll('.main, .block-container, [data-testid="stAppViewContainer"]');
-                scrollNodes.forEach(node => {
-                    node.scrollTo({top: 0, behavior: 'smooth'});
-                });
-            }
+            var run_id = "{time.time()}"; // Tránh bị Streamlit cache
+            setTimeout(function() {{
+                var parentDoc = window.parent.document;
+                // Cuộn cả container của Streamlit và trình duyệt tổng lên
+                var mainElements = parentDoc.querySelectorAll('.main, .block-container, [data-testid="stAppViewContainer"]');
+                mainElements.forEach(function(el) {{
+                    el.scrollTo({{top: 0, behavior: 'smooth'}});
+                }});
+                window.parent.scrollTo({{top: 0, behavior: 'smooth'}});
+            }}, 300);
         </script>
     """, height=0)
     st.session_state.scroll_to_top = False
@@ -246,6 +248,7 @@ with st.sidebar:
     
     if st.session_state.is_logged_in:
         st.markdown("### 🗂️ **Quản Lý Dự Án**")
+        
         if st.button("➕ Tạo Dự Án Mới (Làm Mới)", type="primary", use_container_width=True):
             st.session_state.content_analysis = None
             st.session_state.all_scripts = []
@@ -315,8 +318,6 @@ with st.sidebar:
         
         if uploaded_project_file is not None:
             file_identifier = f"{uploaded_project_file.name}_{uploaded_project_file.size}"
-            
-            # Chỉ nạp lại file nếu file ID thay đổi (Tránh chặn tiến trình khi ấn các nút bấm)
             if st.session_state.get("last_loaded_file_id") != file_identifier:
                 try:
                     file_bytes = uploaded_project_file.getvalue()
