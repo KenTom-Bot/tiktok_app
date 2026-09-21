@@ -524,21 +524,15 @@ def call_gemini_api(contents, system_inst):
             else: raise e
     raise Exception("Lỗi kết nối Gemini API sau nhiều lần thử.")
 
-def generate_char_rules_string(profiles, is_sales_mode=False):
+def generate_char_rules_string(profiles):
     if not profiles:
         return "2. KHÓA ĐA NHÂN VẬT: Không có nhân vật cụ thể tham chiếu."
         
-    if is_sales_mode:
-        outfit_rule = "wearing the exact same outfit"
-        outfit_desc = "TRANG PHỤC ĐỒNG NHẤT 100%: Thể loại Bán Hàng yêu cầu bắt buộc nhân vật mặc ĐÚNG MỘT BỘ QUẦN ÁO DUY NHẤT từ đầu đến cuối video."
-    else:
-        outfit_rule = "wearing [mô tả trang phục tiếng Anh hợp bối cảnh]"
-        outfit_desc = "TRANG PHỤC LINH HOẠT: AI tự động phân tích và mô tả trang phục thay đổi hợp lý theo thời gian/bối cảnh (vd: đồ ngủ ở nhà, vest đi làm)."
-
-    rules = f"2. KHÓA KHUÔN MẶT (FACE IDENTITY ANCHOR) VÀ {outfit_desc}\n   - Người dùng đã cung cấp ảnh các nhân vật cụ thể. Trong mọi `image_prompt` và `video_prompt`, bạn PHẢI phân vai và gọi tên tiếng Anh chính xác kèm lệnh khóa ảnh tham chiếu như sau:\n"
+    rules = "2. KHÓA KHUÔN MẶT KOC VÀ ĐỒNG NHẤT TRANG PHỤC THEO TỪNG KỊCH BẢN:\n   - NGƯỜI DÙNG đã cung cấp ảnh các nhân vật. Bạn PHẢI phân vai tiếng Anh chính xác kèm lệnh khóa như sau:\n"
     for p in profiles:
-        rules += f"     + Nhân vật số {p['id']}: Đóng vai trò '{p['role']}'. Bắt buộc viết lệnh tiếng Anh là: 'Character {p['id']} ({p['role']}) {outfit_rule} and featuring the exact identity of reference image {p['id']}'.\n"
+        rules += f"     + Nhân vật {p['id']}: Đóng vai '{p['role']}'. Lệnh bắt buộc: 'Character {p['id']} ({p['role']}) wearing [trang_phục_đã_chọn_cho_kịch_bản_này] and featuring the exact identity of reference image {p['id']}'.\n"
     rules += "   - KHUÔN MẶT: Bắt buộc dùng lệnh 'featuring the exact identity of reference image X' để AI không tự chế mặt.\n"
+    rules += "   - TRANG PHỤC LINH HOẠT THEO BỐI CẢNH KỊCH BẢN: App sẽ tự động thiết lập 1 bộ trang phục (script_outfit_setup) phù hợp nhất với bối cảnh của TỪNG kịch bản (ví dụ kịch bản ở kho thì mặc đồ công nhân, ở showroom thì mặc đồ quản lý). Tuy nhiên, bộ trang phục này sẽ được ĐỒNG NHẤT khóa cứng xuyên suốt tất cả các phân cảnh bên trong kịch bản đó để nhân vật không bị thay quần áo loạn xạ giữa video."
     return rules
 
 def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float):
@@ -558,17 +552,18 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
         else:
             extra_rules = "- Khai thác sâu khía cạnh cảm xúc, trải nghiệm thực tế gia đình/giáo dục."
             
-        char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []), is_sales_mode)
+        char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []))
             
         prompt_more = f"""
         DỮ LIỆU SẢN PHẨM GỐC (DNA): {json.dumps(dna_data, ensure_ascii=False)}
         Ghi chú từ người dùng: "{product_ctx}"
         
         Dựa trên thông tin SẢN PHẨM GỐC (DNA) ở trên và kết quả phân tích DNA đã thực hiện cho thể loại '{current_mode}' phong cách '{current_style}'.
-        Hãy tạo thêm đúng 5 kịch bản mới (id từ {cur_len + 1} đến {cur_len + 5}) với các key: id, title, setting_style, angle, target_hook, recommended_scenes_count, voice_profile.
+        Hãy tạo thêm đúng 5 kịch bản mới (id từ {cur_len + 1} đến {cur_len + 5}) với các key: id, title, setting_style, script_outfit_setup, angle, target_hook, recommended_scenes_count, voice_profile.
         
         QUY ĐỊNH BẮT BUỘC CHO KỊCH BẢN MỚI:
         {extra_rules}
+        - Thêm key 'script_outfit_setup': Ghi rõ 1 câu miêu tả trang phục nhân vật phù hợp với bối cảnh của kịch bản này (vd: Áo thun năng động, Vest công sở...). Bộ đồ này sẽ dùng xuyên suốt kịch bản.
         Xuất JSON chuẩn với key 'script_outlines'.
         """
         try:
@@ -603,17 +598,15 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         fixed_tone = v_profile.get("tone", "Truyền cảm chuyên nghiệp")
     else:
         fixed_gender, fixed_tone = "Nữ", "Truyền cảm"
+        
+    outfit_setup = outline.get("script_outfit_setup", "casual everyday outfit")
     
     total_sec = int(target_duration_mins * 60)
     if target_duration_mins <= 0.5:
         total_sec = 30
         
     duration_str = f"{total_sec}s ({target_duration_mins} phút)" if target_duration_mins > 0.5 else "24s - 35s (Chuyển đổi bán hàng)"
-    
-    is_sales_mode = "Bán Hàng" in current_mode
-    char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []), is_sales_mode)
-    
-    outfit_prompt_instruction = "'Character X... wearing the exact same outfit and featuring the exact identity of reference image X'" if is_sales_mode else "'Character X... wearing [context outfit] and featuring the exact identity of reference image X'"
+    char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []))
     
     with st.spinner(f"🎬 Đang dựng chi tiết cảnh quay #{target_id} (Thời lượng: {duration_str} | Giọng cố định: {fixed_gender})..."):
         prompt_detail = f"""
@@ -621,22 +614,22 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         Thể loại nội dung: "{current_mode}" | Mục tiêu chiến dịch: "{goal}" | Tỷ lệ khung hình: "{aspect_ratio}"
         Ý tưởng kịch bản: ID {target_id} - {outline.get('title')}
         Bối cảnh định hướng: {outline.get('setting_style')} | Góc tiếp cận: {outline.get('angle')} | Hook: {outline.get('target_hook')}
+        TRANG PHỤC CỐ ĐỊNH CHO KỊCH BẢN NÀY: {outfit_setup}
         
         QUY ĐỊNH ĐẠO DIỄN & LÊN PROMPT TIẾNG ANH (BẮT BUỘC):
         1. KHÓA CỨNG GIỚI TÍNH & TÔNG GIỌNG THUYẾT MINH: Sử dụng 100% giọng đọc của **{fixed_gender}** với tông giọng **{fixed_tone}**.
         2. PHÂN RÃ THỜI LƯỢNG CỰC KỲ KHẮT KHE: Tổng thời lượng khớp chính xác {total_sec} giây. Mỗi phân cảnh CHỈ ĐƯỢC PHÉP chọn 1 trong 3 mức thời lượng: 4s, 6s hoặc 8s. 
-        3. QUY TRÌNH MÔ TẢ SẢN PHẨM & TỶ LỆ KÍCH THƯỚC: TUYỆT ĐỐI KHÔNG phóng to sản phẩm. BẮT BUỘC DÙNG: "using the exact same colors and textures as the reference image, maintaining realistic scale and true-to-life proportions, keeping exact product logo and text".
-        4. KHUÔN MẶT & TRANG PHỤC: Dùng tên 'Character X'. 
-           - NẾU LÀ VIDEO BÁN HÀNG: Ép buộc thêm cụm 'wearing the exact same outfit' cho mọi cảnh để quần áo không đổi.
-           - NẾU KHÔNG PHẢI BÁN HÀNG: Mô tả trang phục hợp logic bối cảnh hiện tại.
-           - LUÔN LUÔN ép buộc lệnh 'featuring the exact identity of reference image X' để khóa khuôn mặt.
-        5. MÀN HÌNH SẠCH RÁC: Tuyệt đối không sinh ra chữ lơ lửng hay phụ đề (`no floating text, clean background`).
+        3. QUY TRÌNH TRANG PHỤC & KHUÔN MẶT: Dùng tên 'Character X'. BẮT BUỘC áp dụng trang phục được quy định cho kịch bản này là: "{outfit_setup}" cho TẤT CẢ các phân cảnh có mặt nhân vật để đảm bảo tính đồng nhất 100%. Luôn kèm lệnh 'featuring the exact identity of reference image X'.
+        4. QUY TRÌNH LOGO & TỶ LỆ SẢN PHẨM: TUYỆT ĐỐI KHÔNG phóng to sản phẩm. BẮT BUỘC DÙNG: "using the exact same colors and textures as the reference image, maintaining realistic scale and true-to-life proportions, keeping exact product logo and text".
+        5. ĐỒNG BỘ GIỌNG ĐỌC NGOÀI HÌNH (GHOST VOICE PREVENTION): Kể cả khi cảnh quay chỉ quay cận cảnh sản phẩm (nhân vật không lên hình), vẫn phải ghi rõ trong video_prompt là giọng đọc của CÙNG MỘT nhân vật đó (off-screen narrator) để tránh tình trạng giọng bị biến thành máy đọc phim tài liệu.
+        6. MÀN HÌNH SẠCH RÁC: Tuyệt đối không sinh ra chữ lơ lửng hay phụ đề (`no floating text, clean background`).
         
         Xuất chuẩn 1 Dict JSON duy nhất:
         {{
           "id": {target_id}, 
           "title": "{outline.get('title')}", 
           "setting_style": "{outline.get('setting_style')}",
+          "script_outfit_setup": "{outfit_setup}",
           "voice_profile": {{"gender": "{fixed_gender}", "tone": "{fixed_tone}"}},
           "total_estimated_duration": "{duration_str}",
           "scenes": [
@@ -645,10 +638,10 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
               "duration": "6s", 
               "scene_setting": "Bối cảnh chi tiết", 
               "transition_type": "Cắt cứng dồn dập (Hard Cut)", 
-              "voice_director_vn": "Giọng {fixed_gender} miền Bắc: {fixed_tone} và truyền cảm...", 
+              "voice_director_vn": "Giọng {fixed_gender} miền Bắc: {fixed_tone}...", 
               "voiceover_vi": "Lời thuyết minh tiếng Việt", 
-              "image_prompt": "Prompt Imagen 3 (tiếng Anh, {aspect_ratio}). Nếu có nhân vật phải gán rõ {outfit_prompt_instruction}. Kèm lệnh mô tả sản phẩm 'using the exact same colors and textures as the reference image, keeping exact product logo and text, maintaining realistic scale and true-to-life proportions', no floating text", 
-              "video_prompt": "Prompt Veo 3 (tiếng Anh). Áp dụng quy tắc nhân vật, trang phục, sản phẩm chân thực như trên. Kèm audio: professional voiceover narration in Northern Vietnamese read by a {fixed_gender} speaker with {fixed_tone} tone, reading [voiceover_vi]"
+              "image_prompt": "Prompt Imagen 3 (tiếng Anh). Nếu có nhân vật phải gán rõ 'Character X... wearing {outfit_setup} and featuring the exact identity of reference image X'. Kèm lệnh mô tả sản phẩm 'using the exact same colors and textures... maintaining realistic scale, keeping exact product logo', no floating text", 
+              "video_prompt": "Prompt Veo 3 (tiếng Anh). Kèm audio: consistent voiceover by the exact same {fixed_gender} character with {fixed_tone} tone (even if acting as off-screen narrator), reading [voiceover_vi]"
             }}
           ]
         }}
@@ -673,8 +666,7 @@ def clone_script_id(target_id, current_mode, current_style, aspect_ratio, goal, 
             target_script = st.session_state.generated_details[target_id]
             all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
             cur_len = len(all_sources)
-            is_sales_mode = "Bán Hàng" in current_mode
-            char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []), is_sales_mode)
+            char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []))
             
             p_clone = f"Dựa trên kịch bản: {json.dumps(target_script, ensure_ascii=False)}. Tạo đúng 5 biến thể mới (id từ {cur_len+1} đến {cur_len+5}). Xuất JSON key 'cloned_outlines'."
             sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str)
@@ -763,7 +755,7 @@ with col_goal:
     
     if is_sales:
         content_goal = "Chuyển đổi đơn hàng & Chốt Sale trực tiếp (Sales & Conversion)"
-        st.info("💡 **Chế độ Bán Hàng:** 24s-35s (4-6 phân cảnh), trang phục đồng nhất 100%.")
+        st.info("💡 **Chế độ Bán Hàng:** 24s-35s (4-6 phân cảnh), trang phục đồng bộ theo kịch bản.")
     elif is_corporate:
         content_goal_options = [
             "Kể chuyện dài tập / Phim tài liệu thương hiệu (Corporate Documentary)",
@@ -846,7 +838,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
             st.session_state.character_profiles = profiles_to_save
             
             st.session_state.current_input_context = input_text.strip() if input_text else "Phân tích trực tiếp từ hình ảnh đính kèm sản phẩm/dự án."
-            char_rules_str = generate_char_rules_string(profiles_to_save, is_sales)
+            char_rules_str = generate_char_rules_string(profiles_to_save)
             
             if is_sales:
                 specific_rules = """
@@ -862,6 +854,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "id": 1,
                       "title": "Tên kịch bản (Xả kho / Deal sốc)",
                       "setting_style": "Bối cảnh: Kho hàng / Xưởng / Showroom",
+                      "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật phù hợp bối cảnh kho/xưởng",
                       "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
                       "target_hook": "Câu mở đầu giật gân chốt đơn (Không đưa giá cụ thể)",
                       "recommended_scenes_count": "5",
@@ -871,6 +864,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "id": 2,
                       "title": "Tên kịch bản 2",
                       "setting_style": "Bối cảnh: Kho hàng / Xưởng / Showroom",
+                      "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật phù hợp bối cảnh",
                       "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
@@ -880,6 +874,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "id": 3,
                       "title": "Tên kịch bản 3",
                       "setting_style": "Bối cảnh: Kho hàng / Xưởng / Showroom",
+                      "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật phù hợp bối cảnh",
                       "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
@@ -889,6 +884,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "id": 4,
                       "title": "Tên kịch bản 4",
                       "setting_style": "Bối cảnh: Kho hàng / Xưởng / Showroom",
+                      "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật phù hợp bối cảnh",
                       "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
@@ -898,6 +894,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "id": 5,
                       "title": "Tên kịch bản 5",
                       "setting_style": "Bối cảnh: Kho hàng / Xưởng / Showroom",
+                      "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật phù hợp bối cảnh",
                       "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
@@ -916,6 +913,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "id": 1,
                       "title": "Tên kịch bản 1",
                       "setting_style": "Bối cảnh định hướng",
+                      "script_outfit_setup": "Mô tả 1 bộ trang phục công sở",
                       "angle": "Góc tiếp cận chuyển đổi",
                       "target_hook": "Câu mở đầu thu hút",
                       "recommended_scenes_count": "5",
@@ -925,6 +923,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "id": 2,
                       "title": "Tên kịch bản 2",
                       "setting_style": "Bối cảnh",
+                      "script_outfit_setup": "Mô tả 1 bộ trang phục",
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
@@ -934,6 +933,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "id": 3,
                       "title": "Tên kịch bản 3",
                       "setting_style": "Bối cảnh",
+                      "script_outfit_setup": "Mô tả 1 bộ trang phục",
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
@@ -943,6 +943,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "id": 4,
                       "title": "Tên kịch bản 4",
                       "setting_style": "Bối cảnh",
+                      "script_outfit_setup": "Mô tả 1 bộ trang phục",
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
@@ -952,6 +953,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "id": 5,
                       "title": "Tên kịch bản 5",
                       "setting_style": "Bối cảnh",
+                      "script_outfit_setup": "Mô tả 1 bộ trang phục",
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
@@ -970,6 +972,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "id": 1,
                       "title": "Tên kịch bản 1",
                       "setting_style": "Bối cảnh định hướng",
+                      "script_outfit_setup": "Mô tả trang phục phù hợp",
                       "angle": "Góc tiếp cận chuyển đổi",
                       "target_hook": "Câu mở đầu thu hút",
                       "recommended_scenes_count": "5",
@@ -979,6 +982,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "id": 2,
                       "title": "Tên kịch bản 2",
                       "setting_style": "Bối cảnh",
+                      "script_outfit_setup": "Mô tả trang phục phù hợp",
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
@@ -988,6 +992,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "id": 3,
                       "title": "Tên kịch bản 3",
                       "setting_style": "Bối cảnh",
+                      "script_outfit_setup": "Mô tả trang phục phù hợp",
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
@@ -997,6 +1002,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "id": 4,
                       "title": "Tên kịch bản 4",
                       "setting_style": "Bối cảnh",
+                      "script_outfit_setup": "Mô tả trang phục phù hợp",
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
@@ -1006,6 +1012,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "id": 5,
                       "title": "Tên kịch bản 5",
                       "setting_style": "Bối cảnh",
+                      "script_outfit_setup": "Mô tả trang phục phù hợp",
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
@@ -1166,9 +1173,10 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
 
     script_title = active_script.get('title', 'Kịch bản chi tiết') if isinstance(active_script, dict) else 'Kịch bản chi tiết'
     total_dur = active_script.get('total_estimated_duration', '24s') if isinstance(active_script, dict) else '24s'
+    outfit_setup_text = active_script.get('script_outfit_setup', 'Đồng phục bối cảnh')
 
     st.markdown(f"### 🎬 **KỊCH BẢN CHI TIẾT: {str(script_title).upper()}**")
-    st.info(f"⏱️ Tổng thời lượng: **{total_dur}** | 🎙️ Giọng thuyết minh: **Giọng {vp.get('gender', 'Nữ')} ({vp.get('tone', 'Truyền cảm')})** | 📐 Khung hình: **{selected_aspect}**")
+    st.info(f"⏱️ Thời lượng: **{total_dur}** | 🎙️ Giọng: **{vp.get('gender', 'Nữ')} ({vp.get('tone', 'Truyền cảm')})** | 👔 Trang phục: **{outfit_setup_text}** | 📐 Khung hình: **{selected_aspect}**")
 
     scenes_list = active_script.get("scenes", []) if isinstance(active_script, dict) else []
     if isinstance(scenes_list, dict): scenes_list = [scenes_list]
