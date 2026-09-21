@@ -118,8 +118,13 @@ st.markdown("""
         text-align: center;
         margin-top: 15px;
     }
-    [data-testid="stFileUploader"] { padding: 0px !important; }
-    [data-testid="stFileUploader"] > section { padding: 8px !important; }
+    /* Compact File Uploader in grid */
+    [data-testid="stFileUploader"] {
+        padding: 0px !important;
+    }
+    [data-testid="stFileUploader"] > section {
+        padding: 8px !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -133,6 +138,7 @@ client = genai.Client(api_key=api_key)
 ACCOUNTS_FILE = "accounts.json"
 ADMIN_EMAIL = "binhnguyenmedia.vn@gmail.com"
 
+# Danh sách Modun Hệ thống
 ALL_MODULES = [
     "🛒 TikTok Shop & Bán Hàng", "👶 Mẹ & Bé & Cùng Con Học (Viral Parenting)", "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp",
     "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan", "🌿 Du Lịch & Phong Cảnh Đất Nước", "🚗 Xe Cộ & Trải Nghiệm Lái",
@@ -498,7 +504,7 @@ MỤC TIÊU CHIẾN DỊCH: {goal}
 1. QUY TẮC QUỐC TỊCH: Nếu có con người chung chung, BẮT BUỘC chèn "Vietnamese" (Ví dụ: Vietnamese grandfather, Vietnamese mother). Tuyệt đối không để chung chung.
 {char_rules}
 3. MÀN HÌNH SẠCH & GIỮ NGUYÊN LOGO SẢN PHẨM: Tuyệt đối không sinh ra chữ, phụ đề hay watermark rác xung quanh ('no floating text, no subtitles, clean background'). NHƯNG BẮT BUỘC phải giữ nguyên chính xác logo và các dòng chữ có sẵn trên bản thân sản phẩm ('keep exact product logo and typography from reference image').
-4. KHÓA MÀU SẢN PHẨM & VẬT LÝ ĐẶC THÙ: Bắt buộc dùng lệnh "using the exact same colors and textures as the reference image" trong mọi prompt tạo ảnh và video để mô tả sản phẩm/vật thể chính. TUYỆT ĐỐI KHÔNG tự bịa tên màu.
+4. KHÓA MÀU SẮC & TỶ LỆ KÍCH THƯỚC THỰC TẾ: Bắt buộc dùng lệnh "using the exact same colors and textures as the reference image, maintaining realistic scale and true-to-life proportions, keeping exact product logo and text" để mô tả sản phẩm. TUYỆT ĐỐI KHÔNG phóng to sản phẩm sai tỷ lệ thực tế.
 5. CHUYỂN CẢNH THÔNG MINH (SMART TRANSITIONS): Cắt cứng dồn dập (Hard Cut) hoặc Chuyển cảnh khớp hành động mượt mà (Match Cut).
 {voiceover_instruction}
 """
@@ -589,14 +595,14 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     
     v_profile = outline.get("voice_profile", {})
     if isinstance(v_profile, str):
-        fixed_gender, fixed_tone = "Nam", v_profile
+        fixed_gender, fixed_tone = "Nữ", v_profile
     elif isinstance(v_profile, dict):
-        fixed_gender = v_profile.get("gender", "Nam")
+        fixed_gender = v_profile.get("gender", "Nữ")
         if "hay Nữ" in fixed_gender or "xác định" in fixed_gender.lower() or not fixed_gender.strip():
-            fixed_gender = "Nữ" # Default fallback if AI failed to decide
+            fixed_gender = "Nữ" 
         fixed_tone = v_profile.get("tone", "Truyền cảm chuyên nghiệp")
     else:
-        fixed_gender, fixed_tone = "Nam", "Truyền cảm"
+        fixed_gender, fixed_tone = "Nữ", "Truyền cảm"
     
     total_sec = int(target_duration_mins * 60)
     if target_duration_mins <= 0.5:
@@ -619,13 +625,12 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         QUY ĐỊNH ĐẠO DIỄN & LÊN PROMPT TIẾNG ANH (BẮT BUỘC):
         1. KHÓA CỨNG GIỚI TÍNH & TÔNG GIỌNG THUYẾT MINH: Sử dụng 100% giọng đọc của **{fixed_gender}** với tông giọng **{fixed_tone}**.
         2. PHÂN RÃ THỜI LƯỢNG CỰC KỲ KHẮT KHE: Tổng thời lượng khớp chính xác {total_sec} giây. Mỗi phân cảnh CHỈ ĐƯỢC PHÉP chọn 1 trong 3 mức thời lượng: 4s, 6s hoặc 8s. 
-        3. VỀ GIÁ BÁN (Nếu có): TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ.
-        4. QUY TRÌNH MÔ TẢ SẢN PHẨM: TUYỆT ĐỐI KHÔNG ĐƯỢC CHỨA TÊN MÀU SẮC. BẮT BUỘC DÙNG: "using the exact same colors and textures as the reference image".
-        5. KHUÔN MẶT & TRANG PHỤC: Dùng tên 'Character X'. 
+        3. QUY TRÌNH MÔ TẢ SẢN PHẨM & TỶ LỆ KÍCH THƯỚC: TUYỆT ĐỐI KHÔNG phóng to sản phẩm. BẮT BUỘC DÙNG: "using the exact same colors and textures as the reference image, maintaining realistic scale and true-to-life proportions, keeping exact product logo and text".
+        4. KHUÔN MẶT & TRANG PHỤC: Dùng tên 'Character X'. 
            - NẾU LÀ VIDEO BÁN HÀNG: Ép buộc thêm cụm 'wearing the exact same outfit' cho mọi cảnh để quần áo không đổi.
            - NẾU KHÔNG PHẢI BÁN HÀNG: Mô tả trang phục hợp logic bối cảnh hiện tại.
            - LUÔN LUÔN ép buộc lệnh 'featuring the exact identity of reference image X' để khóa khuôn mặt.
-        6. MÀN HÌNH SẠCH RÁC: Tuyệt đối không sinh ra chữ lơ lửng hay phụ đề (`no floating text, clean background`). CHỈ giữ lại chữ in trên bản thân sản phẩm.
+        5. MÀN HÌNH SẠCH RÁC: Tuyệt đối không sinh ra chữ lơ lửng hay phụ đề (`no floating text, clean background`).
         
         Xuất chuẩn 1 Dict JSON duy nhất:
         {{
@@ -642,8 +647,8 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
               "transition_type": "Cắt cứng dồn dập (Hard Cut)", 
               "voice_director_vn": "Giọng {fixed_gender} miền Bắc: {fixed_tone} và truyền cảm...", 
               "voiceover_vi": "Lời thuyết minh tiếng Việt", 
-              "image_prompt": "Prompt Imagen 3 (tiếng Anh, {aspect_ratio}). Nếu có nhân vật phải gán rõ {outfit_prompt_instruction}. Kèm lệnh mô tả sản phẩm 'using the exact same colors and textures as the reference image, keeping exact product logo and text', no floating text", 
-              "video_prompt": "Prompt Veo 3 (tiếng Anh). Áp dụng quy tắc nhân vật, trang phục, sản phẩm và logo như trên. Kèm audio: professional voiceover narration in Northern Vietnamese read by a {fixed_gender} speaker with {fixed_tone} tone, reading [voiceover_vi]"
+              "image_prompt": "Prompt Imagen 3 (tiếng Anh, {aspect_ratio}). Nếu có nhân vật phải gán rõ {outfit_prompt_instruction}. Kèm lệnh mô tả sản phẩm 'using the exact same colors and textures as the reference image, keeping exact product logo and text, maintaining realistic scale and true-to-life proportions', no floating text", 
+              "video_prompt": "Prompt Veo 3 (tiếng Anh). Áp dụng quy tắc nhân vật, trang phục, sản phẩm chân thực như trên. Kèm audio: professional voiceover narration in Northern Vietnamese read by a {fixed_gender} speaker with {fixed_tone} tone, reading [voiceover_vi]"
             }}
           ]
         }}
@@ -848,7 +853,8 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                 1. Về Giá cả: TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ. Chỉ sử dụng: "giá tận xưởng", "deal sốc giới hạn".
                 2. BẮT BUỘC 5 KỊCH BẢN ĐẦU TIÊN: Phải xoay quanh các chủ đề: Xả kho, Giảm giá, Deal sốc, Siêu sale.
                 3. BỐI CẢNH BẮT BUỘC: 5 kịch bản này phải diễn ra tại: Kho hàng, Xưởng sản xuất, hoặc Showroom trưng bày. Không làm bối cảnh lifestyle.
-                4. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Phân tích ảnh KOC tải lên. Nếu là nữ, trường 'gender' trong 'voice_profile' PHẢI điền chính xác chữ 'Nữ'. Nếu là nam, điền 'Nam'. Không ghi chú giải thích dài dòng.
+                4. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Dựa vào ảnh NHÂN VẬT THAM CHIẾU (KOC/KOL) tải lên, bắt buộc tự động nhận diện chính xác giới tính là Nam hay Nữ để điền vào mục 'gender' của 'voice_profile' và gán đúng giới tính vào vai diễn. Tuyệt đối không để chung chung Nam/Nữ.
+                5. KÍCH THƯỚC THỰC TẾ: Ước lượng chính xác kích thước thật của sản phẩm từ ảnh để AI không phóng to sai sự thật.
                 """
                 script_outlines_json = """
                   "script_outlines": [
@@ -1018,12 +1024,12 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
             BẮT BUỘC TRẢ VỀ ĐỊNH DẠNG JSON CHUẨN GỒM CÁC KEY SAU:
             {{
               "content_analysis": {{
-                "mechanical_and_accessories": "Mô tả vật thể, thiết kế, quy mô (Không gọi tên màu sắc cụ thể).",
+                "mechanical_and_accessories": "Mô tả vật thể, thiết kế, quy mô, KÍCH THƯỚC THỰC TẾ (tương quan với người/cảnh để tránh phóng to). (Không gọi tên màu sắc cụ thể).",
                 "customer_pain_points": "Phân tích 3 tầng nỗi đau hoặc thách thức thực trạng.",
                 "core_desires": "Mong muốn cốt lõi / Sứ mệnh.",
                 "emotional_or_usp_hook": "Slogan, USP độc quyền.",
                 "visual_physics_rules": "Quy chuẩn vật lý khi chuyển động, ánh sáng.",
-                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ toàn bộ video. Bắt buộc có lệnh màu sắc 'using the exact same colors and textures as the reference image'."
+                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ toàn bộ video. Bắt buộc có lệnh màu sắc 'using the exact same colors and textures as the reference image, maintaining realistic scale and true-to-life proportions'."
               }},
               {script_outlines_json}
             }}
