@@ -177,7 +177,6 @@ for key, default_val in [
     if key not in st.session_state:
         st.session_state[key] = default_val
 
-# Hàm ép cuộn trang lên đầu an toàn với mã định danh động (chống cache)
 if st.session_state.scroll_to_top:
     components.html(f"""
         <script>
@@ -489,7 +488,7 @@ MỤC TIÊU CHIẾN DỊCH: {goal}
 {master_director_directive}
 
 🛑 QUY TẮC BẮT BUỘC 100% (KHÔNG ĐƯỢC VI PHẠM):
-1. KHÓA CỨNG KHUÔN MẶT & VÓC DÁNG (IDENTITY ANCHOR): Nếu có nhân vật xuất hiện, 100% người Việt Nam, biểu cảm chân thực, hình thể chuẩn xác, giữ nguyên 100% qua mọi cảnh.
+1. KHÓA CỨNG QUỐC TỊCH & NHÂN VẬT (VIETNAMESE IDENTITY ANCHOR): Bất cứ khi nào tạo câu lệnh tiếng Anh cho `image_prompt` và `video_prompt` mà có sự xuất hiện của con người (dù là người thật hay nhân vật 3D/hoạt hình), BẮT BUỘC phải chèn thêm từ khóa "Vietnamese" (Ví dụ: Vietnamese baby, Vietnamese man, Vietnamese woman, Vietnamese family). Tuyệt đối không được dùng danh từ chung chung như "a baby", "a man" để tránh AI sinh ra người phương Tây.
 2. MÀN HÌNH SẠCH (ZERO TEXT LOCK): Trong mọi 'image_prompt', bắt buộc cài đặt lệnh chống chữ: 'no text, zero typography, clean screen, no watermarks, no logos'.
 3. KHÓA MÀU SẢN PHẨM & VẬT LÝ ĐẶC THÙ: Bắt buộc dùng lệnh "using the exact same colors and textures as the reference image" trong mọi prompt tạo ảnh và video. TUYỆT ĐỐI KHÔNG tự bịa hoặc gọi tên màu sắc cụ thể (như red, blue, pink, white, black...) để tránh làm sai lệch màu sắc thực tế của sản phẩm.
 4. CHUYỂN CẢNH THÔNG MINH (SMART TRANSITIONS): 
@@ -497,7 +496,6 @@ MỤC TIÊU CHIẾN DỊCH: {goal}
    - 'Chuyển cảnh khớp hành động mượt mà (Match Cut)': Dùng để nối tiếp không gian, hình khối uyển chuyển.
    - 'Chuyển cảnh bước ngoặt thời gian (Time-jump)': Dùng khi đổi bối cảnh lớn.
 5. CHIẾN LƯỢC GIỮ CHÂN NGƯỜI XEM (GOLDEN HOOK & RETENTION): Phân cảnh số 1 phải có hook giật gân, câu hỏi kích thích tò mò trong 3 giây đầu.
-6. KHẨU HÌNH & HÌNH ẢNH SẠCH: Hình ảnh tuyệt đối không chứa chữ thừa.
 {voiceover_instruction}
 """
     return base
@@ -544,7 +542,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
             for i, sc in enumerate(new_scripts): sc["id"] = cur_len + i + 1
             st.session_state.expanded_scripts.extend(new_scripts)
             st.session_state.scroll_to_top = True
-            st.success("✅ Đã bổ sung 5 kịch bản mới thành công!")
+            st.success("✅ Đã bổ sung 5 kịch bản mới bám sát sản phẩm & kho xưởng!")
             time.sleep(0.3)
             st.rerun()
         except Exception as e:
@@ -579,11 +577,12 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         Ý tưởng kịch bản: ID {target_id} - {outline.get('title')}
         Bối cảnh định hướng: {outline.get('setting_style')} | Góc tiếp cận: {outline.get('angle')} | Hook: {outline.get('target_hook')}
         
-        QUY ĐỊNH ĐẠO DIỄN & GIỌNG ĐỌC CỐ ĐỊNH (BẮT BUỘC):
-        1. KHÓA CỨNG GIỚI TÍNH & TÔNG GIỌNG THUYẾT MINH: Kịch bản này BẮT BUỘC sử dụng 100% giọng đọc của **{fixed_gender}** với tông giọng **{fixed_tone}** xuyên suốt qua MỌI PHÂN CẢNH. TUYỆT ĐỐI KHÔNG được phép đổi lẫn lộn giữa Nam và Nữ giữa các cảnh.
-        2. VỀ GIÁ BÁN (Nếu có đề cập): TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ (ví dụ: không dùng 100k, 50.000đ). Chỉ sử dụng: "giá xưởng", "deal sốc" hoặc không đề cập giá nếu là video Doanh nghiệp.
-        3. QUY TRÌNH TẠO PROMPT ẢNH VÀ VIDEO: Trong `image_prompt` và `video_prompt`, TUYỆT ĐỐI KHÔNG ĐƯỢC CHỨA TÊN MÀU SẮC DƯỚI DẠNG VĂN BẢN (ví dụ CẤM dùng từ: white, black, red, blue, pink, yellow, green...). BẮT BUỘC PHẢI DÙNG cụm từ: "using the exact same colors and textures as the reference image" để AI đồng bộ màu từ ảnh đính kèm.
-        4. MÀN HÌNH SẠCH: Ảnh sạch tuyệt đối (`no text, clean screen`).
+        QUY ĐỊNH ĐẠO DIỄN & LÊN PROMPT TIẾNG ANH (BẮT BUỘC):
+        1. KHÓA CỨNG GIỚI TÍNH & TÔNG GIỌNG THUYẾT MINH: Kịch bản BẮT BUỘC sử dụng 100% giọng đọc của **{fixed_gender}** với tông giọng **{fixed_tone}** xuyên suốt.
+        2. VỀ GIÁ BÁN (Nếu có đề cập): TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ (ví dụ: không dùng 100k, 50.000đ). Chỉ sử dụng: "giá xưởng", "deal sốc" hoặc không đề cập.
+        3. QUY TRÌNH TẠO PROMPT ẢNH VÀ VIDEO: TUYỆT ĐỐI KHÔNG ĐƯỢC CHỨA TÊN MÀU SẮC DƯỚI DẠNG VĂN BẢN (white, black, red, blue, pink, yellow, green...). BẮT BUỘC PHẢI DÙNG: "using the exact same colors and textures as the reference image".
+        4. KHÓA QUỐC TỊCH NHÂN VẬT (CỰC KỲ QUAN TRỌNG): Trong `image_prompt` và `video_prompt` (tiếng Anh), nếu có con người xuất hiện (dù là đời thực hay nhân vật hoạt hình 3D), BẮT BUỘC phải chèn từ khóa "Vietnamese" (Ví dụ: Vietnamese baby, Vietnamese man, Vietnamese woman) để AI luôn tạo ra đặc điểm khuôn mặt người Việt Nam. KHÔNG để chung chung.
+        5. MÀN HÌNH SẠCH: Ảnh sạch tuyệt đối (`no text, clean screen`).
         
         Xuất chuẩn 1 Dict JSON duy nhất:
         {{
@@ -600,8 +599,8 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
               "transition_type": "Cắt cứng dồn dập (Hard Cut) hoặc Chuyển cảnh khớp hành động mượt mà (Match Cut)", 
               "voice_director_vn": "Chỉ đạo ngữ điệu thuyết minh miền Bắc ({fixed_gender})", 
               "voiceover_vi": "Lời thuyết minh tiếng Việt chuẩn miền Bắc dẫn dắt cảnh quay", 
-              "image_prompt": "Prompt Imagen 3 ({aspect_ratio}) hiển thị không gian/sự vật chân thực, sử dụng lệnh 'using the exact same colors and textures as the reference image', màn hình sạch, no text, clean screen", 
-              "video_prompt": "Prompt Veo 3 miêu tả chuyển động điện ảnh, kèm chỉ định audio: professional voiceover narration in Northern Vietnamese read by a {fixed_gender} speaker with {fixed_tone} tone, reading [voiceover_vi]"
+              "image_prompt": "Prompt Imagen 3 (tiếng Anh, {aspect_ratio}) miêu tả chi tiết bối cảnh, NẾU CÓ NGƯỜI BẮT BUỘC GHI RÕ 'Vietnamese' (vd: a Vietnamese baby, a Vietnamese man), sử dụng lệnh 'using the exact same colors and textures as the reference image', màn hình sạch, no text, clean screen", 
+              "video_prompt": "Prompt Veo 3 (tiếng Anh) miêu tả chuyển động điện ảnh, NẾU CÓ NGƯỜI BẮT BUỘC GHI RÕ 'Vietnamese', kèm chỉ định audio: professional voiceover narration in Northern Vietnamese read by a {fixed_gender} speaker with {fixed_tone} tone, reading [voiceover_vi]"
             }}
           ]
         }}
