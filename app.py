@@ -488,9 +488,9 @@ MỤC TIÊU CHIẾN DỊCH: {goal}
 {master_director_directive}
 
 🛑 QUY TẮC BẮT BUỘC 100% (KHÔNG ĐƯỢC VI PHẠM):
-1. KHÓA CỨNG QUỐC TỊCH & NHÂN VẬT (VIETNAMESE IDENTITY ANCHOR): Bất cứ khi nào tạo câu lệnh tiếng Anh cho `image_prompt` và `video_prompt` mà có sự xuất hiện của con người (dù là người thật hay nhân vật 3D/hoạt hình), BẮT BUỘC phải chèn thêm từ khóa "Vietnamese" (Ví dụ: Vietnamese baby, Vietnamese man, Vietnamese woman, Vietnamese family). Tuyệt đối không được dùng danh từ chung chung như "a baby", "a man" để tránh AI sinh ra người phương Tây.
+1. KHÓA CỨNG QUỐC TỊCH & KHUÔN MẶT NHÂN VẬT (IDENTITY & KOC ANCHOR): Nếu có nhân vật xuất hiện, BẮT BUỘC chèn "Vietnamese" (Ví dụ: Vietnamese baby, Vietnamese man, Vietnamese woman). Đồng thời NẾU có ảnh nhân vật tham chiếu, phải BẮT BUỘC chèn cụm từ "featuring the exact same facial features and identity as the character reference image" để giữ nguyên khuôn mặt nhân vật KOC qua mọi cảnh. Tuyệt đối không được dùng danh từ chung chung như "a baby", "a man" để tránh AI sinh ra người phương Tây.
 2. MÀN HÌNH SẠCH (ZERO TEXT LOCK): Trong mọi 'image_prompt', bắt buộc cài đặt lệnh chống chữ: 'no text, zero typography, clean screen, no watermarks, no logos'.
-3. KHÓA MÀU SẢN PHẨM & VẬT LÝ ĐẶC THÙ: Bắt buộc dùng lệnh "using the exact same colors and textures as the reference image" trong mọi prompt tạo ảnh và video. TUYỆT ĐỐI KHÔNG tự bịa hoặc gọi tên màu sắc cụ thể (như red, blue, pink, white, black...) để tránh làm sai lệch màu sắc thực tế của sản phẩm.
+3. KHÓA MÀU SẢN PHẨM & VẬT LÝ ĐẶC THÙ: Bắt buộc dùng lệnh "using the exact same colors and textures as the reference image" trong mọi prompt tạo ảnh và video để mô tả sản phẩm. TUYỆT ĐỐI KHÔNG tự bịa hoặc gọi tên màu sắc cụ thể của sản phẩm (như red, blue, pink, white, black...) để tránh làm sai lệch màu sắc thực tế của sản phẩm.
 4. CHUYỂN CẢNH THÔNG MINH (SMART TRANSITIONS): 
    - 'Cắt cứng dồn dập (Hard Cut)': Dùng cho hành động nhanh, dồn dập.
    - 'Chuyển cảnh khớp hành động mượt mà (Match Cut)': Dùng để nối tiếp không gian, hình khối uyển chuyển.
@@ -529,7 +529,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
             extra_rules = "- Khai thác sâu khía cạnh cảm xúc, trải nghiệm thực tế và giá trị mang lại cho người dùng."
             
         prompt_more = f"""
-        Dựa trên sản phẩm/dịch vụ: "{product_ctx}" và kết quả phân tích DNA đã thực hiện cho thể loại '{current_mode}' phong cách '{current_style}'.
+        Dựa trên thông tin: "{product_ctx}" và kết quả phân tích DNA đã thực hiện cho thể loại '{current_mode}' phong cách '{current_style}'.
         Hãy tạo thêm đúng 5 kịch bản mới (id từ {cur_len + 1} đến {cur_len + 5}) với các key: id, title, setting_style, angle, target_hook, recommended_scenes_count, voice_profile.
         
         QUY ĐỊNH BẮT BUỘC CHO KỊCH BẢN MỚI:
@@ -542,7 +542,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
             for i, sc in enumerate(new_scripts): sc["id"] = cur_len + i + 1
             st.session_state.expanded_scripts.extend(new_scripts)
             st.session_state.scroll_to_top = True
-            st.success("✅ Đã bổ sung 5 kịch bản mới bám sát sản phẩm & kho xưởng!")
+            st.success("✅ Đã bổ sung 5 kịch bản mới bám sát DNA gốc!")
             time.sleep(0.3)
             st.rerun()
         except Exception as e:
@@ -580,8 +580,8 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         QUY ĐỊNH ĐẠO DIỄN & LÊN PROMPT TIẾNG ANH (BẮT BUỘC):
         1. KHÓA CỨNG GIỚI TÍNH & TÔNG GIỌNG THUYẾT MINH: Kịch bản BẮT BUỘC sử dụng 100% giọng đọc của **{fixed_gender}** với tông giọng **{fixed_tone}** xuyên suốt.
         2. VỀ GIÁ BÁN (Nếu có đề cập): TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ (ví dụ: không dùng 100k, 50.000đ). Chỉ sử dụng: "giá xưởng", "deal sốc" hoặc không đề cập.
-        3. QUY TRÌNH TẠO PROMPT ẢNH VÀ VIDEO: TUYỆT ĐỐI KHÔNG ĐƯỢC CHỨA TÊN MÀU SẮC DƯỚI DẠNG VĂN BẢN (white, black, red, blue, pink, yellow, green...). BẮT BUỘC PHẢI DÙNG: "using the exact same colors and textures as the reference image".
-        4. KHÓA QUỐC TỊCH NHÂN VẬT (CỰC KỲ QUAN TRỌNG): Trong `image_prompt` và `video_prompt` (tiếng Anh), nếu có con người xuất hiện (dù là đời thực hay nhân vật hoạt hình 3D), BẮT BUỘC phải chèn từ khóa "Vietnamese" (Ví dụ: Vietnamese baby, Vietnamese man, Vietnamese woman) để AI luôn tạo ra đặc điểm khuôn mặt người Việt Nam. KHÔNG để chung chung.
+        3. QUY TRÌNH MÔ TẢ SẢN PHẨM: TUYỆT ĐỐI KHÔNG ĐƯỢC CHỨA TÊN MÀU SẮC DƯỚI DẠNG VĂN BẢN (white, black, red, blue, pink, yellow, green...). BẮT BUỘC PHẢI DÙNG lệnh: "using the exact same colors and textures as the reference image" để mô tả đối tượng chính/sản phẩm.
+        4. KHÓA NHÂN VẬT KOC (CỰC KỲ QUAN TRỌNG): Trong `image_prompt` và `video_prompt` (tiếng Anh), nếu có con người xuất hiện, BẮT BUỘC phải chèn từ khóa "Vietnamese" HOẶC cụm từ "featuring the exact same facial features, hairstyle, and identity as the character reference image" để khóa khuôn mặt KOC qua mọi phân cảnh.
         5. MÀN HÌNH SẠCH: Ảnh sạch tuyệt đối (`no text, clean screen`).
         
         Xuất chuẩn 1 Dict JSON duy nhất:
@@ -599,8 +599,8 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
               "transition_type": "Cắt cứng dồn dập (Hard Cut) hoặc Chuyển cảnh khớp hành động mượt mà (Match Cut)", 
               "voice_director_vn": "Chỉ đạo ngữ điệu thuyết minh miền Bắc ({fixed_gender})", 
               "voiceover_vi": "Lời thuyết minh tiếng Việt chuẩn miền Bắc dẫn dắt cảnh quay", 
-              "image_prompt": "Prompt Imagen 3 (tiếng Anh, {aspect_ratio}) miêu tả chi tiết bối cảnh, NẾU CÓ NGƯỜI BẮT BUỘC GHI RÕ 'Vietnamese' (vd: a Vietnamese baby, a Vietnamese man), sử dụng lệnh 'using the exact same colors and textures as the reference image', màn hình sạch, no text, clean screen", 
-              "video_prompt": "Prompt Veo 3 (tiếng Anh) miêu tả chuyển động điện ảnh, NẾU CÓ NGƯỜI BẮT BUỘC GHI RÕ 'Vietnamese', kèm chỉ định audio: professional voiceover narration in Northern Vietnamese read by a {fixed_gender} speaker with {fixed_tone} tone, reading [voiceover_vi]"
+              "image_prompt": "Prompt Imagen 3 (tiếng Anh, {aspect_ratio}) miêu tả chi tiết bối cảnh. NẾU CÓ NGƯỜI BẮT BUỘC chèn lệnh 'featuring the exact same facial features and identity as the character reference image'. Kèm lệnh mô tả sản phẩm 'using the exact same colors and textures as the reference image', màn hình sạch, no text, clean screen", 
+              "video_prompt": "Prompt Veo 3 (tiếng Anh) miêu tả chuyển động điện ảnh. NẾU CÓ NGƯỜI BẮT BUỘC chèn lệnh 'featuring the exact same facial features and identity as the character reference image'. Kèm chỉ định audio: professional voiceover narration in Northern Vietnamese read by a {fixed_gender} speaker with {fixed_tone} tone, reading [voiceover_vi]"
             }}
           ]
         }}
@@ -727,73 +727,59 @@ with col_time:
 
 st.markdown("---")
 input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô tả chi tiết dự án/sản phẩm:", height=100)
-uploaded_files = st.file_uploader("🖼️ Tải ảnh tham chiếu (Tùy chọn):", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
-if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files)):
-    with st.spinner("⏳ Đang phân tích..."):
+# Bổ sung 2 cột để tải ảnh Sản phẩm và tải ảnh KOC (Nhân vật tham chiếu)
+col_img1, col_img2 = st.columns(2)
+with col_img1:
+    uploaded_files = st.file_uploader("🖼️ Tải ảnh SẢN PHẨM / DỰ ÁN tham chiếu:", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
+with col_img2:
+    uploaded_koc_files = st.file_uploader("👤 Tải ảnh NHÂN VẬT / KOC tham chiếu (Tùy chọn):", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
+
+if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files or uploaded_koc_files)):
+    with st.spinner("⏳ Đang phân tích DNA chuyên sâu..."):
         try:
             st.session_state.current_input_context = input_text.strip() if input_text else "Phân tích trực tiếp từ hình ảnh đính kèm sản phẩm/dự án."
             
             if is_sales:
                 specific_rules = """
-                1. Về Giá cả: TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ (ví dụ: không dùng 100k, 50.000đ). Chỉ sử dụng các cụm từ mường tượng kích cầu như: "giá tận xưởng", "rẻ bằng cốc trà sữa", "deal sốc giới hạn", "giá ưu đãi".
-                2. Tự động nhận diện cơ khí & cấu tạo: Tự động nhận diện vị trí các nút bấm, cổng sạc, màn hình LED, chất liệu và phụ kiện đi kèm.
-                3. Khóa thị giác (Visual DNA Lock) & Màu sắc tham chiếu: TUYỆT ĐỐI KHÔNG viết tên màu cụ thể (như đỏ, xanh, vàng, red, blue...) vào các prompt tạo ảnh/video. Bắt buộc thay thế bằng câu lệnh: "using the exact same colors and textures as the reference image" để AI tự động lấy màu từ ảnh gốc.
-                """
-                dna_analysis_structure = """
-                "mechanical_and_accessories": "Mô tả chất liệu nhám/bóng, vị trí nút bấm, cổng sạc, trọng lượng, kích thước... (Không gọi tên màu sắc cụ thể).",
-                "customer_pain_points": "Phân tích 3 tầng nỗi đau của khách hàng (Chức năng, Tài chính - nhấn mạnh giá tận xưởng, không nêu giá cụ thể, Cảm xúc).",
-                "core_desires": "Mong muốn cốt lõi và khao khát lớn nhất của khách hàng khi mua sản phẩm này.",
-                "emotional_or_usp_hook": "Slogan, USP độc quyền hoặc câu hook giật gân chốt đơn (Không có giá cụ thể).",
-                "visual_physics_rules": "Quy chuẩn vật lý khi chuyển động đặc thù của sản phẩm.",
-                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ toàn bộ video, tuyệt đối KHÔNG ghi tên màu sắc cụ thể, CHỈ DÙNG lệnh 'using the exact same colors and textures as the reference image'."
+                1. Về Giá cả: TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ. Chỉ sử dụng các cụm từ mường tượng kích cầu như: "giá tận xưởng", "rẻ bằng cốc trà sữa", "deal sốc giới hạn".
+                2. Tự động nhận diện cơ khí & cấu tạo sản phẩm mà không ghi tên màu sắc.
+                3. Khóa Khuôn Mặt KOC: Nếu có ảnh nhân vật KOC tham chiếu, BẮT BUỘC chèn lệnh "featuring the exact same facial features, hairstyle, and identity as the character reference image" vào chuỗi khóa thị giác để AI đồng bộ khuôn mặt.
                 """
             elif is_corporate:
                 specific_rules = """
-                1. Tầm nhìn & Sứ mệnh: Bóc tách triết lý vận hành, thông điệp cốt lõi mà tổ chức muốn truyền tải tới cộng đồng hoặc đối tác.
-                2. Năng lực thực thi: Làm nổi bật quy mô văn phòng, nhà xưởng, dây chuyền công nghệ, đội ngũ nhân sự tận tâm. Không thúc ép mua hàng.
-                3. Khóa thị giác (Visual DNA Lock) & Màu sắc tham chiếu: TUYỆT ĐỐI KHÔNG viết tên màu cụ thể vào các prompt tạo ảnh/video. Bắt buộc thay thế bằng câu lệnh: "using the exact same colors, architectural tone, and corporate textures as the reference image" để AI tự động lấy màu từ ảnh gốc.
-                """
-                dna_analysis_structure = """
-                "mechanical_and_accessories": "Mô tả Năng lực thực thi, cơ sở vật chất, quy mô văn phòng, nhà xưởng, nhân sự.",
-                "customer_pain_points": "Thực trạng xã hội, thách thức ngành nghề hoặc vấn đề vĩ mô đang đối mặt.",
-                "core_desires": "Tầm nhìn, Sứ mệnh & Giá trị Cốt lõi của doanh nghiệp/tổ chức.",
-                "emotional_or_usp_hook": "Thông điệp truyền cảm hứng, câu lệnh kêu gọi hành động vì cộng đồng/hợp tác.",
-                "visual_physics_rules": "Quy chuẩn bối cảnh điện ảnh (ví dụ: flycam, ánh sáng tự nhiên, không gian làm việc hiện đại, steadycam).",
-                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ, tuyệt đối KHÔNG ghi tên màu sắc cụ thể, CHỈ DÙNG lệnh 'using the exact same colors, architectural tone, and corporate textures as the reference image'."
+                1. Tầm nhìn & Sứ mệnh: Bóc tách triết lý vận hành, thông điệp cốt lõi.
+                2. Năng lực thực thi: Làm nổi bật quy mô văn phòng, nhà xưởng, dây chuyền.
+                3. Khóa Khuôn Mặt KOC: Nếu có ảnh nhân vật KOC tham chiếu, BẮT BUỘC chèn lệnh "featuring the exact same facial features, hairstyle, and identity as the character reference image" vào chuỗi khóa thị giác.
                 """
             else:
                 specific_rules = """
-                1. Tự động quét màu sắc thực tế: Phân tích kỹ để xác định CHÍNH XÁC màu sắc chủ đạo, chất liệu thực tế.
-                2. Bóc tách không gian & nhân vật: Bối cảnh, không gian, cảm xúc và thông điệp truyền tải.
-                3. Khóa thị giác (Visual DNA Lock) & Màu sắc tham chiếu: TUYỆT ĐỐI KHÔNG viết tên màu cụ thể vào các prompt tạo ảnh/video. Bắt buộc thay thế bằng câu lệnh: "using the exact same colors and textures as the reference image" để AI tự động lấy màu từ ảnh gốc.
-                """
-                dna_analysis_structure = """
-                "mechanical_and_accessories": "Mô tả đối tượng chính, chất liệu, thành phần, không gian bối cảnh (Không gọi tên màu sắc cụ thể).",
-                "customer_pain_points": "Phân tích tâm lý, vấn đề hoặc bối cảnh cần giải quyết.",
-                "core_desires": "Mong muốn cốt lõi, giá trị mang lại.",
-                "emotional_or_usp_hook": "Thông điệp chính, USP hoặc câu hook mở đầu.",
-                "visual_physics_rules": "Quy chuẩn vật lý, ánh sáng, chuyển động.",
-                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ, tuyệt đối KHÔNG ghi tên màu sắc cụ thể, CHỈ DÙNG lệnh 'using the exact same colors and textures as the reference image'."
+                1. Khóa Khuôn Mặt KOC: Nếu có ảnh nhân vật KOC tham chiếu, BẮT BUỘC chèn lệnh "featuring the exact same facial features, hairstyle, and identity as the character reference image" vào chuỗi khóa thị giác.
+                2. Phân tích đối tượng chính, không gian bối cảnh. TUYỆT ĐỐI KHÔNG viết tên màu cụ thể của sản phẩm vào các prompt.
                 """
             
             prompt_text = f"""
-            Phân tích siêu chuyên sâu sản phẩm/chủ đề bất kỳ cho thể loại '{selected_mode}' theo phong cách '{selected_style}'. 
-            Thông tin mô tả từ người dùng: "{st.session_state.current_input_context}"
+            Phân tích siêu chuyên sâu chủ đề cho thể loại '{selected_mode}' theo phong cách '{selected_style}'. 
+            Thông tin mô tả: "{st.session_state.current_input_context}"
 
-            QUY ĐỊNH ĐỘNG VỀ NHẬN DIỆN SẢN PHẨM & NỘI DUNG (RẤT QUAN TRỌNG):
+            QUY ĐỊNH ĐỘNG VỀ NHẬN DIỆN (RẤT QUAN TRỌNG):
             {specific_rules}
 
             BẮT BUỘC TRẢ VỀ ĐỊNH DẠNG JSON CHUẨN GỒM CÁC KEY SAU:
             {{
               "content_analysis": {{
-                {dna_analysis_structure}
+                "mechanical_and_accessories": "Mô tả chất liệu, thiết kế, quy mô (Không gọi tên màu sắc cụ thể).",
+                "customer_pain_points": "Phân tích 3 tầng nỗi đau hoặc thách thức thực trạng.",
+                "core_desires": "Mong muốn cốt lõi / Sứ mệnh.",
+                "emotional_or_usp_hook": "Slogan, USP độc quyền.",
+                "visual_physics_rules": "Quy chuẩn vật lý khi chuyển động, ánh sáng.",
+                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ toàn bộ video. Bắt buộc có lệnh màu sắc 'using the exact same colors and textures as the reference image'. Nếu có KOC, phải thêm 'featuring the exact same facial features, hairstyle, and identity as the character reference image'."
               }},
               "script_outlines": [
                 {{
                   "id": 1,
                   "title": "Tên kịch bản 1",
-                  "setting_style": "Bối cảnh định hướng (Ví dụ: xưởng/kho/văn phòng/thực tế)",
+                  "setting_style": "Bối cảnh định hướng",
                   "angle": "Góc tiếp cận chuyển đổi",
                   "target_hook": "Câu mở đầu thu hút",
                   "recommended_scenes_count": "5",
@@ -841,8 +827,14 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
             
             payload = []
             if uploaded_files:
+                payload.append("ẢNH SẢN PHẨM / DỰ ÁN THAM CHIẾU:")
                 for f in uploaded_files:
                     payload.append(types.Part.from_bytes(data=f.getvalue(), mime_type=f.type if f.type else "image/jpeg"))
+            if uploaded_koc_files:
+                payload.append("ẢNH NHÂN VẬT KOC THAM CHIẾU:")
+                for f in uploaded_koc_files:
+                    payload.append(types.Part.from_bytes(data=f.getvalue(), mime_type=f.type if f.type else "image/jpeg"))
+            
             payload.append(prompt_text)
             
             res = call_gemini_api(payload, get_system_instructions(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins))
