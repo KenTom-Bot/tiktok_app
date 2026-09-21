@@ -138,6 +138,7 @@ client = genai.Client(api_key=api_key)
 ACCOUNTS_FILE = "accounts.json"
 ADMIN_EMAIL = "binhnguyenmedia.vn@gmail.com"
 
+# Danh sách Modun Hệ thống
 ALL_MODULES = [
     "🛒 TikTok Shop & Bán Hàng", "👶 Mẹ & Bé & Cùng Con Học (Viral Parenting)", "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp",
     "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan", "🌿 Du Lịch & Phong Cảnh Đất Nước", "🚗 Xe Cộ & Trải Nghiệm Lái",
@@ -526,10 +527,10 @@ def call_gemini_api(contents, system_inst):
 def generate_char_rules_string(profiles):
     if not profiles:
         return "2. KHÓA ĐA NHÂN VẬT: Không có nhân vật cụ thể tham chiếu."
-    rules = "2. KHÓA KHUÔN MẶT ĐA NHÂN VẬT (MULTI-CHARACTER IDENTITY ANCHOR) BẮT BUỘC:\n   - Người dùng đã cung cấp ảnh các nhân vật cụ thể. Trong mọi `image_prompt` và `video_prompt`, bạn PHẢI phân vai và gọi tên tiếng Anh chính xác kèm lệnh khóa ảnh tham chiếu như sau:\n"
+    rules = "2. KHÓA KHUÔN MẶT (FACE IDENTITY ANCHOR) VÀ TRANG PHỤC LINH HOẠT TÙY BỐI CẢNH:\n   - Người dùng đã cung cấp ảnh các nhân vật cụ thể. Trong mọi `image_prompt` và `video_prompt`, bạn PHẢI phân vai và gọi tên tiếng Anh chính xác kèm lệnh khóa ảnh tham chiếu như sau:\n"
     for p in profiles:
-        rules += f"     + Nhân vật số {p['id']}: Đóng vai trò '{p['role']}'. Bắt buộc viết lệnh tiếng Anh là: 'Character {p['id']} ({p['role']}) featuring the exact identity of reference image {p['id']}'.\n"
-    rules += "   - TUYỆT ĐỐI không để AI tự chế khuôn mặt. Phải viết rõ ràng 'Character X... reference image X' nếu nhân vật đó xuất hiện trong cảnh."
+        rules += f"     + Nhân vật số {p['id']}: Đóng vai trò '{p['role']}'. Bắt buộc viết lệnh tiếng Anh là: 'Character {p['id']} ({p['role']}) wearing [mô tả trang phục bằng tiếng Anh phù hợp với bối cảnh cảnh quay] and featuring the exact identity of reference image {p['id']}'.\n"
+    rules += "   - KHUÔN MẶT: Bắt buộc dùng lệnh 'featuring the exact identity of reference image X' để AI không tự chế mặt.\n   - TRANG PHỤC: AI tự động phân tích và mô tả trang phục phù hợp (ví dụ: đồ ngủ ở nhà, vest đi làm, đồ dạo phố...). Nếu các phân cảnh diễn ra liên tục trong cùng 1 khoảng thời gian/không gian, trang phục phải được mô tả giữ đồng nhất. Nếu sang ngày mới hoặc bối cảnh mới, trang phục phải được thay đổi cho hợp logic."
     return rules
 
 def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float):
@@ -610,7 +611,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         2. PHÂN RÃ THỜI LƯỢNG CỰC KỲ KHẮT KHE: Tổng thời lượng khớp chính xác {total_sec} giây. Mỗi phân cảnh CHỈ ĐƯỢC PHÉP chọn 1 trong 3 mức thời lượng: 4s, 6s hoặc 8s. 
         3. VỀ GIÁ BÁN (Nếu có): TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ.
         4. QUY TRÌNH MÔ TẢ SẢN PHẨM: TUYỆT ĐỐI KHÔNG ĐƯỢC CHỨA TÊN MÀU SẮC. BẮT BUỘC DÙNG: "using the exact same colors and textures as the reference image".
-        5. KHÓA ĐA NHÂN VẬT (MULTI-CHARACTER ANCHOR): TUÂN THỦ NGHIÊM NGẶT HỆ THỐNG NHÂN VẬT TRONG SYSTEM INSTRUCTION. Dùng chính xác tên 'Character X' và 'reference image X'.
+        5. KHUÔN MẶT & TRANG PHỤC: TUÂN THỦ NGHIÊM NGẶT HỆ THỐNG NHÂN VẬT TRONG SYSTEM INSTRUCTION. Dùng tên 'Character X', mô tả trang phục hợp logic bối cảnh hiện tại, và ép buộc lệnh 'featuring the exact identity of reference image X' để khóa khuôn mặt.
         6. MÀN HÌNH SẠCH: Ảnh sạch tuyệt đối (`no text, clean screen`).
         
         Xuất chuẩn 1 Dict JSON duy nhất:
@@ -624,12 +625,12 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
             {{
               "scene_number": 1, 
               "duration": "6s", 
-              "scene_setting": "Bối cảnh thực tế", 
+              "scene_setting": "Bối cảnh chi tiết", 
               "transition_type": "Cắt cứng dồn dập (Hard Cut)", 
               "voice_director_vn": "Chỉ đạo ngữ điệu thuyết minh miền Bắc ({fixed_gender})", 
               "voiceover_vi": "Lời thuyết minh tiếng Việt", 
-              "image_prompt": "Prompt Imagen 3 (tiếng Anh, {aspect_ratio}). Nếu có nhiều nhân vật phải gán rõ 'Character X... reference image X'. Kèm lệnh mô tả sản phẩm 'using the exact same colors and textures as the reference image', no text", 
-              "video_prompt": "Prompt Veo 3 (tiếng Anh). Áp dụng quy tắc phân vai đa nhân vật như trên. Kèm audio: professional voiceover narration in Northern Vietnamese read by a {fixed_gender} speaker with {fixed_tone} tone, reading [voiceover_vi]"
+              "image_prompt": "Prompt Imagen 3 (tiếng Anh, {aspect_ratio}). Nếu có nhân vật phải gán rõ 'Character X... wearing [context outfit] and featuring the exact identity of reference image X'. Kèm lệnh mô tả sản phẩm 'using the exact same colors and textures as the reference image', no text", 
+              "video_prompt": "Prompt Veo 3 (tiếng Anh). Áp dụng quy tắc nhân vật, trang phục hợp cảnh như trên. Kèm audio: professional voiceover narration in Northern Vietnamese read by a {fixed_gender} speaker with {fixed_tone} tone, reading [voiceover_vi]"
             }}
           ]
         }}
@@ -743,7 +744,7 @@ with col_goal:
     
     if is_sales:
         content_goal = "Chuyển đổi đơn hàng & Chốt Sale trực tiếp (Sales & Conversion)"
-        st.info("💡 **Chế độ Bán Hàng:** 24s-35s (4-6 phân cảnh), trang phục cố định 100%.")
+        st.info("💡 **Chế độ Bán Hàng:** 24s-35s (4-6 phân cảnh), trang phục tự động theo bối cảnh.")
     elif is_corporate:
         content_goal_options = [
             "Kể chuyện dài tập / Phim tài liệu thương hiệu (Corporate Documentary)",
@@ -798,7 +799,6 @@ if num_chars > 0:
 
 # === VÙNG BẮT ĐẦU TRIGGER CHỐNG LỖI BÓNG MỜ ===
 if st.session_state.action_trigger:
-    # 1. Hien thi Pop-up Toast de nguoi dung bet ngay la he thong dang hoat dong
     st.toast("⏳ Đang kết nối với AI để xử lý... Vui lòng đợi trong giây lát!", icon="🤖")
     st.markdown("<br><br>", unsafe_allow_html=True)
     
