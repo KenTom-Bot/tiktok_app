@@ -118,6 +118,13 @@ st.markdown("""
         text-align: center;
         margin-top: 15px;
     }
+    /* Compact File Uploader in grid */
+    [data-testid="stFileUploader"] {
+        padding: 0px !important;
+    }
+    [data-testid="stFileUploader"] > section {
+        padding: 8px !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -618,8 +625,8 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
               "transition_type": "Cắt cứng dồn dập (Hard Cut)", 
               "voice_director_vn": "Chỉ đạo ngữ điệu thuyết minh miền Bắc ({fixed_gender})", 
               "voiceover_vi": "Lời thuyết minh tiếng Việt", 
-              "image_prompt": "Prompt Imagen 3 (tiếng Anh, {aspect_ratio}). Khóa vai diễn đa nhân vật 'Character X... reference image X'. Kèm lệnh mô tả sản phẩm 'using the exact same colors and textures as the reference image', no text", 
-              "video_prompt": "Prompt Veo 3 (tiếng Anh). Khóa vai diễn đa nhân vật tương tự. Kèm audio: professional voiceover narration in Northern Vietnamese read by a {fixed_gender} speaker with {fixed_tone} tone, reading [voiceover_vi]"
+              "image_prompt": "Prompt Imagen 3 (tiếng Anh, {aspect_ratio}). Nếu có nhiều nhân vật phải gán rõ 'Character X... reference image X'. Kèm lệnh mô tả sản phẩm 'using the exact same colors and textures as the reference image', no text", 
+              "video_prompt": "Prompt Veo 3 (tiếng Anh). Áp dụng quy tắc phân vai đa nhân vật như trên. Kèm audio: professional voiceover narration in Northern Vietnamese read by a {fixed_gender} speaker with {fixed_tone} tone, reading [voiceover_vi]"
             }}
           ]
         }}
@@ -759,32 +766,33 @@ st.markdown("---")
 input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô tả chi tiết dự án/sản phẩm:", height=80)
 
 # ==============================================================================
-# QUẢN LÝ ẢNH SẢN PHẨM & ĐA NHÂN VẬT ĐỘNG
+# QUẢN LÝ ẢNH SẢN PHẨM & ĐA NHÂN VẬT ĐỘNG (LAYOUT LƯỚI GỌN GÀNG)
 # ==============================================================================
 st.markdown("### 👥 Quản Lý Nguồn Ảnh & Tuyển Diễn Viên (Casting)")
-col_p_img, col_c_img = st.columns([1, 1.5])
+col_p_img, col_c_img = st.columns([1, 1])
 
 with col_p_img:
-    st.markdown("**1. 📦 Sản phẩm / Bối cảnh chính**")
-    uploaded_files = st.file_uploader("Tải ảnh sản phẩm (Nhiều ảnh):", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
+    st.markdown("**1. 📦 Tải ảnh Sản phẩm / Bối cảnh chính**")
+    uploaded_files = st.file_uploader("Chọn nhiều ảnh sản phẩm", type=["jpg", "jpeg", "png"], accept_multiple_files=True, label_visibility="collapsed")
 
 with col_c_img:
-    st.markdown("**2. 👤 Nhân vật tham chiếu (KOC / Gia đình)**")
-    num_chars = st.radio("Số lượng nhân vật chính cần tham chiếu:", [0, 1, 2, 3], horizontal=True)
-    
-    char_inputs = []
-    if num_chars > 0:
+    st.markdown("**2. 👤 Số lượng Nhân vật KOC/Gia đình tham chiếu**")
+    num_chars = st.number_input("Chọn từ 0 đến 8 nhân vật:", min_value=0, max_value=8, value=0, step=1)
+
+char_inputs = []
+if num_chars > 0:
+    with st.expander(f"🎭 HỒ SƠ DIỄN VIÊN ({num_chars} Nhân vật) - Kéo thả ảnh và Nhập vai trò", expanded=True):
+        # Tự động chia cột: nếu >= 4 nhân vật thì dùng 4 cột, nếu ít hơn dùng 2 cột để tiết kiệm diện tích
+        n_cols = 4 if num_chars > 2 else 2
+        grid_cols = st.columns(n_cols)
         for i in range(num_chars):
-            with st.container(border=True):
-                st.markdown(f"**Nhân vật số {i+1}:**")
-                cc1, cc2 = st.columns([1, 1])
-                with cc1:
-                    c_file = st.file_uploader(f"Tải ảnh rõ mặt", type=["jpg", "jpeg", "png"], key=f"c_img_{i}")
-                with cc2:
-                    c_role = st.text_input(f"Nhập vai trò (vd: Mẹ 30 tuổi, Ông nội, KOL...)", key=f"c_role_{i}")
-                
-                if c_file and c_role:
-                    char_inputs.append({"id": i+1, "role": c_role, "file": c_file})
+            with grid_cols[i % n_cols]:
+                with st.container(border=True):
+                    st.markdown(f"<div style='color:#d90429; font-weight:800; font-size:14px; margin-bottom:5px;'>👤 Diễn viên {i+1}</div>", unsafe_allow_html=True)
+                    c_role = st.text_input("Vai trò", key=f"c_role_{i}", placeholder="Vd: Mẹ 30 tuổi...", label_visibility="collapsed")
+                    c_file = st.file_uploader("Ảnh", type=["jpg", "jpeg", "png"], key=f"c_img_{i}", label_visibility="collapsed")
+                    if c_file and c_role.strip():
+                        char_inputs.append({"id": i+1, "role": c_role.strip(), "file": c_file})
 
 # === VÙNG BẮT ĐẦU TRIGGER CHỐNG LỖI BÓNG MỜ ===
 if st.session_state.action_trigger:
@@ -810,7 +818,6 @@ if st.session_state.action_trigger:
 if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files or char_inputs)):
     with st.spinner("⏳ Đang phân tích DNA chuyên sâu và Gán vai diễn viên..."):
         try:
-            # Lưu hồ sơ nhân vật vào session state để dùng cho các luồng sau
             profiles_to_save = [{"id": c["id"], "role": c["role"]} for c in char_inputs]
             st.session_state.character_profiles = profiles_to_save
             
@@ -845,7 +852,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                 "core_desires": "Mong muốn cốt lõi / Sứ mệnh.",
                 "emotional_or_usp_hook": "Slogan, USP độc quyền.",
                 "visual_physics_rules": "Quy chuẩn vật lý khi chuyển động, ánh sáng.",
-                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ toàn bộ video. Ghi rõ chỉ dẫn lệnh màu 'using the exact same colors and textures as the reference image'. Cập nhật danh sách các diễn viên/vai diễn."
+                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ toàn bộ video. Bắt buộc có lệnh màu sắc 'using the exact same colors and textures as the reference image'."
               }},
               "script_outlines": [
                 {{
@@ -905,7 +912,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
             
             if char_inputs:
                 for c in char_inputs:
-                    payload.append(f"ẢNH NHÂN VẬT THAM CHIẾU {c['id']} - VAI TRÒ: {c['role']}:")
+                    payload.append(f"ẢNH NHÂN VẬT THAM CHIẾU DÀNH CHO VAI DIỄN '{c['role']}':")
                     payload.append(types.Part.from_bytes(data=c['file'].getvalue(), mime_type=c['file'].type if c['file'].type else "image/jpeg"))
             
             payload.append(prompt_text)
