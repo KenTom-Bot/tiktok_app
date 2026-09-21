@@ -504,7 +504,7 @@ MỤC TIÊU CHIẾN DỊCH: {goal}
 1. QUY TẮC QUỐC TỊCH: Nếu có con người chung chung, BẮT BUỘC chèn "Vietnamese" (Ví dụ: Vietnamese grandfather, Vietnamese mother). Tuyệt đối không để chung chung.
 {char_rules}
 3. MÀN HÌNH SẠCH & GIỮ NGUYÊN LOGO SẢN PHẨM: Tuyệt đối không sinh ra chữ, phụ đề hay watermark rác xung quanh ('no floating text, no subtitles, clean background'). NHƯNG BẮT BUỘC phải giữ nguyên chính xác logo và các dòng chữ có sẵn trên bản thân sản phẩm ('keep exact product logo and typography from reference image').
-4. KHÓA MÀU SẢN PHẨM & TỶ LỆ KÍCH THƯỚC THỰC TẾ: Bắt buộc dùng lệnh "using the exact same colors and textures as the reference image, maintaining realistic scale and true-to-life proportions, keeping exact product logo and text" để mô tả sản phẩm. TUYỆT ĐỐI KHÔNG phóng to sản phẩm sai tỷ lệ thực tế. Bắt buộc phải đánh giá kích thước vật lý dựa trên ảnh tải lên (VD: nhỏ bằng bàn tay, cao đến gối...).
+4. KHÓA KIỂU DÁNG SẢN PHẨM & TỶ LỆ KÍCH THƯỚC (PRODUCT OBJECT ANCHOR): Bắt buộc dùng lệnh "featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE, maintaining realistic scale and true-to-life proportions" để mô tả sản phẩm. TUYỆT ĐỐI KHÔNG tự bịa ra kiểu dáng hay phóng to sản phẩm sai tỷ lệ thực tế. Bắt buộc phải đánh giá kích thước vật lý dựa trên ảnh tải lên (VD: nhỏ bằng bàn tay, cao đến gối...).
 5. CHUYỂN CẢNH THÔNG MINH (SMART TRANSITIONS): Cắt cứng dồn dập (Hard Cut) hoặc Chuyển cảnh khớp hành động mượt mà (Match Cut).
 {voiceover_instruction}
 """
@@ -620,7 +620,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         1. KHÓA CỨNG GIỚI TÍNH, TÔNG GIỌNG & NHỊP ĐỘ (PACE & ENERGY ANCHOR): Sử dụng 100% giọng đọc của **{fixed_gender}** với tông giọng **{fixed_tone}**.
         2. PHÂN RÃ THỜI LƯỢNG CỰC KỲ KHẮT KHE: Tổng thời lượng khớp chính xác {total_sec} giây. Mỗi phân cảnh CHỈ ĐƯỢC PHÉP chọn 1 trong 3 mức thời lượng: 4s, 6s hoặc 8s. 
         3. QUY TRÌNH TRANG PHỤC & KHUÔN MẶT: Dùng tên 'Character X'. BẮT BUỘC áp dụng trang phục được quy định cho kịch bản này là: "{outfit_setup}" cho TẤT CẢ các phân cảnh có mặt nhân vật để đảm bảo tính đồng nhất 100%. Luôn kèm lệnh 'featuring the exact identity of reference image X'.
-        4. KIỂM SOÁT KÍCH THƯỚC VẬT LÝ TUYỆT ĐỐI (STRICT SCALE CONTROL): Bạn PHẢI sử dụng các cụm từ tiếng Anh mô tả rõ kích thước tương quan của sản phẩm (ví dụ: 'small palm-sized', 'held in one hand', 'tiny', 'knee-high') vào trong `image_prompt` và `video_prompt`. Tuyệt đối không phóng to sản phẩm sai tỷ lệ thực tế. BẮT BUỘC chèn lệnh: "using the exact same colors and textures as the reference image, maintaining realistic scale and true-to-life proportions, keeping exact product logo and text".
+        4. QUY TRÌNH SẢN PHẨM & TỶ LỆ KÍCH THƯỚC: TUYỆT ĐỐI KHÔNG làm sai lệch kiểu dáng và KHÔNG phóng to sản phẩm sai tỷ lệ. BẮT BUỘC DÙNG CỤM TỪ: "featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE, maintaining realistic scale and true-to-life proportions".
         5. ĐỒNG BỘ GIỌNG ĐỌC NGOÀI HÌNH (STRICT VOICE MATCHING): Khi quay cận cảnh sản phẩm (không có nhân vật trên hình), BẮT BUỘC giữ nguyên cấu trúc audio prompt y hệt như cảnh có mặt nhân vật. Phải chèn lệnh: "fast-paced, high-energy, consistent pacing, identical voice identity" để AI duy trì sự cuốn hút và tốc độ đọc, KHÔNG bị rớt nhịp chậm rãi thành phim tài liệu.
         6. MÀN HÌNH SẠCH RÁC: Tuyệt đối không sinh ra chữ lơ lửng hay phụ đề (`no floating text, clean background`).
         
@@ -640,7 +640,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
               "transition_type": "Cắt cứng dồn dập (Hard Cut)", 
               "voice_director_vn": "Giọng {fixed_gender} miền Bắc: {fixed_tone}, nhịp độ nhanh...", 
               "voiceover_vi": "Lời thuyết minh tiếng Việt", 
-              "image_prompt": "Prompt Imagen 3 (tiếng Anh). Nếu có nhân vật phải gán rõ 'Character X... wearing {outfit_setup} and featuring the exact identity of reference image X'. BẮT BUỘC MÔ TẢ KÍCH THƯỚC THẬT CỦA SẢN PHẨM (vd: a small palm-sized product) kèm lệnh 'using the exact same colors and textures... maintaining realistic scale, keeping exact product logo', no floating text", 
+              "image_prompt": "Prompt Imagen 3 (tiếng Anh). Nếu có nhân vật phải gán rõ 'Character X... wearing {outfit_setup} and featuring the exact identity of reference image X'. BẮT BUỘC MÔ TẢ KÍCH THƯỚC THẬT CỦA SẢN PHẨM (vd: a small palm-sized product) kèm lệnh 'featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE... maintaining realistic scale', no floating text", 
               "video_prompt": "Prompt Veo 3 (tiếng Anh). Kèm audio: fast-paced, high-energy, consistent voiceover by the exact same {fixed_gender} character with {fixed_tone} tone, maintaining the exact same speed, emotion, and identity across all scenes (off-screen narrator if character is not visible), reading [voiceover_vi]"
             }}
           ]
@@ -684,7 +684,6 @@ def clone_script_id(target_id, current_mode, current_style, aspect_ratio, goal, 
 # ==============================================================================
 # BẮT ĐẦU TRIGGER EVENT TRỰC TIẾP (BỎ QUA ST.RERUN ĐỂ TRÁNH MỜ MÀN HÌNH)
 # ==============================================================================
-# Xóa phần action_trigger ở trên vì ta sẽ nhúng trực tiếp vào nút bấm bên dưới.
 if st.session_state.action_trigger:
     st.info("🔄 Ứng dụng đang đồng bộ dữ liệu. Xin vui lòng đợi...")
     st.session_state.action_trigger = None
@@ -1076,7 +1075,7 @@ if st.session_state.content_analysis and isinstance(st.session_state.content_ana
     st.code(raw_dna, language="text")
 
 # ==============================================================================
-# GIAI ĐOẠN 1: CHIA 2 VÙNG ĐỘC LẬP CHO DANH SÁCH KỊCH BẢN
+# GIAO DIỆN CHÍNH (KHU VỰC DANH SÁCH KỊCH BẢN)
 # ==============================================================================
 all_combined_scripts_list = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
 
