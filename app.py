@@ -503,7 +503,7 @@ MỤC TIÊU CHIẾN DỊCH: {goal}
 🛑 QUY TẮC BẮT BUỘC 100% (KHÔNG ĐƯỢC VI PHẠM):
 1. QUY TẮC QUỐC TỊCH: Nếu có con người chung chung, BẮT BUỘC chèn "Vietnamese" (Ví dụ: Vietnamese grandfather, Vietnamese mother). Tuyệt đối không để chung chung.
 {char_rules}
-3. MÀN HÌNH SẠCH (ZERO TEXT LOCK): Trong mọi 'image_prompt', bắt buộc cài đặt lệnh chống chữ: 'no text, zero typography, clean screen'.
+3. MÀN HÌNH SẠCH & GIỮ NGUYÊN LOGO SẢN PHẨM: Tuyệt đối không sinh ra chữ, phụ đề hay watermark rác xung quanh ('no floating text, no subtitles, no watermarks, clean background'). NHƯNG BẮT BUỘC phải giữ nguyên chính xác logo và các dòng chữ có sẵn trên bản thân sản phẩm ('keep exact product logo and typography from reference image').
 4. KHÓA MÀU SẢN PHẨM & VẬT LÝ ĐẶC THÙ: Bắt buộc dùng lệnh "using the exact same colors and textures as the reference image" trong mọi prompt tạo ảnh và video để mô tả sản phẩm/vật thể chính. TUYỆT ĐỐI KHÔNG tự bịa tên màu.
 5. CHUYỂN CẢNH THÔNG MINH (SMART TRANSITIONS): Cắt cứng dồn dập (Hard Cut) hoặc Chuyển cảnh khớp hành động mượt mà (Match Cut).
 {voiceover_instruction}
@@ -610,9 +610,9 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         1. KHÓA CỨNG GIỚI TÍNH & TÔNG GIỌNG THUYẾT MINH: Sử dụng 100% giọng đọc của **{fixed_gender}** với tông giọng **{fixed_tone}**.
         2. PHÂN RÃ THỜI LƯỢNG CỰC KỲ KHẮT KHE: Tổng thời lượng khớp chính xác {total_sec} giây. Mỗi phân cảnh CHỈ ĐƯỢC PHÉP chọn 1 trong 3 mức thời lượng: 4s, 6s hoặc 8s. 
         3. VỀ GIÁ BÁN (Nếu có): TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ.
-        4. QUY TRÌNH MÔ TẢ SẢN PHẨM: TUYỆT ĐỐI KHÔNG ĐƯỢC CHỨA TÊN MÀU SẮC. BẮT BUỘC DÙNG: "using the exact same colors and textures as the reference image".
-        5. KHUÔN MẶT & TRANG PHỤC: TUÂN THỦ NGHIÊM NGẶT HỆ THỐNG NHÂN VẬT TRONG SYSTEM INSTRUCTION. Dùng tên 'Character X', mô tả trang phục hợp logic bối cảnh hiện tại, và ép buộc lệnh 'featuring the exact identity of reference image X' để khóa khuôn mặt.
-        6. MÀN HÌNH SẠCH: Ảnh sạch tuyệt đối (`no text, clean screen`).
+        4. QUY TRÌNH MÔ TẢ SẢN PHẨM & LOGO: BẮT BUỘC DÙNG lệnh "using the exact same colors and textures as the reference image". Đồng thời yêu cầu AI "keep exact product logo and typography from reference image" để không làm mất logo gốc của sản phẩm.
+        5. KHUÔN MẶT & TRANG PHỤC: Dùng tên 'Character X', mô tả trang phục hợp logic bối cảnh hiện tại, và ép buộc lệnh 'featuring the exact identity of reference image X' để khóa khuôn mặt.
+        6. MÀN HÌNH SẠCH RÁC: Tuyệt đối không sinh ra chữ lơ lửng hay phụ đề (`no floating text, no subtitles, clean background`). CHỈ giữ lại chữ in trên bản thân sản phẩm.
         
         Xuất chuẩn 1 Dict JSON duy nhất:
         {{
@@ -629,8 +629,8 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
               "transition_type": "Cắt cứng dồn dập (Hard Cut)", 
               "voice_director_vn": "Chỉ đạo ngữ điệu thuyết minh miền Bắc ({fixed_gender})", 
               "voiceover_vi": "Lời thuyết minh tiếng Việt", 
-              "image_prompt": "Prompt Imagen 3 (tiếng Anh, {aspect_ratio}). Nếu có nhân vật phải gán rõ 'Character X... wearing [context outfit] and featuring the exact identity of reference image X'. Kèm lệnh mô tả sản phẩm 'using the exact same colors and textures as the reference image', no text", 
-              "video_prompt": "Prompt Veo 3 (tiếng Anh). Áp dụng quy tắc nhân vật, trang phục hợp cảnh như trên. Kèm audio: professional voiceover narration in Northern Vietnamese read by a {fixed_gender} speaker with {fixed_tone} tone, reading [voiceover_vi]"
+              "image_prompt": "Prompt Imagen 3 (tiếng Anh, {aspect_ratio}). Khóa nhân vật 'Character X... wearing [context outfit] and featuring the exact identity of reference image X'. Khóa sản phẩm 'using the exact same colors and textures as the reference image, keeping exact product logo and text'. KHÔNG thêm chữ rác 'no subtitles, no floating text, clean background'", 
+              "video_prompt": "Prompt Veo 3 (tiếng Anh). Áp dụng quy tắc nhân vật, trang phục, sản phẩm và logo như trên. Kèm audio: professional voiceover narration in Northern Vietnamese read by a {fixed_gender} speaker with {fixed_tone} tone, reading [voiceover_vi]"
             }}
           ]
         }}
@@ -834,6 +834,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                 1. Về Giá cả: TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ. Chỉ sử dụng: "giá tận xưởng", "deal sốc giới hạn".
                 2. BẮT BUỘC 5 KỊCH BẢN ĐẦU TIÊN: Phải xoay quanh các chủ đề: Xả kho, Giảm giá, Deal sốc, Siêu sale.
                 3. BỐI CẢNH BẮT BUỘC: 5 kịch bản này phải diễn ra tại: Kho hàng, Xưởng sản xuất, hoặc Showroom trưng bày. Không làm bối cảnh lifestyle.
+                4. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Dựa vào ảnh NHÂN VẬT THAM CHIẾU (KOC/KOL) tải lên, bắt buộc tự động nhận diện chính xác giới tính là Nam hay Nữ để điền vào mục 'gender' của 'voice_profile' và gán đúng giới tính vào vai diễn. Tuyệt đối không để chung chung Nam/Nữ.
                 """
                 script_outlines_json = """
                   "script_outlines": [
@@ -844,7 +845,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
                       "target_hook": "Câu mở đầu giật gân chốt đơn (Không đưa giá cụ thể)",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
+                      "voice_profile": {"gender": "Nam hay Nữ (Xác định chính xác từ ảnh tải lên)", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
                     },
                     {
                       "id": 2,
@@ -853,7 +854,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
+                      "voice_profile": {"gender": "Nam hay Nữ (Xác định chính xác từ ảnh tải lên)", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
                     },
                     {
                       "id": 3,
@@ -862,7 +863,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
+                      "voice_profile": {"gender": "Nam hay Nữ (Xác định chính xác từ ảnh tải lên)", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
                     },
                     {
                       "id": 4,
@@ -871,7 +872,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
+                      "voice_profile": {"gender": "Nam hay Nữ (Xác định chính xác từ ảnh tải lên)", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
                     },
                     {
                       "id": 5,
@@ -880,13 +881,14 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
+                      "voice_profile": {"gender": "Nam hay Nữ (Xác định chính xác từ ảnh tải lên)", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
                     }
                   ]
                 """
             elif is_corporate:
                 specific_rules = """
                 1. Tầm nhìn & Sứ mệnh: Bóc tách triết lý vận hành. Không thúc ép mua hàng.
+                2. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Bắt buộc nhận diện giới tính nhân vật từ ảnh tham chiếu (Nam hoặc Nữ) để gán cho 'gender'.
                 """
                 script_outlines_json = """
                   "script_outlines": [
@@ -897,7 +899,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận chuyển đổi",
                       "target_hook": "Câu mở đầu thu hút",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Truyền cảm, thuyết minh chuyên nghiệp"}
+                      "voice_profile": {"gender": "Nam hay Nữ (Xác định từ ảnh)", "age_range": "25-35", "tone": "Truyền cảm, thuyết minh chuyên nghiệp"}
                     },
                     {
                       "id": 2,
@@ -906,7 +908,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Trầm ấm, thuyết minh"}
+                      "voice_profile": {"gender": "Nam hay Nữ (Xác định từ ảnh)", "age_range": "25-35", "tone": "Trầm ấm, thuyết minh"}
                     },
                     {
                       "id": 3,
@@ -915,7 +917,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Hào hứng"}
+                      "voice_profile": {"gender": "Nam hay Nữ (Xác định từ ảnh)", "age_range": "25-35", "tone": "Hào hứng"}
                     },
                     {
                       "id": 4,
@@ -924,7 +926,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Thuyết phục"}
+                      "voice_profile": {"gender": "Nam hay Nữ (Xác định từ ảnh)", "age_range": "25-35", "tone": "Thuyết phục"}
                     },
                     {
                       "id": 5,
@@ -933,13 +935,14 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Tin cậy"}
+                      "voice_profile": {"gender": "Nam hay Nữ (Xác định từ ảnh)", "age_range": "25-35", "tone": "Tin cậy"}
                     }
                   ]
                 """
             else:
                 specific_rules = """
                 1. Khai thác nội dung sâu sắc, ý nghĩa giáo dục gia đình. Tuyệt đối không viết tên màu cụ thể của sản phẩm vào các prompt.
+                2. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Bắt buộc nhận diện giới tính KOC từ ảnh tham chiếu (Nam hoặc Nữ) để gán cho 'gender' và thay đổi xưng hô nhân vật.
                 """
                 script_outlines_json = """
                   "script_outlines": [
@@ -950,7 +953,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận chuyển đổi",
                       "target_hook": "Câu mở đầu thu hút",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Truyền cảm, thuyết minh chuyên nghiệp"}
+                      "voice_profile": {"gender": "Nam hay Nữ (Xác định từ ảnh)", "age_range": "25-35", "tone": "Truyền cảm, thuyết minh chuyên nghiệp"}
                     },
                     {
                       "id": 2,
@@ -959,7 +962,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Trầm ấm, thuyết minh"}
+                      "voice_profile": {"gender": "Nam hay Nữ (Xác định từ ảnh)", "age_range": "25-35", "tone": "Trầm ấm, thuyết minh"}
                     },
                     {
                       "id": 3,
@@ -968,7 +971,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Hào hứng"}
+                      "voice_profile": {"gender": "Nam hay Nữ (Xác định từ ảnh)", "age_range": "25-35", "tone": "Hào hứng"}
                     },
                     {
                       "id": 4,
@@ -977,7 +980,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Thuyết phục"}
+                      "voice_profile": {"gender": "Nam hay Nữ (Xác định từ ảnh)", "age_range": "25-35", "tone": "Thuyết phục"}
                     },
                     {
                       "id": 5,
@@ -986,7 +989,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Tin cậy"}
+                      "voice_profile": {"gender": "Nam hay Nữ (Xác định từ ảnh)", "age_range": "25-35", "tone": "Tin cậy"}
                     }
                   ]
                 """
@@ -1069,7 +1072,7 @@ if all_combined_scripts_list and st.session_state.active_script_id is None and n
     completed_scripts = [sc for sc in all_combined_scripts_list if sc.get("id") in st.session_state.generated_details]
     pending_scripts = [sc for sc in all_combined_scripts_list if sc.get("id") not in st.session_state.generated_details]
 
-    st.markdown("### 🎬 **1. Kịch Bản Đã Hoàn Thiện Chi Tiết (Sẵn Sàng Sản Xuất & Nhân Bản)**")
+    st.markdown("### 🎬 **1. Kịch Bản Đã Hoàn Thiện Chi Tiết (Sẵn Sàng Sản thực & Nhân Bản)**")
     if not completed_scripts:
         st.info("💡 Chưa có kịch bản nào được tạo chi tiết. Hãy chọn một kịch bản ở bên dưới để bắt đầu dựng cảnh!")
     else:
