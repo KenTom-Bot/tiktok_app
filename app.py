@@ -538,19 +538,23 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
         all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
         cur_len = len(all_sources)
         product_ctx = st.session_state.get("current_input_context", "Sản phẩm hiện tại")
+        dna_data = st.session_state.get("content_analysis", {}) 
         
         is_corporate = "Doanh Nghiệp" in current_mode or "Tuyên Truyền" in current_mode
         if is_corporate:
             extra_rules = "- Bối cảnh không gian văn phòng, nhà xưởng quy mô, dự án thực tế hoặc cộng đồng.\n- Không thúc ép mua hàng."
         elif "Bán Hàng" in current_mode:
-            extra_rules = "- Phải bám sát thực chiến sản phẩm.\n- TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ. Chỉ sử dụng: 'giá tận xưởng', 'rẻ bằng cốc trà sữa', 'deal sốc'."
+            extra_rules = "- BẮT BUỘC Bối cảnh phải là: Kho hàng tổng, Xưởng sản xuất, hoặc Showroom.\n- BẮT BUỘC Góc tiếp cận phải là: Xả kho, Giảm giá sâu, Siêu Sale, Deal sốc giới hạn thời gian.\n- TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ. Chỉ sử dụng: 'giá tận xưởng', 'rẻ bằng cốc trà sữa', 'deal sốc'."
         else:
             extra_rules = "- Khai thác sâu khía cạnh cảm xúc, trải nghiệm thực tế gia đình/giáo dục."
             
         char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []))
             
         prompt_more = f"""
-        Dựa trên thông tin: "{product_ctx}" và kết quả phân tích DNA đã thực hiện cho thể loại '{current_mode}' phong cách '{current_style}'.
+        DỮ LIỆU SẢN PHẨM GỐC (DNA): {json.dumps(dna_data, ensure_ascii=False)}
+        Ghi chú từ người dùng: "{product_ctx}"
+        
+        Dựa trên thông tin SẢN PHẨM GỐC (DNA) ở trên và kết quả phân tích DNA đã thực hiện cho thể loại '{current_mode}' phong cách '{current_style}'.
         Hãy tạo thêm đúng 5 kịch bản mới (id từ {cur_len + 1} đến {cur_len + 5}) với các key: id, title, setting_style, angle, target_hook, recommended_scenes_count, voice_profile.
         
         QUY ĐỊNH BẮT BUỘC CHO KỊCH BẢN MỚI:
@@ -763,7 +767,7 @@ with col_time:
         target_duration_mins = st.number_input("⏱️ Nhập thời lượng mong muốn (Phút):", min_value=0.5, max_value=30.0, value=1.0, step=0.5)
 
 st.markdown("---")
-input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô tả chi tiết dự án/sản phẩm:", height=80)
+input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô tả chi tiết dự án/sản phẩm (Ghi chú rõ thứ tự các ảnh nếu tải nhiều ảnh nhân vật):", height=80)
 
 # ==============================================================================
 # QUẢN LÝ ẢNH SẢN PHẨM & ĐA NHÂN VẬT ĐỘNG (LAYOUT LƯỚI GỌN GÀNG)
@@ -912,7 +916,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
             
             if char_inputs:
                 for c in char_inputs:
-                    payload.append(f"ẢNH NHÂN VẬT THAM CHIẾU DÀNH CHO VAI DIỄN '{c['role']}':")
+                    payload.append(f"ẢNH NHÂN VẬT THAM CHIẾU {c['id']} - VAI TRÒ: {c['role']}:")
                     payload.append(types.Part.from_bytes(data=c['file'].getvalue(), mime_type=c['file'].type if c['file'].type else "image/jpeg"))
             
             payload.append(prompt_text)
