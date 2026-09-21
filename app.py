@@ -138,7 +138,6 @@ client = genai.Client(api_key=api_key)
 ACCOUNTS_FILE = "accounts.json"
 ADMIN_EMAIL = "binhnguyenmedia.vn@gmail.com"
 
-# Danh sách Modun Hệ thống
 ALL_MODULES = [
     "🛒 TikTok Shop & Bán Hàng", "👶 Mẹ & Bé & Cùng Con Học (Viral Parenting)", "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp",
     "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan", "🌿 Du Lịch & Phong Cảnh Đất Nước", "🚗 Xe Cộ & Trải Nghiệm Lái",
@@ -544,7 +543,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
         if is_corporate:
             extra_rules = "- Bối cảnh không gian văn phòng, nhà xưởng quy mô, dự án thực tế hoặc cộng đồng.\n- Không thúc ép mua hàng."
         elif "Bán Hàng" in current_mode:
-            extra_rules = "- BẮT BUỘC Bối cảnh phải là: Kho hàng tổng, Xưởng sản xuất, hoặc Showroom.\n- BẮT BUỘC Góc tiếp cận phải là: Xả kho, Giảm giá sâu, Siêu Sale, Deal sốc giới hạn thời gian.\n- TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ. Chỉ sử dụng: 'giá tận xưởng', 'rẻ bằng cốc trà sữa', 'deal sốc'."
+            extra_rules = "- BẮT BUỘC CHUYỂN ĐỔI GÓC TIẾP CẬN: Hãy tạo 5 kịch bản mới tập trung vào: Review tính năng chi tiết, Đập hộp (Unboxing), Trải nghiệm thực tế (Lifestyle), Feedback khách hàng, Hướng dẫn sử dụng. KHÔNG làm xả kho/kho hàng nữa.\n- TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ."
         else:
             extra_rules = "- Khai thác sâu khía cạnh cảm xúc, trải nghiệm thực tế gia đình/giáo dục."
             
@@ -786,7 +785,6 @@ with col_c_img:
 char_inputs = []
 if num_chars > 0:
     with st.expander(f"🎭 HỒ SƠ DIỄN VIÊN ({num_chars} Nhân vật) - Kéo thả ảnh và Nhập vai trò", expanded=True):
-        # Tự động chia cột: nếu >= 4 nhân vật thì dùng 4 cột, nếu ít hơn dùng 2 cột để tiết kiệm diện tích
         n_cols = 4 if num_chars > 2 else 2
         grid_cols = st.columns(n_cols)
         for i in range(num_chars):
@@ -800,7 +798,10 @@ if num_chars > 0:
 
 # === VÙNG BẮT ĐẦU TRIGGER CHỐNG LỖI BÓNG MỜ ===
 if st.session_state.action_trigger:
+    # 1. Hien thi Pop-up Toast de nguoi dung bet ngay la he thong dang hoat dong
+    st.toast("⏳ Đang kết nối với AI để xử lý... Vui lòng đợi trong giây lát!", icon="🤖")
     st.markdown("<br><br>", unsafe_allow_html=True)
+    
     if st.session_state.action_trigger == "create_detail":
         t_id = st.session_state.action_param
         st.session_state.action_trigger = None
@@ -831,14 +832,163 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
             if is_sales:
                 specific_rules = """
                 1. Về Giá cả: TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ. Chỉ sử dụng: "giá tận xưởng", "deal sốc giới hạn".
+                2. BẮT BUỘC 5 KỊCH BẢN ĐẦU TIÊN: Phải xoay quanh các chủ đề: Xả kho, Giảm giá, Deal sốc, Siêu sale.
+                3. BỐI CẢNH BẮT BUỘC: 5 kịch bản này phải diễn ra tại: Kho hàng, Xưởng sản xuất, hoặc Showroom trưng bày. Không làm bối cảnh lifestyle.
+                """
+                script_outlines_json = """
+                  "script_outlines": [
+                    {
+                      "id": 1,
+                      "title": "Tên kịch bản (Xả kho / Deal sốc)",
+                      "setting_style": "Bối cảnh: Kho hàng / Xưởng / Showroom",
+                      "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
+                      "target_hook": "Câu mở đầu giật gân chốt đơn (Không đưa giá cụ thể)",
+                      "recommended_scenes_count": "5",
+                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
+                    },
+                    {
+                      "id": 2,
+                      "title": "Tên kịch bản 2",
+                      "setting_style": "Bối cảnh: Kho hàng / Xưởng / Showroom",
+                      "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
+                      "target_hook": "Câu mở đầu",
+                      "recommended_scenes_count": "5",
+                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
+                    },
+                    {
+                      "id": 3,
+                      "title": "Tên kịch bản 3",
+                      "setting_style": "Bối cảnh: Kho hàng / Xưởng / Showroom",
+                      "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
+                      "target_hook": "Câu mở đầu",
+                      "recommended_scenes_count": "5",
+                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
+                    },
+                    {
+                      "id": 4,
+                      "title": "Tên kịch bản 4",
+                      "setting_style": "Bối cảnh: Kho hàng / Xưởng / Showroom",
+                      "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
+                      "target_hook": "Câu mở đầu",
+                      "recommended_scenes_count": "5",
+                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
+                    },
+                    {
+                      "id": 5,
+                      "title": "Tên kịch bản 5",
+                      "setting_style": "Bối cảnh: Kho hàng / Xưởng / Showroom",
+                      "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
+                      "target_hook": "Câu mở đầu",
+                      "recommended_scenes_count": "5",
+                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
+                    }
+                  ]
                 """
             elif is_corporate:
                 specific_rules = """
                 1. Tầm nhìn & Sứ mệnh: Bóc tách triết lý vận hành. Không thúc ép mua hàng.
                 """
+                script_outlines_json = """
+                  "script_outlines": [
+                    {
+                      "id": 1,
+                      "title": "Tên kịch bản 1",
+                      "setting_style": "Bối cảnh định hướng",
+                      "angle": "Góc tiếp cận chuyển đổi",
+                      "target_hook": "Câu mở đầu thu hút",
+                      "recommended_scenes_count": "5",
+                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Truyền cảm, thuyết minh chuyên nghiệp"}
+                    },
+                    {
+                      "id": 2,
+                      "title": "Tên kịch bản 2",
+                      "setting_style": "Bối cảnh",
+                      "angle": "Góc tiếp cận",
+                      "target_hook": "Câu mở đầu",
+                      "recommended_scenes_count": "5",
+                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Trầm ấm, thuyết minh"}
+                    },
+                    {
+                      "id": 3,
+                      "title": "Tên kịch bản 3",
+                      "setting_style": "Bối cảnh",
+                      "angle": "Góc tiếp cận",
+                      "target_hook": "Câu mở đầu",
+                      "recommended_scenes_count": "5",
+                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Hào hứng"}
+                    },
+                    {
+                      "id": 4,
+                      "title": "Tên kịch bản 4",
+                      "setting_style": "Bối cảnh",
+                      "angle": "Góc tiếp cận",
+                      "target_hook": "Câu mở đầu",
+                      "recommended_scenes_count": "5",
+                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Thuyết phục"}
+                    },
+                    {
+                      "id": 5,
+                      "title": "Tên kịch bản 5",
+                      "setting_style": "Bối cảnh",
+                      "angle": "Góc tiếp cận",
+                      "target_hook": "Câu mở đầu",
+                      "recommended_scenes_count": "5",
+                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Tin cậy"}
+                    }
+                  ]
+                """
             else:
                 specific_rules = """
                 1. Khai thác nội dung sâu sắc, ý nghĩa giáo dục gia đình. Tuyệt đối không viết tên màu cụ thể của sản phẩm vào các prompt.
+                """
+                script_outlines_json = """
+                  "script_outlines": [
+                    {
+                      "id": 1,
+                      "title": "Tên kịch bản 1",
+                      "setting_style": "Bối cảnh định hướng",
+                      "angle": "Góc tiếp cận chuyển đổi",
+                      "target_hook": "Câu mở đầu thu hút",
+                      "recommended_scenes_count": "5",
+                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Truyền cảm, thuyết minh chuyên nghiệp"}
+                    },
+                    {
+                      "id": 2,
+                      "title": "Tên kịch bản 2",
+                      "setting_style": "Bối cảnh",
+                      "angle": "Góc tiếp cận",
+                      "target_hook": "Câu mở đầu",
+                      "recommended_scenes_count": "5",
+                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Trầm ấm, thuyết minh"}
+                    },
+                    {
+                      "id": 3,
+                      "title": "Tên kịch bản 3",
+                      "setting_style": "Bối cảnh",
+                      "angle": "Góc tiếp cận",
+                      "target_hook": "Câu mở đầu",
+                      "recommended_scenes_count": "5",
+                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Hào hứng"}
+                    },
+                    {
+                      "id": 4,
+                      "title": "Tên kịch bản 4",
+                      "setting_style": "Bối cảnh",
+                      "angle": "Góc tiếp cận",
+                      "target_hook": "Câu mở đầu",
+                      "recommended_scenes_count": "5",
+                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Thuyết phục"}
+                    },
+                    {
+                      "id": 5,
+                      "title": "Tên kịch bản 5",
+                      "setting_style": "Bối cảnh",
+                      "angle": "Góc tiếp cận",
+                      "target_hook": "Câu mở đầu",
+                      "recommended_scenes_count": "5",
+                      "voice_profile": {"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Tin cậy"}
+                    }
+                  ]
                 """
             
             prompt_text = f"""
@@ -858,53 +1008,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                 "visual_physics_rules": "Quy chuẩn vật lý khi chuyển động, ánh sáng.",
                 "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ toàn bộ video. Bắt buộc có lệnh màu sắc 'using the exact same colors and textures as the reference image'."
               }},
-              "script_outlines": [
-                {{
-                  "id": 1,
-                  "title": "Tên kịch bản 1",
-                  "setting_style": "Bối cảnh định hướng",
-                  "angle": "Góc tiếp cận chuyển đổi",
-                  "target_hook": "Câu mở đầu thu hút",
-                  "recommended_scenes_count": "5",
-                  "voice_profile": {{"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Truyền cảm, thuyết minh chuyên nghiệp"}}
-                }},
-                {{
-                  "id": 2,
-                  "title": "Tên kịch bản 2",
-                  "setting_style": "Bối cảnh",
-                  "angle": "Góc tiếp cận",
-                  "target_hook": "Câu mở đầu",
-                  "recommended_scenes_count": "5",
-                  "voice_profile": {{"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Trầm ấm, thuyết minh"}}
-                }},
-                {{
-                  "id": 3,
-                  "title": "Tên kịch bản 3",
-                  "setting_style": "Bối cảnh",
-                  "angle": "Góc tiếp cận",
-                  "target_hook": "Câu mở đầu",
-                  "recommended_scenes_count": "5",
-                  "voice_profile": {{"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Hào hứng"}}
-                }},
-                {{
-                  "id": 4,
-                  "title": "Tên kịch bản 4",
-                  "setting_style": "Bối cảnh",
-                  "angle": "Góc tiếp cận",
-                  "target_hook": "Câu mở đầu",
-                  "recommended_scenes_count": "5",
-                  "voice_profile": {{"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Thuyết phục"}}
-                }},
-                {{
-                  "id": 5,
-                  "title": "Tên kịch bản 5",
-                  "setting_style": "Bối cảnh",
-                  "angle": "Góc tiếp cận",
-                  "target_hook": "Câu mở đầu",
-                  "recommended_scenes_count": "5",
-                  "voice_profile": {{"gender": "Nam/Nữ", "age_range": "25-35", "tone": "Tin cậy"}}
-                }}
-              ]
+              {script_outlines_json}
             }}
             """
             
