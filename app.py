@@ -504,7 +504,7 @@ MỤC TIÊU CHIẾN DỊCH: {goal}
 1. QUY TẮC QUỐC TỊCH: Nếu có con người chung chung, BẮT BUỘC chèn "Vietnamese" (Ví dụ: Vietnamese grandfather, Vietnamese mother). Tuyệt đối không để chung chung.
 {char_rules}
 3. MÀN HÌNH SẠCH & GIỮ NGUYÊN LOGO SẢN PHẨM: Tuyệt đối không sinh ra chữ, phụ đề hay watermark rác xung quanh ('no floating text, no subtitles, clean background'). NHƯNG BẮT BUỘC phải giữ nguyên chính xác logo và các dòng chữ có sẵn trên bản thân sản phẩm ('keep exact product logo and typography from reference image').
-4. KHÓA MÀU SẮC & TỶ LỆ KÍCH THƯỚC THỰC TẾ: Bắt buộc dùng lệnh "using the exact same colors and textures as the reference image, maintaining realistic scale and true-to-life proportions, keeping exact product logo and text" để mô tả sản phẩm. TUYỆT ĐỐI KHÔNG phóng to sản phẩm sai tỷ lệ thực tế.
+4. KHÓA MÀU SẢN PHẨM & TỶ LỆ KÍCH THƯỚC THỰC TẾ: Bắt buộc dùng lệnh "using the exact same colors and textures as the reference image, maintaining realistic scale and true-to-life proportions, keeping exact product logo and text" để mô tả sản phẩm. TUYỆT ĐỐI KHÔNG phóng to sản phẩm sai tỷ lệ thực tế. Bắt buộc phải đánh giá kích thước vật lý dựa trên ảnh tải lên (VD: nhỏ bằng bàn tay, cao đến gối...).
 5. CHUYỂN CẢNH THÔNG MINH (SMART TRANSITIONS): Cắt cứng dồn dập (Hard Cut) hoặc Chuyển cảnh khớp hành động mượt mà (Match Cut).
 {voiceover_instruction}
 """
@@ -532,7 +532,7 @@ def generate_char_rules_string(profiles):
     for p in profiles:
         rules += f"     + Nhân vật {p['id']}: Đóng vai '{p['role']}'. Lệnh bắt buộc: 'Character {p['id']} ({p['role']}) wearing [trang_phục_đã_chọn_cho_kịch_bản_này] and featuring the exact identity of reference image {p['id']}'.\n"
     rules += "   - KHUÔN MẶT: Bắt buộc dùng lệnh 'featuring the exact identity of reference image X' để AI không tự chế mặt.\n"
-    rules += "   - TRANG PHỤC LINH HOẠT THEO BỐI CẢNH KỊCH BẢN: App sẽ tự động thiết lập 1 bộ trang phục (script_outfit_setup) phù hợp nhất với bối cảnh của TỪNG kịch bản (ví dụ kịch bản ở kho thì mặc đồ công nhân, ở showroom thì mặc đồ quản lý). Tuy nhiên, bộ trang phục này sẽ được ĐỒNG NHẤT khóa cứng xuyên suốt tất cả các phân cảnh bên trong kịch bản đó để nhân vật không bị thay quần áo loạn xạ giữa video."
+    rules += "   - TRANG PHỤC LINH HOẠT THEO BỐI CẢNH KỊCH BẢN: App sẽ tự động thiết lập 1 bộ trang phục (script_outfit_setup) phù hợp nhất với bối cảnh của TỪNG kịch bản. Tuy nhiên, bộ trang phục này sẽ được ĐỒNG NHẤT khóa cứng xuyên suốt tất cả các phân cảnh bên trong kịch bản đó để nhân vật không bị thay quần áo loạn xạ giữa video."
     return rules
 
 def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float):
@@ -620,7 +620,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         1. KHÓA CỨNG GIỚI TÍNH, TÔNG GIỌNG & NHỊP ĐỘ (PACE & ENERGY ANCHOR): Sử dụng 100% giọng đọc của **{fixed_gender}** với tông giọng **{fixed_tone}**.
         2. PHÂN RÃ THỜI LƯỢNG CỰC KỲ KHẮT KHE: Tổng thời lượng khớp chính xác {total_sec} giây. Mỗi phân cảnh CHỈ ĐƯỢC PHÉP chọn 1 trong 3 mức thời lượng: 4s, 6s hoặc 8s. 
         3. QUY TRÌNH TRANG PHỤC & KHUÔN MẶT: Dùng tên 'Character X'. BẮT BUỘC áp dụng trang phục được quy định cho kịch bản này là: "{outfit_setup}" cho TẤT CẢ các phân cảnh có mặt nhân vật để đảm bảo tính đồng nhất 100%. Luôn kèm lệnh 'featuring the exact identity of reference image X'.
-        4. QUY TRÌNH LOGO & TỶ LỆ SẢN PHẨM: TUYỆT ĐỐI KHÔNG phóng to sản phẩm. BẮT BUỘC DÙNG: "using the exact same colors and textures as the reference image, maintaining realistic scale and true-to-life proportions, keeping exact product logo and text".
+        4. KIỂM SOÁT KÍCH THƯỚC VẬT LÝ TUYỆT ĐỐI (STRICT SCALE CONTROL): Bạn PHẢI sử dụng các cụm từ tiếng Anh mô tả rõ kích thước tương quan của sản phẩm (ví dụ: 'small palm-sized', 'held in one hand', 'tiny', 'knee-high') vào trong `image_prompt` và `video_prompt`. Tuyệt đối không phóng to sản phẩm sai tỷ lệ thực tế. BẮT BUỘC chèn lệnh: "using the exact same colors and textures as the reference image, maintaining realistic scale and true-to-life proportions, keeping exact product logo and text".
         5. ĐỒNG BỘ GIỌNG ĐỌC NGOÀI HÌNH (STRICT VOICE MATCHING): Khi quay cận cảnh sản phẩm (không có nhân vật trên hình), BẮT BUỘC giữ nguyên cấu trúc audio prompt y hệt như cảnh có mặt nhân vật. Phải chèn lệnh: "fast-paced, high-energy, consistent pacing, identical voice identity" để AI duy trì sự cuốn hút và tốc độ đọc, KHÔNG bị rớt nhịp chậm rãi thành phim tài liệu.
         6. MÀN HÌNH SẠCH RÁC: Tuyệt đối không sinh ra chữ lơ lửng hay phụ đề (`no floating text, clean background`).
         
@@ -640,7 +640,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
               "transition_type": "Cắt cứng dồn dập (Hard Cut)", 
               "voice_director_vn": "Giọng {fixed_gender} miền Bắc: {fixed_tone}, nhịp độ nhanh...", 
               "voiceover_vi": "Lời thuyết minh tiếng Việt", 
-              "image_prompt": "Prompt Imagen 3 (tiếng Anh). Nếu có nhân vật phải gán rõ 'Character X... wearing {outfit_setup} and featuring the exact identity of reference image X'. Kèm lệnh mô tả sản phẩm 'using the exact same colors and textures... maintaining realistic scale, keeping exact product logo', no floating text", 
+              "image_prompt": "Prompt Imagen 3 (tiếng Anh). Nếu có nhân vật phải gán rõ 'Character X... wearing {outfit_setup} and featuring the exact identity of reference image X'. BẮT BUỘC MÔ TẢ KÍCH THƯỚC THẬT CỦA SẢN PHẨM (vd: a small palm-sized product) kèm lệnh 'using the exact same colors and textures... maintaining realistic scale, keeping exact product logo', no floating text", 
               "video_prompt": "Prompt Veo 3 (tiếng Anh). Kèm audio: fast-paced, high-energy, consistent voiceover by the exact same {fixed_gender} character with {fixed_tone} tone, maintaining the exact same speed, emotion, and identity across all scenes (off-screen narrator if character is not visible), reading [voiceover_vi]"
             }}
           ]
@@ -680,6 +680,14 @@ def clone_script_id(target_id, current_mode, current_style, aspect_ratio, goal, 
             st.rerun()
         except Exception as e:
             st.error(f"Lỗi: {e}")
+
+# ==============================================================================
+# BẮT ĐẦU TRIGGER EVENT TRỰC TIẾP (BỎ QUA ST.RERUN ĐỂ TRÁNH MỜ MÀN HÌNH)
+# ==============================================================================
+# Xóa phần action_trigger ở trên vì ta sẽ nhúng trực tiếp vào nút bấm bên dưới.
+if st.session_state.action_trigger:
+    st.info("🔄 Ứng dụng đang đồng bộ dữ liệu. Xin vui lòng đợi...")
+    st.session_state.action_trigger = None
 
 # ==============================================================================
 # GIAO DIỆN CHÍNH
@@ -808,30 +816,9 @@ if num_chars > 0:
                     if c_file and c_role.strip():
                         char_inputs.append({"id": i+1, "role": c_role.strip(), "file": c_file})
 
-# === VÙNG BẮT ĐẦU TRIGGER CHỐNG LỖI BÓNG MỜ ===
-if st.session_state.action_trigger:
-    st.toast("⏳ Đang kết nối với AI để xử lý... Vui lòng đợi trong giây lát!", icon="🤖")
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    
-    if st.session_state.action_trigger == "create_detail":
-        t_id = st.session_state.action_param
-        st.session_state.action_trigger = None
-        st.session_state.action_param = None
-        create_scene_details_for_id(t_id, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
-        
-    elif st.session_state.action_trigger == "clone_script":
-        t_id = st.session_state.action_param
-        st.session_state.action_trigger = None
-        st.session_state.action_param = None
-        clone_script_id(t_id, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
-        
-    elif st.session_state.action_trigger == "generate_more":
-        st.session_state.action_trigger = None
-        add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
-# ==========================================================
-
 # Xử lý Logic Phân tích chính
-if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files or char_inputs)):
+if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files or char_inputs)):
+    st.toast("⏳ Đang kết nối phân tích DNA... Vui lòng đợi trong giây lát!", icon="🤖")
     with st.spinner("⏳ Đang phân tích DNA chuyên sâu và Gán vai diễn viên..."):
         try:
             profiles_to_save = [{"id": c["id"], "role": c["role"]} for c in char_inputs]
@@ -846,7 +833,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                 2. BẮT BUỘC 5 KỊCH BẢN ĐẦU TIÊN: Phải xoay quanh các chủ đề: Xả kho, Giảm giá, Deal sốc, Siêu sale.
                 3. BỐI CẢNH BẮT BUỘC: 5 kịch bản này phải diễn ra tại: Kho hàng, Xưởng sản xuất, hoặc Showroom trưng bày. Không làm bối cảnh lifestyle.
                 4. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Dựa vào ảnh NHÂN VẬT THAM CHIẾU (KOC/KOL) tải lên, bắt buộc tự động nhận diện chính xác giới tính là Nam hay Nữ để điền vào mục 'gender' của 'voice_profile' và gán đúng giới tính vào vai diễn. Tuyệt đối không để chung chung Nam/Nữ.
-                5. KÍCH THƯỚC THỰC TẾ: Ước lượng chính xác kích thước thật của sản phẩm từ ảnh để AI không phóng to sai sự thật.
+                5. KÍCH THƯỚC THỰC TẾ: Ước lượng chính xác kích thước thật của sản phẩm từ ảnh để AI không phóng to sai sự thật. (Ví dụ: nhỏ gọn trong lòng bàn tay).
                 """
                 script_outlines_json = """
                   "script_outlines": [
@@ -1031,7 +1018,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
             BẮT BUỘC TRẢ VỀ ĐỊNH DẠNG JSON CHUẨN GỒM CÁC KEY SAU:
             {{
               "content_analysis": {{
-                "mechanical_and_accessories": "Mô tả vật thể, thiết kế, quy mô, KÍCH THƯỚC THỰC TẾ (tương quan với người/cảnh để tránh phóng to). (Không gọi tên màu sắc cụ thể).",
+                "mechanical_and_accessories": "Mô tả vật thể, thiết kế, quy mô, ƯỚC LƯỢNG KÍCH THƯỚC THỰC TẾ (tương quan với người/cảnh để tránh AI phóng to sai lệch, VD: to bằng lòng bàn tay, nhỏ bằng ngón tay...). (Không gọi tên màu sắc cụ thể).",
                 "customer_pain_points": "Phân tích 3 tầng nỗi đau hoặc thách thức thực trạng.",
                 "core_desires": "Mong muốn cốt lõi / Sứ mệnh.",
                 "emotional_or_usp_hook": "Slogan, USP độc quyền.",
@@ -1068,12 +1055,12 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
         except Exception as e:
             st.error(f"❌ Lỗi thực thi: {e}")
 
-if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict) and not st.session_state.action_trigger:
+if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
     st.divider()
     st.markdown(f"### 🔍 **Phân Tích DNA Chi Tiết Đa Tầng — [{selected_mode.upper()}]**")
     ca = st.session_state.content_analysis
     with st.container(border=True):
-        st.markdown("##### 🏭 **1. Thông số Cốt lõi / Đối tượng chính:**")
+        st.markdown("##### 🏭 **1. Thông số Cốt lõi / Đối tượng chính (Đã định chuẩn Kích thước):**")
         st.markdown(f"<div style='line-height: 1.8;'>{format_analysis_field(ca.get('mechanical_and_accessories', 'N/A'))}</div>", unsafe_allow_html=True)
         st.markdown("---")
         st.markdown("##### 🎯 **2. Ma trận Nỗi đau / Thách thức thực trạng:**")
@@ -1093,7 +1080,7 @@ if st.session_state.content_analysis and isinstance(st.session_state.content_ana
 # ==============================================================================
 all_combined_scripts_list = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
 
-if all_combined_scripts_list and st.session_state.active_script_id is None and not st.session_state.action_trigger:
+if all_combined_scripts_list and st.session_state.active_script_id is None:
     st.divider()
     
     completed_scripts = [sc for sc in all_combined_scripts_list if sc.get("id") in st.session_state.generated_details]
@@ -1117,9 +1104,8 @@ if all_combined_scripts_list and st.session_state.active_script_id is None and n
                         st.rerun()
                 with col_btn2:
                     if st.button("🚀 Nhân bản 5 biến thể", key=f"btn_clone_v1_main_{sc_id}", type="primary", use_container_width=True):
-                        st.session_state.action_trigger = "clone_script"
-                        st.session_state.action_param = sc_id
-                        st.rerun()
+                        st.toast(f"⏳ Đang nhân bản biến thể cho kịch bản #{sc_id}... Vui lòng đợi!", icon="🧬")
+                        clone_script_id(sc_id, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -1136,17 +1122,16 @@ if all_combined_scripts_list and st.session_state.active_script_id is None and n
                     st.caption(f"🏛️ Bối cảnh: {outline.get('setting_style')} | ⚡ Hook: *\"{outline.get('target_hook')}\"*")
                 with col_a2:
                     if st.button("✨ Tạo chi tiết ngay", key=f"btn_cre_v2_main_{sc_id}", use_container_width=True):
-                        st.session_state.action_trigger = "create_detail"
-                        st.session_state.action_param = sc_id
-                        st.rerun()
+                        st.toast(f"⏳ Hệ thống đang dựng chi tiết cho kịch bản #{sc_id}... Vui lòng đợi!", icon="🎬")
+                        create_scene_details_for_id(sc_id, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
 
     st.markdown("---")
     if st.button("➕ Gọi Thêm 5 Kịch Bản Khác", key="btn_add_more_1_main", type="primary", use_container_width=True):
-        st.session_state.action_trigger = "generate_more"
-        st.rerun()
+        st.toast("⏳ Đang suy nghĩ góc tiếp cận mới... Vui lòng đợi 10-15 giây!", icon="🧠")
+        add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
 
 # GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC ĐIỀU HƯỚNG
-if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details and not st.session_state.action_trigger:
+if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
     st.divider()
 
     if st.button("⬅️ Quay lại danh sách kịch bản tổng", key="btn_back_to_list_main"):
@@ -1233,9 +1218,8 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                             st.markdown("<div style='text-align: center; color: #15803d; font-size: 12px; font-weight: 700; padding: 6px;'>Đang hiển thị</div>", unsafe_allow_html=True)
                     with c_clone:
                         if st.button("🚀 Nhân bản", key=f"dt_clone_detail_{it_id}", type="primary", use_container_width=True):
-                            st.session_state.action_trigger = "clone_script"
-                            st.session_state.action_param = it_id
-                            st.rerun()
+                            st.toast(f"⏳ Đang nhân bản biến thể cho kịch bản #{it_id}... Vui lòng đợi!", icon="🧬")
+                            clone_script_id(it_id, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
@@ -1247,8 +1231,8 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         """, unsafe_allow_html=True)
 
         if st.button("➕ Gọi Thêm 5 Tình Huống Kịch Bản Mới", key="btn_add_more_phase2_detail", use_container_width=True):
-            st.session_state.action_trigger = "generate_more"
-            st.rerun()
+            st.toast("⏳ Đang suy nghĩ góc tiếp cận mới... Vui lòng đợi 10-15 giây!", icon="🧠")
+            add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
 
     with col_right:
         st.markdown("""
@@ -1269,6 +1253,5 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                     st.caption(f"🏛️ {item.get('setting_style')}")
                     
                     if st.button("✨ Tạo chi tiết ngay", key=f"nav_sc_detail_{it_id}", use_container_width=True):
-                        st.session_state.action_trigger = "create_detail"
-                        st.session_state.action_param = it_id
-                        st.rerun()
+                        st.toast(f"⏳ Hệ thống đang dựng chi tiết cho kịch bản #{it_id}... Vui lòng đợi!", icon="🎬")
+                        create_scene_details_for_id(it_id, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
