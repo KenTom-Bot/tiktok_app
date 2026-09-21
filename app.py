@@ -303,7 +303,7 @@ with st.sidebar:
                 "character_profiles": st.session_state.character_profiles
             }
             json_str = json.dumps(export_data, ensure_ascii=False, indent=2)
-            st.download_button(label="📥 Tải JSON", data=json_str, file_name=f"{project_title_input.replace(' ', '_')}.json", mime="application/json", use_container_width=True)
+            st.download_button(label="📥 Tải Dự Án", data=json_str, file_name=f"{project_title_input.replace(' ', '_')}.json", mime="application/json", use_container_width=True)
 
         if st.session_state.projects_library:
             proj_keys = list(st.session_state.projects_library.keys())
