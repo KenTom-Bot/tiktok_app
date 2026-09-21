@@ -263,7 +263,7 @@ with st.sidebar:
     if st.session_state.is_logged_in:
         st.markdown("### 🗂️ **Quản Lý Dự Án**")
         
-        if st.button("➕ Tạo Dự Án Mới", type="primary", use_container_width=True):
+        if st.button("➕ Tạo Dự Án Mới (Làm Mới)", type="primary", use_container_width=True):
             st.session_state.content_analysis = None
             st.session_state.all_scripts = []
             st.session_state.cloned_scripts = []
@@ -303,7 +303,7 @@ with st.sidebar:
                 "character_profiles": st.session_state.character_profiles
             }
             json_str = json.dumps(export_data, ensure_ascii=False, indent=2)
-            st.download_button(label="📥 Tải Dự Án", data=json_str, file_name=f"{project_title_input.replace(' ', '_')}.json", mime="application/json", use_container_width=True)
+            st.download_button(label="📥 Tải JSON", data=json_str, file_name=f"{project_title_input.replace(' ', '_')}.json", mime="application/json", use_container_width=True)
 
         if st.session_state.projects_library:
             proj_keys = list(st.session_state.projects_library.keys())
@@ -485,9 +485,9 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
         duration_rule = f"QUY CHUẨN THỜI LƯỢNG KỂ CHUYỆN / REVIEW DÀI ({target_duration_mins} phút / {total_seconds} giây): Xây dựng cốt truyện có chiều sâu, chia theo cấu trúc Hồi/Chương (Act & Chapter)."
 
     voiceover_instruction = """
-    7. QUY CHUẨN THUYẾT MINH TOÀN DIỆN (NARRATION & VOICE OVER MANDATORY): 
-       - 100% các phân cảnh trong video BẮT BUỘC phải kèm theo lời thuyết minh tiếng Việt chuẩn miền Bắc.
-       - Trong 'video_prompt' của MỖI CẢNH, bắt buộc phải mô tả rõ phần âm thanh/lời đọc bằng câu lệnh chỉ định Veo 3 phát ra giọng đọc.
+    7. QUY CHUẨN THUYẾT MINH & ĐỒNG BỘ ÂM THANH (STRICT AUDIO MATCHING):
+       - 100% các phân cảnh BẮT BUỘC phải kèm theo lời thuyết minh.
+       - NHỊP ĐỘ VÀ NĂNG LƯỢNG (PACE & ENERGY): Giọng đọc giữa cảnh CÓ nhân vật và cảnh KHÔNG CÓ nhân vật (cận cảnh sản phẩm) phải ĐỒNG NHẤT TUYỆT ĐỐI về nhịp độ (fast-paced), năng lượng (high-energy) và danh tính giọng (identity). Trong video_prompt, luôn sử dụng lệnh ép buộc AI giữ nguyên "identical voice identity and pacing".
     """
 
     master_director_directive = "CHẾ ĐỘ CHUYÊN GIA CAO CẤP: Tối ưu hóa sâu sắc các thông số điện ảnh chuyên sâu (Lighting setup, Lens focal length, Color grading, Camera movement physics) cho Imagen 3 và Veo 3."
@@ -617,11 +617,11 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         TRANG PHỤC CỐ ĐỊNH CHO KỊCH BẢN NÀY: {outfit_setup}
         
         QUY ĐỊNH ĐẠO DIỄN & LÊN PROMPT TIẾNG ANH (BẮT BUỘC):
-        1. KHÓA CỨNG GIỚI TÍNH & TÔNG GIỌNG THUYẾT MINH: Sử dụng 100% giọng đọc của **{fixed_gender}** với tông giọng **{fixed_tone}**.
+        1. KHÓA CỨNG GIỚI TÍNH, TÔNG GIỌNG & NHỊP ĐỘ (PACE & ENERGY ANCHOR): Sử dụng 100% giọng đọc của **{fixed_gender}** với tông giọng **{fixed_tone}**.
         2. PHÂN RÃ THỜI LƯỢNG CỰC KỲ KHẮT KHE: Tổng thời lượng khớp chính xác {total_sec} giây. Mỗi phân cảnh CHỈ ĐƯỢC PHÉP chọn 1 trong 3 mức thời lượng: 4s, 6s hoặc 8s. 
         3. QUY TRÌNH TRANG PHỤC & KHUÔN MẶT: Dùng tên 'Character X'. BẮT BUỘC áp dụng trang phục được quy định cho kịch bản này là: "{outfit_setup}" cho TẤT CẢ các phân cảnh có mặt nhân vật để đảm bảo tính đồng nhất 100%. Luôn kèm lệnh 'featuring the exact identity of reference image X'.
         4. QUY TRÌNH LOGO & TỶ LỆ SẢN PHẨM: TUYỆT ĐỐI KHÔNG phóng to sản phẩm. BẮT BUỘC DÙNG: "using the exact same colors and textures as the reference image, maintaining realistic scale and true-to-life proportions, keeping exact product logo and text".
-        5. ĐỒNG BỘ GIỌNG ĐỌC NGOÀI HÌNH (GHOST VOICE PREVENTION): Kể cả khi cảnh quay chỉ quay cận cảnh sản phẩm (nhân vật không lên hình), vẫn phải ghi rõ trong video_prompt là giọng đọc của CÙNG MỘT nhân vật đó (off-screen narrator) để tránh tình trạng giọng bị biến thành máy đọc phim tài liệu.
+        5. ĐỒNG BỘ GIỌNG ĐỌC NGOÀI HÌNH (STRICT VOICE MATCHING): Khi quay cận cảnh sản phẩm (không có nhân vật trên hình), BẮT BUỘC giữ nguyên cấu trúc audio prompt y hệt như cảnh có mặt nhân vật. Phải chèn lệnh: "fast-paced, high-energy, consistent pacing, identical voice identity" để AI duy trì sự cuốn hút và tốc độ đọc, KHÔNG bị rớt nhịp chậm rãi thành phim tài liệu.
         6. MÀN HÌNH SẠCH RÁC: Tuyệt đối không sinh ra chữ lơ lửng hay phụ đề (`no floating text, clean background`).
         
         Xuất chuẩn 1 Dict JSON duy nhất:
@@ -638,10 +638,10 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
               "duration": "6s", 
               "scene_setting": "Bối cảnh chi tiết", 
               "transition_type": "Cắt cứng dồn dập (Hard Cut)", 
-              "voice_director_vn": "Giọng {fixed_gender} miền Bắc: {fixed_tone}...", 
+              "voice_director_vn": "Giọng {fixed_gender} miền Bắc: {fixed_tone}, nhịp độ nhanh...", 
               "voiceover_vi": "Lời thuyết minh tiếng Việt", 
               "image_prompt": "Prompt Imagen 3 (tiếng Anh). Nếu có nhân vật phải gán rõ 'Character X... wearing {outfit_setup} and featuring the exact identity of reference image X'. Kèm lệnh mô tả sản phẩm 'using the exact same colors and textures... maintaining realistic scale, keeping exact product logo', no floating text", 
-              "video_prompt": "Prompt Veo 3 (tiếng Anh). Kèm audio: consistent voiceover by the exact same {fixed_gender} character with {fixed_tone} tone (even if acting as off-screen narrator), reading [voiceover_vi]"
+              "video_prompt": "Prompt Veo 3 (tiếng Anh). Kèm audio: fast-paced, high-energy, consistent voiceover by the exact same {fixed_gender} character with {fixed_tone} tone, maintaining the exact same speed, emotion, and identity across all scenes (off-screen narrator if character is not visible), reading [voiceover_vi]"
             }}
           ]
         }}
