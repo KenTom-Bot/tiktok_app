@@ -263,7 +263,7 @@ with st.sidebar:
     if st.session_state.is_logged_in:
         st.markdown("### 🗂️ **Quản Lý Dự Án**")
         
-        if st.button("➕ Tạo Dự Án Mới (Làm Mới)", type="primary", use_container_width=True):
+        if st.button("➕ Tạo Dự Án Mới", type="primary", use_container_width=True):
             st.session_state.content_analysis = None
             st.session_state.all_scripts = []
             st.session_state.cloned_scripts = []
