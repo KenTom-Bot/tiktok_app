@@ -433,19 +433,42 @@ def get_realtime_context():
 
 def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str, target_duration_mins: float = 0.5, char_rules: str = "") -> str:
     is_sales = ("Bán Hàng" in mode or "Sales" in goal)
+    is_knowledge = "Chia sẻ kiến thức" in goal or "Review" in goal
+    is_story = "Kể chuyện" in goal or "Phim ngắn" in goal
+    is_corporate = "Doanh Nghiệp" in mode or "Tuyên Truyền" in mode
+    
     format_instruction = "9:16 vertical video format, mobile-first framing" if aspect_ratio == "9:16" else "16:9 widescreen cinematic format, professional movie framing"
     
+    # 1. LOGIC KIỂM SOÁT THỜI LƯỢNG (GIỚI HẠN VEO 3 LIMITATION)
+    total_seconds = int(target_duration_mins * 60)
     if is_sales:
-        duration_rule = "QUY CHUẨN THỜI LƯỢNG BÁN HÀNG (24s - 35s): Phân rã tự động thành số lượng cảnh hợp lý linh hoạt (VD: 4, 5, 6 cảnh), nhịp độ cực nhanh, tập trung dồn dập vào hook, test thực tế và chốt đơn. Các cảnh được thiết lập linh hoạt ở mốc 4s, 6s hoặc 8s."
+        duration_rule = "QUY CHUẨN THỜI LƯỢNG BÁN HÀNG (24s - 35s): Phân rã tự động thành số lượng cảnh hợp lý linh hoạt, nhịp độ cực nhanh, tập trung dồn dập vào hook, test thực tế và chốt đơn."
     else:
-        total_seconds = int(target_duration_mins * 60)
-        duration_rule = f"QUY CHUẨN THỜI LƯỢNG KỂ CHUYỆN / REVIEW DÀI ({target_duration_mins} phút / {total_seconds} giây): Xây dựng cốt truyện có chiều sâu, chia số cảnh tự động sao cho tổng thời lượng đạt chuẩn."
+        duration_rule = f"QUY CHUẨN THỜI LƯỢNG KỂ CHUYỆN / REVIEW DÀI ({target_duration_mins} phút / {total_seconds} giây): Xây dựng cốt truyện có chiều sâu. Vì AI Video (Veo 3) chỉ sinh được video dài tối đa 4s, 6s, 8s, nên bạn BẮT BUỘC phải chia TỔNG {total_seconds} GIÂY thành nhiều phân cảnh nhỏ (chỉ được chọn mốc 4s, 6s hoặc 8s mỗi cảnh). Để làm một hành động kéo dài (VD cảnh dài 16s), hãy chia làm 2 cảnh 8s liên tiếp."
 
-    voiceover_instruction = """
+    # 2. LOGIC KIỂM SOÁT TÔNG ĐIỆU (TONE OF VOICE & SCRIPT FLOW)
+    if is_sales:
+        goal_directive = "MỤC TIÊU 'BÁN HÀNG': Kịch bản đánh thẳng vào nỗi đau, đưa giải pháp, test thực tế và Kêu gọi hành động (CTA) dồn dập."
+        tone_instruction = "NHỊP ĐỘ VÀ NĂNG LƯỢNG (PACE & ENERGY): fast-paced, high-energy, enthusiastic sales tone."
+    elif is_knowledge:
+        goal_directive = "MỤC TIÊU 'CHIA SẺ KIẾN THỨC / REVIEW': Kịch bản phải VÀO THẲNG TRỌNG TÂM ngay giây đầu tiên, lược bỏ hoàn toàn các phần dạo đầu, chào hỏi dài dòng hay văn vẻ. Trình bày thông tin sắc bén, dễ hiểu."
+        tone_instruction = "NHỊP ĐỘ VÀ NĂNG LƯỢNG (PACE & ENERGY): fast-paced, engaging, sharp, professional tone. VÀO THẲNG VẤN ĐỀ, tuyệt đối KHÔNG chậm rãi/sâu lắng."
+    elif is_story:
+        goal_directive = "MỤC TIÊU 'KỂ CHUYỆN / PHIM NGẮN': Xây dựng cao trào, thắt mở nút rõ ràng. Kể chuyện lôi cuốn, chạm vào cảm xúc người xem."
+        tone_instruction = "NHỊP ĐỘ VÀ NĂNG LƯỢNG (PACE & ENERGY): expressive, emotional storytelling tone, adaptive pacing. Dẫn dắt cảm xúc tự nhiên."
+    elif is_corporate:
+        goal_directive = "MỤC TIÊU 'DOANH NGHIỆP / TUYÊN TRUYỀN': Thể hiện sự chuyên nghiệp, quy mô, uy tín của doanh nghiệp/tổ chức. Thông điệp rõ ràng, khúc chiết."
+        tone_instruction = "NHỊP ĐỘ VÀ NĂNG LƯỢNG (PACE & ENERGY): confident, professional, authoritative tone, steady pacing."
+    else:
+        goal_directive = "MỤC TIÊU 'VIRAL / THƯƠNG HIỆU CÁ NHÂN': Cấu trúc kịch bản có Hook cực mạnh ở 3 giây đầu, bắt trend, giữ chân người xem bằng sự tự nhiên và tương tác cao."
+        tone_instruction = "NHỊP ĐỘ VÀ NĂNG LƯỢNG (PACE & ENERGY): natural, engaging, dynamic pacing."
+
+    voiceover_instruction = f"""
     7. QUY CHUẨN THUYẾT MINH & ĐỒNG BỘ ÂM THANH (ABSOLUTE AUDIO MATCHING):
+       - {goal_directive}
        - CẤM DÙNG GIỌNG THUYẾT MINH PHIM TÀI LIỆU (NO NARRATOR VOICE): Giữa phân cảnh có người và phân cảnh cận sản phẩm (không có người), giọng nói phải là CỦA CÙNG MỘT NGƯỜI (Cùng KOC/Diễn viên đang nói ngoài hình). TUYỆT ĐỐI KHÔNG được chuyển sang giọng đọc phim tài liệu (documentary narrator) đều đều.
-       - NHỊP ĐỘ VÀ NĂNG LƯỢNG (PACE & ENERGY): Luôn sử dụng lệnh ép AI giữ nguyên "The exact same character speaking off-camera, fast-paced, high-energy, NO documentary narrator voice". Tuyệt đối không để giọng bị biến thành giọng kể chuyện chậm rãi.
-       - ĐỒNG NHẤT GIỌNG MIỀN BẮC CHUẨN (HÀ NỘI): Các AI TTS thường tự động chuyển sang giọng miền Nam khi gặp các từ "xả kho", "chốt đơn". Để chống lại điều này, BẮT BUỘC chèn lệnh "strict Northern Vietnamese (Hanoi) accent, ABSOLUTELY NO Southern/Saigon accent even when saying sales keywords" vào MỌI video_prompt.
+       - {tone_instruction} Luôn sử dụng lệnh ép AI giữ nguyên tone này trong mục video_prompt.
+       - ĐỒNG NHẤT GIỌNG MIỀN BẮC CHUẨN (HÀ NỘI): Bắt buộc chèn lệnh "strict Northern Vietnamese (Hanoi) accent, absolutely NO Southern or mixed accents" vào MỌI video_prompt để chặn hiện tượng AI tự động chuyển sang giọng Nam.
        - PHIÊN ÂM TIẾNG VIỆT CHUẨN CHO AI (TTS PRONUNCIATION): Trong trường 'voiceover_vi', BẮT BUỘC phải viết rõ cách phát âm tiếng Việt bồi cho các con số, đơn vị đo lường, và từ tiếng Anh để AI Voice không đọc sai hoặc bị ngọng. 
          + Ví dụ: "10.000mAh" -> viết thành "mười nghìn mi li am pe giờ".
          + Ví dụ: "Sale" -> viết thành "seo", "Deal" -> "đi-u", "Voucher" -> "vâu chờ", "Hot" -> "hót", "Size" -> "sái".
@@ -469,7 +492,7 @@ MỤC TIÊU CHIẾN DỊCH: {goal}
 {char_rules}
 3. MÀN HÌNH SẠCH & GIỮ NGUYÊN LOGO SẢN PHẨM: Tuyệt đối không sinh ra chữ, phụ đề hay watermark rác xung quanh ('no floating text, no subtitles, clean background'). NHƯNG BẮT BUỘC phải giữ nguyên chính xác logo và các dòng chữ có sẵn trên bản thân sản phẩm ('keep exact product logo and typography from reference image').
 4. KHÓA KIỂU DÁNG SẢN PHẨM & TỶ LỆ KÍCH THƯỚC (PRODUCT SCALE & OBJECT ANCHOR): Bắt buộc dùng lệnh "featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE, maintaining realistic scale and true-to-life proportions" để mô tả sản phẩm. TUYỆT ĐỐI KHÔNG tự bịa ra kiểu dáng hay phóng to sản phẩm sai tỷ lệ thực tế. Bắt buộc phải đánh giá kích thước vật lý dựa trên ảnh tải lên (VD: nhỏ bằng bàn tay, to bằng nửa người, cao đến gối...).
-5. CHUYỂN CẢNH THÔNG MINH (SMART TRANSITIONS): Cắt cứng dồn dập (Hard Cut) hoặc Chuyển cảnh khớp hành động mượt mà (Match Cut).
+5. CHUYỂN CẢNH THÔNG MINH & NỐI CẢNH DÀI (SMART TRANSITIONS): Cắt cứng dồn dập (Hard Cut) hoặc Chuyển cảnh khớp hành động mượt mà (Match Cut). ĐỐI VỚI CÁC CẢNH DÀI BỊ CẮT NHỎ THÀNH NHIỀU CẢNH 4S/6S/8S: Cảnh sau sẽ phải dùng frame cuối của cảnh trước làm ảnh tham chiếu để tạo video nối tiếp liền mạch.
 {voiceover_instruction}
 """
     return base
@@ -516,11 +539,14 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
     
     is_corporate = "Doanh Nghiệp" in current_mode or "Tuyên Truyền" in current_mode
     is_sales_mode = "Bán Hàng" in current_mode
+    is_knowledge = "Chia sẻ kiến thức" in goal or "Review" in goal
     
     if is_corporate:
         extra_rules = "- Bối cảnh không gian văn phòng, nhà xưởng quy mô, dự án thực tế hoặc cộng đồng.\n- Không thúc ép mua hàng."
     elif is_sales_mode:
         extra_rules = "- BẮT BUỘC CHUYỂN ĐỔI GÓC TIẾP CẬN: Hãy tạo 5 kịch bản mới tập trung vào: Review tính năng chi tiết, Đập hộp (Unboxing), Trải nghiệm thực tế (Lifestyle), Feedback khách hàng, Hướng dẫn sử dụng. KHÔNG làm xả kho/kho hàng nữa.\n- TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ.\n- TUYỆT ĐỐI CẤM SỬ DỤNG TỪ 'LIVESTREAM', 'PHIÊN LIVE'. Dùng 'video này'."
+    elif is_knowledge:
+        extra_rules = "- VÀO THẲNG VẤN ĐỀ: Bỏ qua hoàn toàn các đoạn chào hỏi, dạo đầu dài dòng. Tập trung 100% vào việc chia sẻ kiến thức hoặc review chuyên sâu."
     else:
         extra_rules = "- Khai thác sâu khía cạnh cảm xúc, trải nghiệm thực tế gia đình/giáo dục."
         
@@ -560,27 +586,49 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     
     product_ctx = st.session_state.get("current_input_context", "Dự án hiện tại")
     
+    # Định tuyến Cảm xúc & Thời lượng (Emotion & Pacing Routing)
+    is_sales_mode = "Bán Hàng" in current_mode
+    is_knowledge = "Chia sẻ kiến thức" in goal or "Review" in goal
+    is_story = "Kể chuyện" in goal or "Phim ngắn" in goal
+    is_corporate = "Doanh Nghiệp" in current_mode or "Tuyên Truyền" in current_mode
+
+    if target_duration_mins <= 0.5:
+        total_sec = 30
+        duration_str = "24s - 35s (Chuyển đổi bán hàng)"
+        duration_rule_scene = "Từng phân cảnh CHỈ ĐƯỢC CHỌN mốc: 4s, 6s, hoặc 8s."
+    else:
+        total_sec = int(target_duration_mins * 60)
+        duration_str = f"{total_sec}s ({target_duration_mins} phút)"
+        duration_rule_scene = f"TỔNG CỘNG ĐỘ DÀI CÁC CẢNH PHẢI ĐÚNG CHÍNH XÁC {total_sec} GIÂY. QUAN TRỌNG: AI tạo video (Veo 3) chỉ giới hạn sinh video 4s, 6s, 8s. KHÔNG ĐƯỢC phép viết cảnh 10s, 15s. Bạn BẮT BUỘC phải chia những hành động dài thành nhiều cảnh nhỏ 4s/6s/8s nối tiếp nhau."
+
+    if is_sales_mode:
+        tone_en = "fast-paced, high-energy, enthusiastic sales tone"
+        tone_vn = "nhịp độ nhanh, năng lượng cao, chốt sale"
+    elif is_knowledge:
+        tone_en = "fast-paced, engaging, sharp, professional tone, absolutely NO slow or overly emotional voice"
+        tone_vn = "nhịp độ nhanh, dứt khoát, lôi cuốn, chuyên nghiệp (Tuyệt đối không dùng giọng chậm rãi hay rườm rà)"
+    elif is_story:
+        tone_en = "expressive, emotional storytelling tone, adaptive pacing"
+        tone_vn = "truyền cảm, nhấn nhá theo mạch cảm xúc câu chuyện"
+    elif is_corporate:
+        tone_en = "confident, professional, authoritative tone, steady pacing"
+        tone_vn = "đĩnh đạc, tự tin, chuyên nghiệp, đáng tin cậy"
+    else:
+        tone_en = "natural, engaging, dynamic pacing"
+        tone_vn = "tự nhiên, gần gũi, lôi cuốn, năng lượng linh hoạt"
+
     # Ép buộc Giới tính phải rõ ràng
     v_profile = outline.get("voice_profile", {})
     if isinstance(v_profile, str):
-        fixed_gender, fixed_tone = "Nữ", v_profile
+        fixed_gender = "Nữ"
     elif isinstance(v_profile, dict):
         fixed_gender = v_profile.get("gender", "Nữ")
         if "hay Nữ" in fixed_gender or "/" in fixed_gender or "xác định" in fixed_gender.lower() or not fixed_gender.strip():
             fixed_gender = "Nữ" 
-        fixed_tone = v_profile.get("tone", "Truyền cảm chuyên nghiệp")
     else:
-        fixed_gender, fixed_tone = "Nữ", "Truyền cảm"
+        fixed_gender = "Nữ"
         
     outfit_setup = outline.get("script_outfit_setup", "casual everyday outfit")
-    
-    is_sales_mode = "Bán Hàng" in current_mode
-    if target_duration_mins <= 0.5:
-        duration_str = "24s - 35s (Chuyển đổi bán hàng)"
-    else:
-        total_sec = int(target_duration_mins * 60)
-        duration_str = f"{total_sec}s ({target_duration_mins} phút)"
-        
     char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []), is_sales_mode)
     realtime_ctx = get_realtime_context()
     
@@ -590,17 +638,17 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     {realtime_ctx}
     Ý tưởng kịch bản: ID {target_id} - {outline.get('title')}
     Bối cảnh định hướng: {outline.get('setting_style')} | Góc tiếp cận: {outline.get('angle')} | Hook: {outline.get('target_hook')}
-    TRANG PHỤC CỐ ĐỊNH CHO KỊCH BẢN NÀY: {outfit_setup} (Lưu ý: Phải bám sát thực tế bối cảnh. Nếu ở kho/xưởng phải là đồ công nhân/đồng phục, KHÔNG mặc lòe loẹt).
+    TRANG PHỤC CỐ ĐỊNH CHO KỊCH BẢN NÀY: {outfit_setup} (Lưu ý: Phải bám sát thực tế bối cảnh).
     
     QUY ĐỊNH ĐẠO DIỄN & LÊN PROMPT TIẾNG ANH (BẮT BUỘC):
-    1. KHÓA CỨNG GIỚI TÍNH, TÔNG GIỌNG & NHỊP ĐỘ (PACE & ENERGY ANCHOR): Sử dụng 100% giọng đọc của **{fixed_gender}** với tông giọng **{fixed_tone}**.
-    2. PHÂN RÃ THỜI LƯỢNG LINH HOẠT: Tổng thời lượng mục tiêu là {duration_str}. Tự động chia thành số lượng phân cảnh phù hợp (Tự linh hoạt 4, 5, 6 cảnh... miễn sao đảm bảo mốc thời gian). Từng phân cảnh chỉ chọn mốc: 4s, 6s, hoặc 8s.
-    3. PHIÊN ÂM TIẾNG VIỆT CHUẨN XÁC CHO AI (TTS RULE): Trong trường 'voiceover_vi', BẮT BUỘC viết âm đọc tiếng Việt bồi cho từ khó/tiếng Anh. (Vd: 10.000mAh phải viết là "mười nghìn mi li am pe giờ", Sale -> "seo", Deal -> "đi-u", freeship -> "phờ ri síp").
-    4. CẤM TỪ LIVESTREAM: TUYỆT ĐỐI KHÔNG dùng từ "livestream", "phiên live". Đây là video VOD.
-    5. QUY TRÌNH TRANG PHỤC & KHUÔN MẶT: Dùng tên 'Character X'. BẮT BUỘC áp dụng trang phục "{outfit_setup}" cho TẤT CẢ các phân cảnh có mặt nhân vật để đảm bảo tính đồng nhất 100%. Luôn kèm lệnh 'featuring the exact identity of reference image X'.
-    6. QUY TRÌNH SẢN PHẨM & TỶ LỆ KÍCH THƯỚC: TUYỆT ĐỐI KHÔNG làm sai lệch kiểu dáng và KHÔNG phóng to sản phẩm sai tỷ lệ. BẮT BUỘC DÙNG CỤM TỪ: "featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE, maintaining realistic scale and true-to-life proportions".
-    7. ĐỒNG BỘ GIỌNG ĐỌC NGOÀI HÌNH & MIỀN BẮC (ANTI-SOUTHERN BIAS RULE): Các AI âm thanh thường bị lỗi tự động chuyển sang giọng miền Nam khi gặp các từ khóa bán hàng ("xả kho", "giá sốc"). Để chống lại điều này, BẮT BUỘC chèn cụm lệnh sau vào MỌI video_prompt (kể cả cảnh không có người): "Audio: The exact same {fixed_gender} character speaking. Fast-paced, high-energy, strict Northern Vietnamese (Hanoi) accent. ABSOLUTELY NO Southern/Saigon accent even when saying sales keywords. ABSOLUTELY NO documentary narrator voice. Maintain the exact same enthusiastic sales tone".
-    8. KỶ LUẬT CHỐNG VIẾT TẮT (NO SHORTCUT RULE): Bạn TUYỆT ĐỐI KHÔNG ĐƯỢC phép lười biếng viết "Tương tự cảnh 1" ở các cảnh sau. Bạn BẮT BUỘC PHẢI VIẾT LẶP LẠI TOÀN BỘ CÁC LỆNH KHÓA (Khuôn mặt, Trang phục '{outfit_setup}', Tỷ lệ Sản phẩm, Giọng điệu ngoài hình) VÀO MỌI PHÂN CẢNH.
+    1. KHÓA CỨNG GIỚI TÍNH, TÔNG GIỌNG & NHỊP ĐỘ: Sử dụng 100% giọng đọc của **{fixed_gender}**. Bắt buộc tuân thủ đạo diễn âm thanh: {tone_vn}.
+    2. KỶ LUẬT THỜI LƯỢNG VÀ NỐI CẢNH (VEO 3 LIMITATION): Tổng thời lượng mục tiêu là {duration_str}. {duration_rule_scene}
+    3. KỸ THUẬT NỐI CẢNH (SEAMLESS CONTINUITY): Đối với các phân cảnh nhỏ được cắt ra từ 1 cảnh dài (để duy trì cùng một hành động/khung hình), tại trường `image_prompt` của cảnh nối tiếp, BẠN CHỈ CẦN GHI LỆNH: "Dùng frame ảnh cuối cùng của phân cảnh trước làm ảnh đầu vào (Image-to-Video) để giữ sự liền mạch tuyệt đối". KHÔNG cần viết lại prompt sinh ảnh mới.
+    4. PHIÊN ÂM TIẾNG VIỆT CHUẨN XÁC CHO AI (TTS RULE): BẮT BUỘC viết âm đọc tiếng Việt bồi cho từ khó/tiếng Anh. (Vd: 10.000mAh -> "mười nghìn mi li am pe giờ").
+    5. CẤM TỪ LIVESTREAM: TUYỆT ĐỐI KHÔNG dùng từ "livestream", "phiên live".
+    6. QUY TRÌNH TRANG PHỤC & KHUÔN MẶT: Nếu là ảnh mới, bắt buộc ép lệnh 'featuring the exact identity of reference image X' và mặc đồ '{outfit_setup}'.
+    7. ĐỒNG BỘ GIỌNG ĐỌC NGOÀI HÌNH & MIỀN BẮC (ANTI-SOUTHERN BIAS RULE): Kể cả cảnh cận sản phẩm (không có người), BẮT BUỘC chèn lệnh: "Audio: The exact same {fixed_gender} character speaking. {tone_en}. Strict Northern Vietnamese (Hanoi) accent. ABSOLUTELY NO Southern/Saigon accent. ABSOLUTELY NO documentary narrator voice." vào video_prompt.
+    8. KỶ LUẬT CHỐNG VIẾT TẮT (NO SHORTCUT RULE): Bạn TUYỆT ĐỐI KHÔNG ĐƯỢC lười biếng bỏ trống phần `video_prompt`. Mọi `video_prompt` phải lặp lại đầy đủ cấu trúc chỉ đạo âm thanh.
     
     Xuất chuẩn 1 Dict JSON duy nhất:
     {{
@@ -608,30 +656,30 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
       "title": "{outline.get('title')}", 
       "setting_style": "{outline.get('setting_style')}",
       "script_outfit_setup": "{outfit_setup}",
-      "voice_profile": {{"gender": "{fixed_gender}", "tone": "{fixed_tone}"}},
+      "voice_profile": {{"gender": "{fixed_gender}", "tone": "{tone_vn}"}},
       "total_estimated_duration": "{duration_str}",
       "scenes": [
         {{
           "scene_number": 1, 
-          "duration": "6s", 
-          "scene_setting": "Bối cảnh chi tiết", 
-          "transition_type": "Cắt cứng dồn dập (Hard Cut)", 
-          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn (Hà Nội): {fixed_tone}, nhịp độ nhanh năng lượng cao (Nhân vật đang nói)", 
+          "duration": "8s", 
+          "scene_setting": "Bối cảnh hành động diễn ra dài...", 
+          "transition_type": "Mở đầu", 
+          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn (Hà Nội): {tone_vn} (Nhân vật đang nói)", 
           "voiceover_vi": "Lời thuyết minh tiếng Việt ĐÃ ĐƯỢC PHIÊN ÂM (vd: mười nghìn mi li am pe giờ)", 
-          "image_prompt": "Prompt Imagen 3 (tiếng Anh). CÓ NHÂN VẬT THÌ ÉP LỆNH: 'Character X... wearing {outfit_setup} and featuring the exact identity of reference image X'. BẮT BUỘC LỆNH SẢN PHẨM: 'featuring the EXACT design... maintaining realistic scale', no floating text", 
-          "video_prompt": "Prompt Veo 3 (tiếng Anh). BẮT BUỘC CÓ LỆNH ÂM THANH: 'Audio: The exact same {fixed_gender} character speaking on-camera. Fast-paced, high-energy, strict Northern Vietnamese (Hanoi) accent. ABSOLUTELY NO Southern/Saigon accent even for sales words. Reading: [voiceover_vi]'"
+          "image_prompt": "Prompt Imagen 3 (tiếng Anh). CÓ NHÂN VẬT THÌ ÉP LỆNH: 'Character X... wearing {outfit_setup} and featuring the exact identity of reference image X'. BẮT BUỘC LỆNH SẢN PHẨM: 'featuring the EXACT design... maintaining realistic scale'", 
+          "video_prompt": "Prompt Veo 3 (tiếng Anh). BẮT BUỘC CÓ LỆNH ÂM THANH: 'Audio: The exact same {fixed_gender} character speaking on-camera. {tone_en}. Strict Northern Vietnamese (Hanoi) accent. ABSOLUTELY NO Southern/Saigon accent. Reading: [voiceover_vi]'"
         }},
         {{
           "scene_number": 2,
-          "duration": "4s",
-          "scene_setting": "Quay cận cảnh sản phẩm (Không thấy người)...",
-          "transition_type": "...",
-          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn (Hà Nội): {fixed_tone}, nhịp độ nhanh năng lượng cao (Nhân vật nói ngoài hình)",
+          "duration": "8s",
+          "scene_setting": "Tiếp tục diễn biến kéo dài của cảnh 1 (Nối cảnh để tạo thành 16s)...",
+          "transition_type": "Nối liền mạch (Match Cut)",
+          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn (Hà Nội): {tone_vn}",
           "voiceover_vi": "Lời thuyết minh tiếp theo...",
-          "image_prompt": "BẠN PHẢI VIẾT LẠI ĐẦY ĐỦ LỆNH TRANG PHỤC VÀ SẢN PHẨM NHƯ CẢNH 1. KHÔNG ĐƯỢC VIẾT TẮT.",
-          "video_prompt": "BẠN PHẢI VIẾT LẠI ĐẦY ĐỦ LỆNH ÂM THANH: 'Audio: The exact same {fixed_gender} character is speaking off-camera. Fast-paced, high-energy, strict Northern Vietnamese (Hanoi) accent. ABSOLUTELY NO Southern/Saigon accent even for sales words. ABSOLUTELY NO documentary narrator voice. Maintain the exact same enthusiastic sales tone and identity. Reading: [voiceover_vi]'"
+          "image_prompt": "Dùng frame ảnh cuối cùng của phân cảnh trước (Cảnh 1) làm ảnh đầu vào (Image-to-Video) để giữ sự liền mạch tuyệt đối.",
+          "video_prompt": "BẠN PHẢI VIẾT LẠI ĐẦY ĐỦ LỆNH ÂM THANH NHƯ CẢNH 1: 'Audio: The exact same {fixed_gender} character is speaking... {tone_en}... Strict Northern Vietnamese (Hanoi) accent. Reading: [voiceover_vi]'"
         }}
-        // TỰ ĐỘNG SINH TIẾP CÁC CẢNH 3, 4, 5... LINH HOẠT ĐỂ ĐẠT TỔNG THỜI LƯỢNG (VIẾT ĐẦY ĐỦ LỆNH CHO TỪNG CẢNH NHƯ TRÊN)
+        // TỰ ĐỘNG CHIA & NỐI CÁC CẢNH 3, 4, 5... SAO CHO TỔNG THỜI GIAN CỘNG LẠI BẰNG CHÍNH XÁC QUY ĐỊNH (MỖI CẢNH ĐỀU PHẢI CHỌN ĐÚNG 4s, 6s HOẶC 8s)
       ]
     }}
     """
@@ -667,7 +715,7 @@ def clone_script_id(target_id, current_mode, current_style, aspect_ratio, goal, 
         st.error(f"❌ Lỗi: {e}")
 
 # ==============================================================================
-# 1. KIỂM TRA ĐĂNG NHẬP & BẢO MẬT (SỬA LỖI MÀN HÌNH CHÍNH)
+# 1. KIỂM TRA ĐĂNG NHẬP & BẢO MẬT
 # ==============================================================================
 st.markdown("""
 <div class="header-container">
@@ -679,7 +727,7 @@ st.markdown("""
 
 if not st.session_state.is_logged_in:
     st.info("👈 **Vui lòng đăng nhập ở thanh công cụ bên trái để sử dụng hệ thống.**")
-    st.stop()  # Ngăn không cho chạy đoạn code UI phía dưới nếu chưa đăng nhập
+    st.stop() 
 
 # ==============================================================================
 # 2. RENDER GIAO DIỆN CẤU HÌNH ĐẦU TIÊN & KHAI BÁO BIẾN TOÀN CỤC
@@ -688,7 +736,7 @@ col_mode, col_style = st.columns([1.5, 1])
 with col_mode:
     selected_mode = st.selectbox("🎯 Chọn Thể Loại Nội Dung:", options=ALL_MODULES)
 
-# KHAI BÁO CÁC CỜ NHẬN DIỆN (FLAGS) NGAY TẠI ĐÂY ĐỂ TRÁNH NAME ERROR
+# KHAI BÁO CÁC CỜ NHẬN DIỆN (FLAGS) NGAY TẠI ĐÂY
 is_sales = "Bán Hàng" in selected_mode
 is_corporate = "Doanh Nghiệp" in selected_mode or "Tuyên Truyền" in selected_mode
 
@@ -737,8 +785,12 @@ with col_time:
     else:
         target_duration_mins = st.number_input("⏱️ Nhập thời lượng mong muốn (Phút):", min_value=0.5, max_value=30.0, value=1.0, step=0.5)
 
+# CỜ NHẬN DIỆN MỤC TIÊU PHỤ
+is_knowledge = "Chia sẻ kiến thức" in content_goal or "Review" in content_goal
+is_story = "Kể chuyện" in content_goal or "Phim ngắn" in content_goal
+
 # ==============================================================================
-# 3. XỬ LÝ SỰ KIỆN NÚT BẤM (NGAY SAU KHI VẼ XONG UI CẤU HÌNH)
+# 3. XỬ LÝ SỰ KIỆN NÚT BẤM (ANTI-STALE UI TRIGGER)
 # ==============================================================================
 if st.session_state.action_trigger:
     action = st.session_state.action_trigger
@@ -772,7 +824,7 @@ if st.session_state.action_trigger:
             time.sleep(0.2)
             st.rerun()
         
-    st.stop() # Cắt luồng tại đây để không render danh sách cũ, tránh màn hình mờ/xám.
+    st.stop() # Dừng toàn bộ code bên dưới để màn hình cũ KHÔNG BỊ VẼ LẠI
 
 # ==============================================================================
 # 4. NẾU KHÔNG CÓ HÀNH ĐỘNG NÀO ĐANG CHẠY (RENDER UI THƯỜNG)
@@ -844,7 +896,9 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
             char_rules_str = generate_char_rules_string(profiles_to_save, is_sales)
             realtime_ctx = get_realtime_context()
             
+            # XỬ LÝ ĐỊNH TUYẾN TÔNG ĐIỆU VÀ CẤU TRÚC KỊCH BẢN TRONG BƯỚC PHÂN TÍCH
             if is_sales:
+                tone_suggestion = "Năng lượng cao, chốt sale"
                 specific_rules = """
                 1. Về Giá cả: TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ. Chỉ sử dụng: "giá tận xưởng", "deal sốc giới hạn".
                 2. BẮT BUỘC TẠO 5 KỊCH BẢN ĐẦU TIÊN: Xoay quanh: Xả kho, Giảm giá, Deal sốc, Siêu sale.
@@ -853,178 +907,89 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
                 5. ƯỚC LƯỢNG KÍCH THƯỚC: Phân tích kích thước thật của sản phẩm từ ảnh để AI không phóng to (vd: nhỏ gọn trong tay).
                 6. CẤM TỪ LIVESTREAM: TUYỆT ĐỐI KHÔNG sử dụng các từ "livestream", "phiên live". Đây là video ngắn quay sẵn. Thay bằng "trong video này", "hôm nay".
                 """
-                script_outlines_json = """
-                  "script_outlines": [
-                    {
-                      "id": 1,
-                      "title": "Tên kịch bản (Xả kho / Deal sốc)",
-                      "setting_style": "Bối cảnh: Kho hàng / Xưởng / Showroom",
-                      "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật PHÙ HỢP NGHIÊM NGẶT THỰC TẾ với bối cảnh kho/xưởng/showroom (VD: đồ thủ kho, áo polo trơn, đồ bảo hộ)",
-                      "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
-                      "target_hook": "Câu mở đầu giật gân chốt đơn (Không đưa giá cụ thể, cấm nhắc livestream)",
-                      "recommended_scenes_count": "Tự động phân bổ linh hoạt",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
-                    },
-                    {
-                      "id": 2,
-                      "title": "Tên kịch bản 2",
-                      "setting_style": "Bối cảnh: Kho hàng / Xưởng / Showroom",
-                      "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật PHÙ HỢP THỰC TẾ bối cảnh",
-                      "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
-                      "target_hook": "Câu mở đầu (cấm nhắc livestream)",
-                      "recommended_scenes_count": "Tự động phân bổ linh hoạt",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
-                    },
-                    {
-                      "id": 3,
-                      "title": "Tên kịch bản 3",
-                      "setting_style": "Bối cảnh: Kho hàng / Xưởng / Showroom",
-                      "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật PHÙ HỢP THỰC TẾ bối cảnh",
-                      "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
-                      "target_hook": "Câu mở đầu (cấm nhắc livestream)",
-                      "recommended_scenes_count": "Tự động phân bổ linh hoạt",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
-                    },
-                    {
-                      "id": 4,
-                      "title": "Tên kịch bản 4",
-                      "setting_style": "Bối cảnh: Kho hàng / Xưởng / Showroom",
-                      "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật PHÙ HỢP THỰC TẾ bối cảnh",
-                      "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
-                      "target_hook": "Câu mở đầu (cấm nhắc livestream)",
-                      "recommended_scenes_count": "Tự động phân bổ linh hoạt",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
-                    },
-                    {
-                      "id": 5,
-                      "title": "Tên kịch bản 5",
-                      "setting_style": "Bối cảnh: Kho hàng / Xưởng / Showroom",
-                      "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật PHÙ HỢP THỰC TẾ bối cảnh",
-                      "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
-                      "target_hook": "Câu mở đầu (cấm nhắc livestream)",
-                      "recommended_scenes_count": "Tự động phân bổ linh hoạt",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
-                    }
-                  ]
+            elif is_knowledge:
+                tone_suggestion = "Nhanh, dứt khoát, lôi cuốn, chuyên nghiệp"
+                specific_rules = """
+                1. VÀO THẲNG VẤN ĐỀ: Lược bỏ hoàn toàn các phần dạo đầu, chào hỏi dài dòng. Bắt đầu ngay bằng 1 hook đánh thẳng vào kiến thức hoặc review chuyên sâu cần chia sẻ.
+                2. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Dựa vào ảnh KOC, điền CHÍNH XÁC 'Nam' hoặc 'Nữ' vào mục 'gender'.
+                3. ƯỚC LƯỢNG KÍCH THƯỚC: Phân tích kích thước thật của sản phẩm/vật thể.
+                """
+            elif is_story:
+                tone_suggestion = "Truyền cảm, nhấn nhá theo mạch cảm xúc"
+                specific_rules = """
+                1. KỂ CHUYỆN: Xây dựng cao trào, thắt mở nút rõ ràng để giữ chân người xem.
+                2. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Dựa vào ảnh KOC, điền CHÍNH XÁC 'Nam' hoặc 'Nữ' vào mục 'gender'.
+                3. ƯỚC LƯỢNG KÍCH THƯỚC: Phân tích kích thước thật của sản phẩm/vật thể.
                 """
             elif is_corporate:
+                tone_suggestion = "Đĩnh đạc, chuyên nghiệp, đáng tin cậy"
                 specific_rules = """
-                1. Tầm nhìn & Sứ mệnh: Bóc tách triết lý vận hành. Không thúc ép mua hàng.
-                2. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Bắt buộc nhận diện giới tính nhân vật từ ảnh tham chiếu, điền đúng 'Nam' hoặc 'Nữ' vào trường 'gender'.
-                """
-                script_outlines_json = """
-                  "script_outlines": [
-                    {
-                      "id": 1,
-                      "title": "Tên kịch bản 1",
-                      "setting_style": "Bối cảnh định hướng",
-                      "script_outfit_setup": "Mô tả 1 bộ trang phục công sở",
-                      "angle": "Góc tiếp cận chuyển đổi",
-                      "target_hook": "Câu mở đầu thu hút",
-                      "recommended_scenes_count": "Tự động phân bổ số cảnh",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Truyền cảm, thuyết minh chuyên nghiệp"}
-                    },
-                    {
-                      "id": 2,
-                      "title": "Tên kịch bản 2",
-                      "setting_style": "Bối cảnh",
-                      "script_outfit_setup": "Mô tả 1 bộ trang phục",
-                      "angle": "Góc tiếp cận",
-                      "target_hook": "Câu mở đầu",
-                      "recommended_scenes_count": "Tự động phân bổ số cảnh",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Trầm ấm, thuyết minh"}
-                    },
-                    {
-                      "id": 3,
-                      "title": "Tên kịch bản 3",
-                      "setting_style": "Bối cảnh",
-                      "script_outfit_setup": "Mô tả 1 bộ trang phục",
-                      "angle": "Góc tiếp cận",
-                      "target_hook": "Câu mở đầu",
-                      "recommended_scenes_count": "Tự động phân bổ số cảnh",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Hào hứng"}
-                    },
-                    {
-                      "id": 4,
-                      "title": "Tên kịch bản 4",
-                      "setting_style": "Bối cảnh",
-                      "script_outfit_setup": "Mô tả 1 bộ trang phục",
-                      "angle": "Góc tiếp cận",
-                      "target_hook": "Câu mở đầu",
-                      "recommended_scenes_count": "Tự động phân bổ số cảnh",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Thuyết phục"}
-                    },
-                    {
-                      "id": 5,
-                      "title": "Tên kịch bản 5",
-                      "setting_style": "Bối cảnh",
-                      "script_outfit_setup": "Mô tả 1 bộ trang phục",
-                      "angle": "Góc tiếp cận",
-                      "target_hook": "Câu mở đầu",
-                      "recommended_scenes_count": "Tự động phân bổ số cảnh",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Tin cậy"}
-                    }
-                  ]
+                1. THÔNG ĐIỆP TỔ CHỨC: Thể hiện sự chuyên nghiệp, uy tín. Không thúc ép mua hàng.
+                2. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Dựa vào ảnh KOC, điền CHÍNH XÁC 'Nam' hoặc 'Nữ' vào mục 'gender'.
+                3. ƯỚC LƯỢNG KÍCH THƯỚC: Phân tích kích thước thật của sản phẩm/dự án.
                 """
             else:
+                tone_suggestion = "Tự nhiên, lôi cuốn, tương tác cao"
                 specific_rules = """
-                1. Khai thác nội dung sâu sắc, ý nghĩa giáo dục gia đình. Tuyệt đối không viết tên màu cụ thể của sản phẩm vào các prompt.
-                2. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Bắt buộc nhận diện giới tính KOC từ ảnh tham chiếu, điền đúng 'Nam' hoặc 'Nữ' vào trường 'gender' và thay đổi xưng hô nhân vật.
+                1. NỘI DUNG VIRAL: Hook cực mạnh ở 3 giây đầu, bắt trend, tự nhiên và gần gũi.
+                2. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Dựa vào ảnh KOC, điền CHÍNH XÁC 'Nam' hoặc 'Nữ' vào mục 'gender'.
+                3. ƯỚC LƯỢNG KÍCH THƯỚC: Phân tích kích thước thật của sản phẩm/vật thể.
                 """
-                script_outlines_json = """
-                  "script_outlines": [
-                    {
-                      "id": 1,
-                      "title": "Tên kịch bản 1",
-                      "setting_style": "Bối cảnh định hướng",
-                      "script_outfit_setup": "Mô tả trang phục phù hợp",
-                      "angle": "Góc tiếp cận chuyển đổi",
-                      "target_hook": "Câu mở đầu thu hút",
-                      "recommended_scenes_count": "Tự động phân bổ số cảnh",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Truyền cảm, thuyết minh chuyên nghiệp"}
-                    },
-                    {
-                      "id": 2,
-                      "title": "Tên kịch bản 2",
-                      "setting_style": "Bối cảnh",
-                      "script_outfit_setup": "Mô tả trang phục phù hợp",
-                      "angle": "Góc tiếp cận",
-                      "target_hook": "Câu mở đầu",
-                      "recommended_scenes_count": "Tự động phân bổ số cảnh",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Trầm ấm, thuyết minh"}
-                    },
-                    {
-                      "id": 3,
-                      "title": "Tên kịch bản 3",
-                      "setting_style": "Bối cảnh",
-                      "script_outfit_setup": "Mô tả trang phục phù hợp",
-                      "angle": "Góc tiếp cận",
-                      "target_hook": "Câu mở đầu",
-                      "recommended_scenes_count": "Tự động phân bổ số cảnh",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Hào hứng"}
-                    },
-                    {
-                      "id": 4,
-                      "title": "Tên kịch bản 4",
-                      "setting_style": "Bối cảnh",
-                      "script_outfit_setup": "Mô tả trang phục phù hợp",
-                      "angle": "Góc tiếp cận",
-                      "target_hook": "Câu mở đầu",
-                      "recommended_scenes_count": "Tự động phân bổ số cảnh",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Thuyết phục"}
-                    },
-                    {
-                      "id": 5,
-                      "title": "Tên kịch bản 5",
-                      "setting_style": "Bối cảnh",
-                      "script_outfit_setup": "Mô tả trang phục phù hợp",
-                      "angle": "Góc tiếp cận",
-                      "target_hook": "Câu mở đầu",
-                      "recommended_scenes_count": "Tự động phân bổ số cảnh",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Tin cậy"}
-                    }
-                  ]
-                """
+
+            script_outlines_json = f"""
+              "script_outlines": [
+                {{
+                  "id": 1,
+                  "title": "Tên kịch bản 1",
+                  "setting_style": "Mô tả bối cảnh",
+                  "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật PHÙ HỢP THỰC TẾ với bối cảnh",
+                  "angle": "Góc tiếp cận",
+                  "target_hook": "Câu mở đầu mạnh mẽ, thu hút (cấm nhắc livestream nếu là video bán hàng)",
+                  "recommended_scenes_count": "Tự động phân bổ linh hoạt",
+                  "voice_profile": {{"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "{tone_suggestion}"}}
+                }},
+                {{
+                  "id": 2,
+                  "title": "Tên kịch bản 2",
+                  "setting_style": "Mô tả bối cảnh",
+                  "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật PHÙ HỢP THỰC TẾ",
+                  "angle": "Góc tiếp cận",
+                  "target_hook": "Câu mở đầu",
+                  "recommended_scenes_count": "Tự động phân bổ linh hoạt",
+                  "voice_profile": {{"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "{tone_suggestion}"}}
+                }},
+                {{
+                  "id": 3,
+                  "title": "Tên kịch bản 3",
+                  "setting_style": "Mô tả bối cảnh",
+                  "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật PHÙ HỢP THỰC TẾ",
+                  "angle": "Góc tiếp cận",
+                  "target_hook": "Câu mở đầu",
+                  "recommended_scenes_count": "Tự động phân bổ linh hoạt",
+                  "voice_profile": {{"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "{tone_suggestion}"}}
+                }},
+                {{
+                  "id": 4,
+                  "title": "Tên kịch bản 4",
+                  "setting_style": "Mô tả bối cảnh",
+                  "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật PHÙ HỢP THỰC TẾ",
+                  "angle": "Góc tiếp cận",
+                  "target_hook": "Câu mở đầu",
+                  "recommended_scenes_count": "Tự động phân bổ linh hoạt",
+                  "voice_profile": {{"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "{tone_suggestion}"}}
+                }},
+                {{
+                  "id": 5,
+                  "title": "Tên kịch bản 5",
+                  "setting_style": "Mô tả bối cảnh",
+                  "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật PHÙ HỢP THỰC TẾ",
+                  "angle": "Góc tiếp cận",
+                  "target_hook": "Câu mở đầu",
+                  "recommended_scenes_count": "Tự động phân bổ linh hoạt",
+                  "voice_profile": {{"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "{tone_suggestion}"}}
+                }}
+              ]
+            """
             
             prompt_text = f"""
             Phân tích siêu chuyên sâu chủ đề cho thể loại '{selected_mode}' theo phong cách '{selected_style}'. 
