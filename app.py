@@ -762,7 +762,6 @@ st.markdown("---")
 st.markdown("### 📐 Cấu Hình Khung Hình, Mục Đích & Thời Lượng Chiến Dịch")
 
 col_ratio, col_goal, col_time = st.columns([1, 1, 1])
-# === KẾT THÚC ĐOẠN CODE CẦN THAY THẾ ===
 
 with col_p_img:
     st.markdown("**1. 📦 Tải ảnh Sản phẩm / Bối cảnh chính**")
