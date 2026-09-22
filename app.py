@@ -7,6 +7,7 @@ import base64
 import os
 import re
 import time
+import ast
 from datetime import datetime, timedelta
 
 # ==============================================================================
@@ -442,21 +443,25 @@ def safe_copy_button(text_to_copy: str, button_label: str = "📋 Sao Chép Prom
     """, height=40)
 
 def clean_and_parse_json(text_content: str):
-    cleaned = re.sub(r'```(?:json)?', '', text_content).strip()
+    # LỌC JSON CHỐNG CRASH TOÀN DIỆN (Trị triệt để lỗi Expecting ',' delimiter)
+    cleaned = text_content.strip()
     match = re.search(r'(\{.*\}|\[.*\])', cleaned, re.DOTALL)
     if match:
         cleaned = match.group(0)
+        
     try:
-        parsed = json.loads(cleaned)
+        # strict=False cho phép các chuỗi chứa \n, \t mà không bị crash
+        parsed = json.loads(cleaned, strict=False)
         return parsed[0] if isinstance(parsed, list) and len(parsed) > 0 else parsed
-    except json.JSONDecodeError as e:
+    except json.JSONDecodeError:
+        # Nếu AI vẫn lỡ dùng dấu ngoặc kép lồng nhau ("kịch bản "sale" đỉnh"), dùng ast.literal_eval
         try:
-            # Lọc bỏ các dấu ngoặc kép không hợp lệ và dấu xuống dòng (thường gây lỗi json)
-            cleaned_fix = cleaned.replace('\n', ' ')
-            parsed = json.loads(cleaned_fix)
+            # Chuyển đổi định dạng chuẩn JS sang Python Dict
+            py_str = cleaned.replace('true', 'True').replace('false', 'False').replace('null', 'None')
+            parsed = ast.literal_eval(py_str)
             return parsed[0] if isinstance(parsed, list) and len(parsed) > 0 else parsed
-        except:
-            raise Exception(f"AI trả về định dạng bị lỗi cú pháp ({str(e)}). Hệ thống đã tự động lọc nhưng không thành công. Hãy bấm Tạo Lại.")
+        except Exception as fallback_e:
+            raise Exception("AI vô tình sinh ra định dạng bị lỗi cấu trúc. Dữ liệu đã bị chặn lại. Vui lòng bấm 'Tạo chi tiết ngay' thêm lần nữa.")
 
 def get_realtime_context():
     now = datetime.now()
@@ -523,7 +528,7 @@ MỤC TIÊU CHIẾN DỊCH: {goal}
 {master_director_directive}
 
 🛑 QUY TẮC BẮT BUỘC 100% (KHÔNG ĐƯỢC VI PHẠM):
-1. LƯU Ý QUAN TRỌNG VỀ JSON: BẮT BUỘC TRẢ VỀ JSON HỢP LỆ. TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP (") HOẶC XUỐNG DÒNG (\\n) BÊN TRONG CÁC CHUỖI GIÁ TRỊ VÌ SẼ GÂY LỖI HỆ THỐNG. DÙNG DẤU NGOẶC ĐƠN (') ĐỂ TRÍCH DẪN NẾU CẦN.
+1. LƯU Ý SỐ 1 VỀ JSON: Bạn đang giao tiếp với một API. Toàn bộ nội dung trả về PHẢI LÀ ĐỊNH DẠNG JSON CHUẨN XÁC 100%. Mọi giá trị chuỗi (string) bên trong JSON NẾU CÓ DÙNG DẤU NGOẶC KÉP THÌ PHẢI ĐƯỢC ESCAPE THÀNH \\", HOẶC TỐT NHẤT LÀ DÙNG DẤU NGOẶC ĐƠN (') ĐỂ TRÍCH DẪN. KHÔNG ĐƯỢC QUÊN DẤU PHẨY MỖI KHI XUỐNG DÒNG (NO TRAILING COMMAS ERROR).
 2. QUY TẮC QUỐC TỊCH: Nếu có con người chung chung, BẮT BUỘC chèn "Vietnamese".
 {char_rules}
 4. MÀN HÌNH SẠCH & CẤM ICON UI (NO SHOPPING CARTS): Tuyệt đối không sinh ra chữ, phụ đề, biểu tượng giỏ hàng (shopping cart), hay các nút bấm UI mạng xã hội ('no floating text, no subtitles, no UI elements, no shopping cart icons, no social media buttons, clean background'). NHƯNG BẮT BUỘC phải giữ nguyên chính xác logo và các dòng chữ có sẵn trên bản thân sản phẩm ('keep exact product logo and typography from reference image').
@@ -602,7 +607,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
     {extra_rules}
     - Thêm key 'script_outfit_setup': Ghi rõ 1 câu miêu tả trang phục nhân vật PHÙ HỢP NGHIÊM NGẶT THỰC TẾ với bối cảnh của kịch bản này (BẮT BUỘC CHỈ ĐỊNH RÕ MÀU SẮC, vd: Áo polo màu xanh navy, Vest công sở màu đen...). Bộ đồ và màu sắc này sẽ dùng xuyên suốt kịch bản.
     Xuất JSON chuẩn với key 'script_outlines'.
-    LƯU Ý CỰC KỲ QUAN TRỌNG: TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP (") HOẶC XUỐNG DÒNG (\n) TRONG GIÁ TRỊ JSON.
+    LƯU Ý CỰC KỲ QUAN TRỌNG: TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP CHƯA ESCAPE (") HOẶC XUỐNG DÒNG BÊN TRONG CÁC GIÁ TRỊ JSON.
     """
     sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str)
     res = call_gemini_api([prompt_more], sys_inst)
@@ -718,7 +723,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         // TỰ ĐỘNG CHIA & NỐI CÁC CẢNH 3, 4, 5... SAO CHO TỔNG THỜI GIAN CỘNG LẠI BẰNG CHÍNH XÁC QUY ĐỊNH (MỖI CẢNH ĐỀU PHẢI CHỌN ĐÚNG 4s, 6s HOẶC 8s)
       ]
     }}
-    LƯU Ý CỰC KỲ QUAN TRỌNG: TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP (") HOẶC XUỐNG DÒNG (\n) TRONG BẤT KỲ GIÁ TRỊ NÀO CỦA JSON.
+    LƯU Ý CỰC KỲ QUAN TRỌNG: TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP CHƯA ESCAPE HOẶC DẤU XUỐNG DÒNG (\\n) BÊN TRONG CÁC GIÁ TRỊ STRING CỦA JSON.
     """
     sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str)
     res = call_gemini_api([prompt_detail], sys_inst)
@@ -732,7 +737,7 @@ def clone_script_id(target_id, current_mode, current_style, aspect_ratio, goal, 
     is_sales_mode = "Bán Hàng" in current_mode
     char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []), is_sales_mode)
     
-    p_clone = f"Dựa trên kịch bản: {json.dumps(target_script, ensure_ascii=False)}. Tạo đúng 5 biến thể mới (id từ {cur_len+1} đến {cur_len+5}). Xuất JSON key 'cloned_outlines'. TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP HOẶC XUỐNG DÒNG TRONG JSON VALUE."
+    p_clone = f"Dựa trên kịch bản: {json.dumps(target_script, ensure_ascii=False)}. Tạo đúng 5 biến thể mới (id từ {cur_len+1} đến {cur_len+5}). Xuất JSON key 'cloned_outlines'. LƯU Ý: TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP CHƯA ESCAPE HOẶC DẤU XUỐNG DÒNG BÊN TRONG JSON VALUE."
     sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str)
     res_c = call_gemini_api([p_clone], sys_inst)
     cloned_list = res_c.get("cloned_outlines", [])
@@ -977,7 +982,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
                 tone_suggestion = "Truyền cảm, nhấn nhá theo mạch cảm xúc"
                 specific_rules = """
                 1. KỂ CHUYỆN: Xây dựng cao trào, thắt mở nút rõ ràng để giữ chân người xem.
-                2. TỰ ĐỘNG NHẬN GIỚI TÍNH: Dựa vào ảnh KOC, điền CHÍNH XÁC 'Nam' hoặc 'Nữ' vào mục 'gender'.
+                2. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Dựa vào ảnh KOC, điền CHÍNH XÁC 'Nam' hoặc 'Nữ' vào mục 'gender'.
                 3. ƯỚC LƯỢNG KÍCH THƯỚC: Phân tích kích thước thật của sản phẩm/vật thể.
                 """
             elif is_corporate:
