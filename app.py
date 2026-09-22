@@ -1131,4 +1131,185 @@ all_combined_scripts_list = st.session_state.all_scripts + st.session_state.clon
 if all_combined_scripts_list and st.session_state.active_script_id is None and not st.session_state.action_trigger:
     st.divider()
     
-    completed
+    completed_scripts = [sc for sc in all_combined_scripts_list if sc.get("id") in st.session_state.generated_details]
+    pending_scripts = [sc for sc in all_combined_scripts_list if sc.get("id") not in st.session_state.generated_details]
+
+    st.markdown("### 🎬 **1. Kịch Bản Đã Hoàn Thiện Chi Tiết (Sẵn Sàng Sản Xuất & Nhân Bản)**")
+    if not completed_scripts:
+        st.info("💡 Chưa có kịch bản nào được tạo chi tiết. Hãy chọn một kịch bản ở bên dưới để bắt đầu dựng cảnh!")
+    else:
+        for outline in completed_scripts:
+            sc_id = outline.get("id")
+            with st.container(border=True):
+                col_i1, col_btn1, col_btn2 = st.columns([2.5, 1, 1])
+                with col_i1:
+                    st.markdown(f"**#{sc_id}. {outline.get('title')}** — <span class='badge-ready'>ĐÃ HOÀN THIỆN</span>", unsafe_allow_html=True)
+                    st.caption(f"🏛️ Bối cảnh: {outline.get('setting_style')} | ⚡ Hook: *\"{outline.get('target_hook')}\"*")
+                with col_btn1:
+                    if st.button("👁️ Xem lại chi tiết", key=f"btn_rev_v1_main_{sc_id}", use_container_width=True):
+                        st.session_state.active_script_id = sc_id
+                        st.session_state.scroll_to_top = True
+                        st.session_state.global_toast = f"Đang xem chi tiết kịch bản #{sc_id}"
+                        st.session_state.global_toast_icon = "👁️"
+                        st.rerun()
+                with col_btn2:
+                    if st.button("🚀 Nhân bản 5 biến thể", key=f"btn_clone_v1_main_{sc_id}", type="primary", use_container_width=True):
+                        st.session_state.action_trigger = "clone_script"
+                        st.session_state.action_param = sc_id
+                        st.rerun()
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    st.markdown("### ⏳ **2. Kịch Bản Đang Chờ Tạo Chi Tiết (Ý Tưởng Thực Chiến)**")
+    if not pending_scripts:
+        st.success("🎉 Tuyệt vời! Tất cả các kịch bản trong danh sách đã được tạo chi tiết thành công.")
+    else:
+        for outline in pending_scripts:
+            sc_id = outline.get("id")
+            with st.container(border=True):
+                col_i2, col_a2 = st.columns([3, 1.2])
+                with col_i2:
+                    st.markdown(f"**#{sc_id}. {outline.get('title')}** — <span class='badge-pending'>ĐANG CHỜ</span>", unsafe_allow_html=True)
+                    st.caption(f"🏛️ Bối cảnh: {outline.get('setting_style')} | ⚡ Hook: *\"{outline.get('target_hook')}\"*")
+                with col_a2:
+                    if st.button("✨ Tạo chi tiết ngay", key=f"btn_cre_v2_main_{sc_id}", use_container_width=True):
+                        st.session_state.action_trigger = "create_detail"
+                        st.session_state.action_param = sc_id
+                        st.rerun()
+
+    st.markdown("---")
+    if st.button("➕ Gọi Thêm 5 Kịch Bản Khác", key="btn_add_more_1_main", type="primary", use_container_width=True):
+        st.session_state.action_trigger = "generate_more"
+        st.rerun()
+
+# GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC ĐIỀU HƯỚNG
+if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details and not st.session_state.action_trigger:
+    st.divider()
+
+    if st.button("⬅️ Quay lại danh sách kịch bản tổng", key="btn_back_to_list_main"):
+        st.session_state.active_script_id = None
+        st.session_state.scroll_to_top = True
+        st.session_state.global_toast = "Đã quay lại danh sách kịch bản!"
+        st.session_state.global_toast_icon = "⬅️"
+        st.rerun()
+
+    raw_active_data = st.session_state.generated_details[st.session_state.active_script_id]
+    
+    if isinstance(raw_active_data, list):
+        active_script = raw_active_data[0] if len(raw_active_data) > 0 else {}
+    elif isinstance(raw_active_data, dict):
+        active_script = raw_active_data
+    else:
+        active_script = {}
+
+    raw_vp = active_script.get("voice_profile", {}) if isinstance(active_script, dict) else {}
+    if isinstance(raw_vp, str):
+        vp = {"gender": "Nữ", "tone": raw_vp}
+    elif isinstance(raw_vp, dict):
+        vp = raw_vp
+    else:
+        vp = {"gender": "Nữ", "age_range": "25-30", "tone": "Truyền cảm"}
+
+    script_title = active_script.get('title', 'Kịch bản chi tiết') if isinstance(active_script, dict) else 'Kịch bản chi tiết'
+    total_dur = active_script.get('total_estimated_duration', '24s') if isinstance(active_script, dict) else '24s'
+    outfit_setup_text = active_script.get('script_outfit_setup', 'Đồng phục bối cảnh')
+
+    st.markdown(f"### 🎬 **KỊCH BẢN CHI TIẾT: {str(script_title).upper()}**")
+    st.info(f"⏱️ Thời lượng: **{total_dur}** | 🎙️ Giọng: **{vp.get('gender', 'Nữ')} ({vp.get('tone', 'Truyền cảm')})** | 👔 Trang phục: **{outfit_setup_text}** | 📐 Khung hình: **{selected_aspect}**")
+
+    scenes_list = active_script.get("scenes", []) if isinstance(active_script, dict) else []
+    if isinstance(scenes_list, dict): scenes_list = [scenes_list]
+    
+    for idx, scene in enumerate(scenes_list, start=1):
+        if not isinstance(scene, dict): continue
+        dur = scene.get("duration", "6s")
+        st.markdown(f"#### **📍 Phân cảnh {idx} ({dur}) — [ {scene.get('transition_type', 'Cắt cứng dồn dập')} ]**")
+        st.markdown(f"🏛️ **Bối cảnh & Miêu tả:** *{scene.get('scene_setting')}*")
+        st.markdown(f"**🎙️ Đạo diễn ngữ điệu:** *{scene.get('voice_director_vn')}*")
+        st.markdown(f"**💬 Lời thuyết minh (Voiceover):** `\"{scene.get('voiceover_vi')}\"`")
+        
+        img_p = scene.get('image_prompt', '')
+        if img_p:
+            st.markdown(f"**🖼️ Prompt Ảnh (Imagen 3 - {selected_aspect}):**")
+            st.code(img_p, language="text")
+            safe_copy_button(img_p, f"📋 Sao Chép Prompt Ảnh Cảnh {idx}")
+            
+        vid_p = scene.get('video_prompt', '')
+        st.markdown(f"**🎥 Prompt Video (Veo 3 - Thuyết minh):**")
+        st.code(vid_p, language="text")
+        safe_copy_button(vid_p, f"📋 Sao Chép Prompt Video Cảnh {idx}")
+        st.markdown("---")
+
+    col_left, col_right = st.columns([1.1, 0.9])
+    
+    with col_left:
+        st.markdown("""
+        <div class="custom-card" style="background: #f0fdf4; border-color: #86efac;">
+            <div style="color: #166534; font-weight: 800; font-size: 1.1rem; margin-bottom: 4px;">🎬 Kịch Bản Đã Hoàn Thiện</div>
+            <div style="font-size: 0.82rem; color: #15803d;">Chọn để xem lại hoặc nhân bản nhanh</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        completed_scripts_in_detail = [sc for sc in all_combined_scripts_list if sc.get("id") in st.session_state.generated_details]
+        if not completed_scripts_in_detail:
+            st.caption("Chưa có kịch bản nào khác được tạo.")
+        else:
+            for item in completed_scripts_in_detail:
+                it_id = item.get("id")
+                is_current = (it_id == st.session_state.active_script_id)
+                with st.container(border=True):
+                    badge_curr = ' <span class="badge-ready">ĐANG XEM</span>' if is_current else ''
+                    st.markdown(f"<b>#{it_id}. {item.get('title')}</b>{badge_curr}", unsafe_allow_html=True)
+                    
+                    c_rev, c_clone = st.columns(2)
+                    with c_rev:
+                        if not is_current:
+                            if st.button("👁️ Xem lại", key=f"dt_rev_detail_{it_id}", use_container_width=True):
+                                st.session_state.active_script_id = it_id
+                                st.session_state.scroll_to_top = True
+                                st.session_state.global_toast = f"Đang hiển thị kịch bản #{it_id}"
+                                st.session_state.global_toast_icon = "👁️"
+                                st.rerun()
+                        else:
+                            st.markdown("<div style='text-align: center; color: #15803d; font-size: 12px; font-weight: 700; padding: 6px;'>Đang hiển thị</div>", unsafe_allow_html=True)
+                    with c_clone:
+                        if st.button("🚀 Nhân bản", key=f"dt_clone_detail_{it_id}", type="primary", use_container_width=True):
+                            st.session_state.action_trigger = "clone_script"
+                            st.session_state.action_param = it_id
+                            st.rerun()
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        st.markdown("""
+        <div class="custom-card">
+            <div class="card-title-add">➕ Vùng Gọi Thêm Kịch Bản Mới</div>
+            <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 8px;">Mở rộng thêm ý tưởng từ dữ liệu DNA đã phân tích.</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if st.button("➕ Gọi Thêm 5 Tình Huống Kịch Bản Mới", key="btn_add_more_phase2_detail", use_container_width=True):
+            st.session_state.action_trigger = "generate_more"
+            st.rerun()
+
+    with col_right:
+        st.markdown("""
+        <div class="custom-card" style="background: #f8fafc;">
+            <div style="color: #0f172a; font-weight: 800; font-size: 1.1rem; margin-bottom: 10px;">📋 Kịch Bản Chưa Tạo Chi Tiết</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        pending_scripts = [item for item in all_combined_scripts_list if item.get("id") not in st.session_state.generated_details]
+
+        if not pending_scripts:
+            st.success("🎉 Tuyệt vời! Tất cả các kịch bản trong danh sách đã được tạo chi tiết thành công.")
+        else:
+            for item in pending_scripts:
+                it_id = item.get("id")
+                with st.container(border=True):
+                    st.markdown(f"**#{it_id}. {item.get('title')}** — <span class='badge-pending'>CHƯA TẠO</span>", unsafe_allow_html=True)
+                    st.caption(f"🏛️ {item.get('setting_style')}")
+                    
+                    if st.button("✨ Tạo chi tiết ngay", key=f"nav_sc_detail_{it_id}", use_container_width=True):
+                        st.session_state.action_trigger = "create_detail"
+                        st.session_state.action_param = it_id
+                        st.rerun()
