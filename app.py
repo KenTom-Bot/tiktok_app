@@ -442,12 +442,22 @@ def safe_copy_button(text_to_copy: str, button_label: str = "📋 Sao Chép Prom
     """, height=40)
 
 def clean_and_parse_json(text_content: str):
-    cleaned = text_content.strip()
-    if cleaned.startswith("```json"): cleaned = cleaned[7:]
-    elif cleaned.startswith("```"): cleaned = cleaned[3:]
-    if cleaned.endswith("```"): cleaned = cleaned[:-3]
-    parsed = json.loads(cleaned.strip())
-    return parsed[0] if isinstance(parsed, list) and len(parsed) > 0 else parsed
+    # Dọn dẹp JSON rác từ AI để chống lỗi Crash
+    cleaned = re.sub(r'```(?:json)?', '', text_content).strip()
+    match = re.search(r'(\{.*\}|\[.*\])', cleaned, re.DOTALL)
+    if match:
+        cleaned = match.group(0)
+    try:
+        parsed = json.loads(cleaned)
+        return parsed[0] if isinstance(parsed, list) and len(parsed) > 0 else parsed
+    except json.JSONDecodeError as e:
+        # Tự động sửa lỗi AI vô tình dùng dấu xuống dòng trong string
+        try:
+            cleaned_fix = cleaned.replace('\n', ' ')
+            parsed = json.loads(cleaned_fix)
+            return parsed[0] if isinstance(parsed, list) and len(parsed) > 0 else parsed
+        except:
+            raise Exception(f"AI trả về định dạng bị lỗi: {str(e)}. Hãy thử bấm tạo lại.")
 
 def get_realtime_context():
     now = datetime.now()
@@ -516,11 +526,12 @@ MỤC TIÊU CHIẾN DỊCH: {goal}
 {master_director_directive}
 
 🛑 QUY TẮC BẮT BUỘC 100% (KHÔNG ĐƯỢC VI PHẠM):
-1. QUY TẮC QUỐC TỊCH: Nếu có con người chung chung, BẮT BUỘC chèn "Vietnamese".
+1. LƯU Ý QUAN TRỌNG VỀ JSON: BẮT BUỘC TRẢ VỀ JSON HỢP LỆ. TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP (") HOẶC XUỐNG DÒNG (\\n) BÊN TRONG CÁC CHUỖI GIÁ TRỊ VÌ SẼ GÂY LỖI HỆ THỐNG. DÙNG DẤU NGOẶC ĐƠN (') ĐỂ TRÍCH DẪN.
+2. QUY TẮC QUỐC TỊCH: Nếu có con người chung chung, BẮT BUỘC chèn "Vietnamese".
 {char_rules}
-3. MÀN HÌNH SẠCH & GIỮ NGUYÊN LOGO SẢN PHẨM: Tuyệt đối không sinh ra chữ, phụ đề hay watermark rác xung quanh ('no floating text, no subtitles, clean background'). NHƯNG BẮT BUỘC phải giữ nguyên chính xác logo và các dòng chữ có sẵn trên bản thân sản phẩm ('keep exact product logo and typography from reference image').
-4. KHÓA KIỂU DÁNG SẢN PHẨM & TỶ LỆ KÍCH THƯỚC (PRODUCT SCALE & OBJECT ANCHOR): Bắt buộc dùng lệnh "featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE, maintaining realistic scale and true-to-life proportions" để mô tả sản phẩm. TUYỆT ĐỐI KHÔNG tự bịa ra kiểu dáng hay phóng to sản phẩm sai tỷ lệ thực tế. Bắt buộc phải đánh giá kích thước vật lý dựa trên ảnh tải lên (VD: nhỏ bằng bàn tay, to bằng nửa người, cao đến gối...).
-5. CHUYỂN CẢNH THÔNG MINH & NỐI CẢNH DÀI (SMART TRANSITIONS): Cắt cứng dồn dập (Hard Cut) hoặc Chuyển cảnh khớp hành động mượt mà (Match Cut). ĐỐI VỚI CÁC CẢNH DÀI BỊ CẮT NHỎ THÀNH NHIỀU CẢNH 4S/6S/8S: Cảnh sau sẽ phải dùng frame cuối của cảnh trước làm ảnh tham chiếu để tạo video nối tiếp liền mạch.
+4. MÀN HÌNH SẠCH & GIỮ NGUYÊN LOGO SẢN PHẨM: Tuyệt đối không sinh ra chữ, phụ đề hay watermark rác xung quanh ('no floating text, no subtitles, clean background'). NHƯNG BẮT BUỘC phải giữ nguyên chính xác logo và các dòng chữ có sẵn trên bản thân sản phẩm ('keep exact product logo and typography from reference image').
+5. KHÓA KIỂU DÁNG SẢN PHẨM & TỶ LỆ KÍCH THƯỚC (PRODUCT SCALE & OBJECT ANCHOR): Bắt buộc dùng lệnh "featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE, maintaining realistic scale and true-to-life proportions" để mô tả sản phẩm. TUYỆT ĐỐI KHÔNG tự bịa ra kiểu dáng hay phóng to sản phẩm sai tỷ lệ thực tế. Bắt buộc phải đánh giá kích thước vật lý dựa trên ảnh tải lên (VD: nhỏ bằng bàn tay, to bằng nửa người, cao đến gối...).
+6. CHUYỂN CẢNH THÔNG MINH & NỐI CẢNH DÀI (SMART TRANSITIONS): Cắt cứng dồn dập (Hard Cut) hoặc Chuyển cảnh khớp hành động mượt mà (Match Cut). ĐỐI VỚI CÁC CẢNH DÀI BỊ CẮT NHỎ THÀNH NHIỀU CẢNH 4S/6S/8S: Cảnh sau sẽ phải dùng frame cuối của cảnh trước làm ảnh tham chiếu để tạo video nối tiếp liền mạch.
 {voiceover_instruction}
 """
     return base
@@ -541,11 +552,12 @@ def call_gemini_api(contents, system_inst):
 
 def generate_char_rules_string(profiles, is_sales_mode=False):
     if not profiles:
-        return "2. KHÓA ĐA NHÂN VẬT: Không có nhân vật cụ thể tham chiếu."
+        return "3. KHÓA ĐA NHÂN VẬT: Không có nhân vật cụ thể tham chiếu."
         
-    rules = "2. KHÓA KHUÔN MẶT KOC VÀ ĐỒNG NHẤT TRANG PHỤC THEO TỪNG KỊCH BẢN:\n   - NGƯỜI DÙNG đã cung cấp ảnh các nhân vật. Bạn PHẢI phân vai tiếng Anh chính xác kèm lệnh khóa như sau:\n"
+    rules = "3. KHÓA KHUÔN MẶT KOC VÀ ĐỒNG NHẤT TRANG PHỤC THEO TỪNG KỊCH BẢN:\n   - NGƯỜI DÙNG đã cung cấp ảnh các nhân vật. Bạn PHẢI phân vai tiếng Anh chính xác kèm lệnh khóa như sau:\n"
     for p in profiles:
-        rules += f"     + Nhân vật {p['id']}: Đóng vai '{p['role']}'. Lệnh bắt buộc: 'Character {p['id']} ({p['role']}) wearing [trang_phục_đã_chọn_cho_kịch_bản_này] and featuring the exact identity of reference image {p['id']}'.\n"
+        safe_role = p['role'].replace('"', "'")
+        rules += f"     + Nhân vật {p['id']}: Đóng vai '{safe_role}'. Lệnh bắt buộc: 'Character {p['id']} ({safe_role}) wearing [trang_phục_đã_chọn_cho_kịch_bản_này] and featuring the exact identity of reference image {p['id']}'.\n"
     rules += "   - KHUÔN MẶT: Bắt buộc dùng lệnh 'featuring the exact identity of reference image X' để AI không tự chế mặt.\n"
     
     if is_sales_mode:
@@ -562,7 +574,7 @@ def generate_char_rules_string(profiles, is_sales_mode=False):
 def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float):
     all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
     cur_len = len(all_sources)
-    product_ctx = st.session_state.get("current_input_context", "Sản phẩm hiện tại")
+    product_ctx = st.session_state.get("current_input_context", "Sản phẩm hiện tại").replace('"', "'")
     dna_data = st.session_state.get("content_analysis", {}) 
     
     is_corporate = "Doanh Nghiệp" in current_mode or "Tuyên Truyền" in current_mode
@@ -606,7 +618,11 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     if not outline:
         raise Exception(f"Không tìm thấy thông tin cho kịch bản #{target_id}")
     
-    product_ctx = st.session_state.get("current_input_context", "Dự án hiện tại")
+    product_ctx = st.session_state.get("current_input_context", "Dự án hiện tại").replace('"', "'")
+    safe_title = outline.get('title', '').replace('"', "'").replace('\n', ' ')
+    safe_setting = outline.get('setting_style', '').replace('"', "'").replace('\n', ' ')
+    safe_angle = outline.get('angle', '').replace('"', "'").replace('\n', ' ')
+    safe_hook = outline.get('target_hook', '').replace('"', "'").replace('\n', ' ')
     
     # Định tuyến Cảm xúc & Thời lượng (Emotion & Pacing Routing)
     is_sales_mode = "Bán Hàng" in current_mode
@@ -650,7 +666,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     else:
         fixed_gender = "Nữ"
         
-    outfit_setup = outline.get("script_outfit_setup", "casual everyday outfit")
+    outfit_setup = outline.get("script_outfit_setup", "casual everyday outfit").replace('"', "'")
     char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []), is_sales_mode)
     realtime_ctx = get_realtime_context()
     
@@ -658,8 +674,8 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     Ngữ cảnh sản phẩm/dịch vụ: "{product_ctx}"
     Thể loại nội dung: "{current_mode}" | Mục tiêu chiến dịch: "{goal}" | Tỷ lệ khung hình: "{aspect_ratio}"
     {realtime_ctx}
-    Ý tưởng kịch bản: ID {target_id} - {outline.get('title')}
-    Bối cảnh định hướng: {outline.get('setting_style')} | Góc tiếp cận: {outline.get('angle')} | Hook: {outline.get('target_hook')}
+    Ý tưởng kịch bản: ID {target_id} - {safe_title}
+    Bối cảnh định hướng: {safe_setting} | Góc tiếp cận: {safe_angle} | Hook: {safe_hook}
     TRANG PHỤC CỐ ĐỊNH CHO KỊCH BẢN NÀY: {outfit_setup} (Lưu ý: Phải bám sát thực tế bối cảnh).
     
     QUY ĐỊNH ĐẠO DIỄN & LÊN PROMPT TIẾNG ANH (BẮT BUỘC):
@@ -675,8 +691,8 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     Xuất chuẩn 1 Dict JSON duy nhất:
     {{
       "id": {target_id}, 
-      "title": "{outline.get('title')}", 
-      "setting_style": "{outline.get('setting_style')}",
+      "title": "{safe_title}", 
+      "setting_style": "{safe_setting}",
       "script_outfit_setup": "{outfit_setup}",
       "voice_profile": {{"gender": "{fixed_gender}", "tone": "{tone_vn}"}},
       "total_estimated_duration": "{duration_str}",
@@ -705,7 +721,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
       ]
     }}
     """
-    sys_inst = get_system_instructions(current_mode, selected_style, selected_aspect, content_goal, target_duration_mins, char_rules_str)
+    sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str)
     res = call_gemini_api([prompt_detail], sys_inst)
     if isinstance(res, list): res = res[0]
     st.session_state.generated_details[target_id] = res
@@ -932,6 +948,10 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
             st.session_state.character_profiles = profiles_to_save
             
             st.session_state.current_input_context = input_text.strip() if input_text else "Phân tích trực tiếp từ hình ảnh đính kèm sản phẩm/dự án."
+            
+            # Khử lỗi JSON lồng nhau từ người dùng
+            safe_input_context = st.session_state.current_input_context.replace('"', "'").replace('\n', ' ')
+            
             char_rules_str = generate_char_rules_string(profiles_to_save, is_sales)
             realtime_ctx = get_realtime_context()
             
@@ -1032,7 +1052,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
             
             prompt_text = f"""
             Phân tích siêu chuyên sâu chủ đề cho thể loại '{selected_mode}' theo phong cách '{selected_style}'. 
-            Thông tin mô tả: "{st.session_state.current_input_context}"
+            Thông tin mô tả: "{safe_input_context}"
             {realtime_ctx}
 
             QUY ĐỊNH ĐỘNG VỀ NHẬN DIỆN (RẤT QUAN TRỌNG):
@@ -1046,10 +1066,11 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
                 "core_desires": "Mong muốn cốt lõi / Sứ mệnh.",
                 "emotional_or_usp_hook": "Slogan, USP độc quyền.",
                 "visual_physics_rules": "Quy chuẩn vật lý khi chuyển động, ánh sáng.",
-                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ toàn bộ video. Bắt buộc có lệnh màu sắc 'using the exact same colors and textures as the reference image, maintaining realistic scale and true-to-life proportions'."
+                "prompt_dna_lock": "Chuỗi khóa thị giác đồng bộ toàn bộ video."
               }},
               {script_outlines_json}
             }}
+            LƯU Ý CỰC KỲ QUAN TRỌNG: TUYỆT ĐỐI KHÔNG ĐƯỢC SỬ DỤNG DẤU NGOẶC KÉP (\") BÊN TRONG BẤT KỲ CHUỖI GIÁ TRỊ (VALUE) NÀO CỦA JSON. NẾU CẦN TRÍCH DẪN, HÃY DÙNG DẤU NGOẶC ĐƠN ('). KHÔNG XUỐNG DÒNG (\\n) BÊN TRONG CHUỖI.
             """
             
             payload = []
