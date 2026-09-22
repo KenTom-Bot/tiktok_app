@@ -489,10 +489,6 @@ def generate_char_rules_string(profiles, is_sales_mode=False):
     
     return rules
 
-# ==============================================================================
-# HỆ THỐNG XỬ LÝ LÕI AI (CORE FUNCTIONS)
-# ==============================================================================
-
 def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float):
     all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
     cur_len = len(all_sources)
@@ -648,7 +644,7 @@ def clone_script_id(target_id, current_mode, current_style, aspect_ratio, goal, 
         st.error(f"❌ Lỗi: {e}")
 
 # ==============================================================================
-# GIAO DIỆN CHÍNH (CẤU HÌNH) - RENDER TRƯỚC KHI BẮT TRIGGER
+# KHAI BÁO BIẾN GIAO DIỆN (ĐỂ CÁC HÀM CÓ THỂ ĐỌC ĐƯỢC)
 # ==============================================================================
 col_mode, col_style = st.columns([1.5, 1])
 with col_mode:
@@ -679,32 +675,15 @@ with col_style:
     }
     selected_style = style_mapping.get(selected_style_vn, "Cinematic Realism (Người thật / Siêu thực 8K)")
 
-# Khôi phục Expander và Info Box theo yêu cầu
-with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp 'Thể Loại & Phong Cách'", expanded=False):
-    st.markdown("""
-    <div style="background-color: #f8fafc; padding: 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 0.95rem; color: #334155; margin-bottom: 5px;">
-        <h4 style="color: #0f172a; margin-top: 0; margin-bottom: 12px; font-size: 1.05rem;">🎯 Cẩm Nang Phối Hợp Sáng Tạo Nội Dung Đa Vũ Trụ</h4>
-        <ul style="padding-left: 20px; line-height: 1.8; margin-bottom: 0;">
-            <li><b>🛒 TikTok Shop & Bán Hàng:</b> Phù hợp nhất với <code style="color: #e11d48;">Studio Tối Giản (Hiện đại, Sạch sẽ)</code>.</li>
-            <li><b>👶 Mẹ & Bé & Cùng Con Học:</b> Tối ưu với <code style="color: #e11d48;">Hoạt Hình Cắt Giấy / Tĩnh Vật</code> hoặc <code style="color: #e11d48;">Hoạt Hình 3D (Kiểu Pixar)</code>.</li>
-            <li><b>📖 Đời Sống, Giáo Dục & Gia Đình:</b> Rất hợp với <code style="color: #e11d48;">Điện Ảnh Chân Thực</code> (nếu tải nhiều ảnh KOC làm diễn viên) hoặc <code style="color: #e11d48;">Hoạt Hình 2D Ghibli</code>.</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
-
-is_sales = "Bán Hàng" in selected_mode
-if is_sales:
-    st.info("💡 **Chế độ Bán Hàng:** Tự động chia từ 4-6 cảnh, trang phục bám sát thực tế kho/xưởng/showroom, chống nhắc 'livestream'.")
-
-st.markdown("---")
-st.markdown("### 📐 Cấu Hình Khung Hình, Mục Đích & Thời Lượng Chiến Dịch")
-
 col_ratio, col_goal, col_time = st.columns([1, 1, 1])
 with col_ratio:
     aspect_ratio_choice = st.selectbox("Tỷ lệ khung hình video:", ["9:16 (Dọc - TikTok, Reels, Shorts)", "16:9 (Ngang - YouTube, Phim dài, Facebook)"], index=0)
     selected_aspect = "9:16" if "9:16" in aspect_ratio_choice else "16:9"
 
 with col_goal:
+    is_sales = "Bán Hàng" in selected_mode
+    is_corporate = "Doanh Nghiệp" in selected_mode or "Tuyên Truyền" in selected_mode
+    
     if is_sales:
         content_goal = "Chuyển đổi đơn hàng & Chốt Sale trực tiếp (Sales & Conversion)"
     elif is_corporate:
@@ -718,12 +697,16 @@ with col_time:
     else:
         target_duration_mins = st.number_input("⏱️ Nhập thời lượng mong muốn (Phút):", min_value=0.5, max_value=30.0, value=1.0, step=0.5)
 
-# Bắt đầu xử lý Action Trigger (CỰC KỲ QUAN TRỌNG ĐỂ KHÔNG BỊ LỖI UX)
+
+# ==============================================================================
+# HỆ THỐNG ĐIỀU HƯỚNG VÀ NGĂN CHẶN MỜ MÀN HÌNH (ANTI-STALE UI TRIGGER)
+# ==============================================================================
+# Đã đặt NGAY SAU khi khai báo biến giao diện, ứng dụng sẽ không còn bị lỗi NameError
 if st.session_state.action_trigger:
     action = st.session_state.action_trigger
     param = st.session_state.action_param
     
-    # Xóa trigger để không bị lặp lại vô hạn
+    # Xóa trigger ngay lập tức để không lặp lại
     st.session_state.action_trigger = None
     st.session_state.action_param = None
     
@@ -752,11 +735,26 @@ if st.session_state.action_trigger:
             time.sleep(0.2)
             st.rerun()
         
-    st.stop() # Dừng toàn bộ code bên dưới để màn hình cũ KHÔNG BỊ VẼ LẠI và gây lỗi NameError.
+    st.stop() # Dừng toàn bộ code bên dưới để màn hình cũ KHÔNG BỊ VẼ LẠI.
 
 # ==============================================================================
-# RENDER NỘI DUNG HIỂN THỊ CHÍNH (NẾU KHÔNG CÓ TRIGGER ĐANG CHẠY)
+# RENDER TIẾP PHẦN GIAO DIỆN (NẾU KHÔNG CÓ HÀNH ĐỘNG NÀO ĐANG CHẠY)
 # ==============================================================================
+
+with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp 'Thể Loại & Phong Cách'", expanded=False):
+    st.markdown("""
+    <div style="background-color: #f8fafc; padding: 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 0.95rem; color: #334155; margin-bottom: 5px;">
+        <h4 style="color: #0f172a; margin-top: 0; margin-bottom: 12px; font-size: 1.05rem;">🎯 Cẩm Nang Phối Hợp Sáng Tạo Nội Dung Đa Vũ Trụ</h4>
+        <ul style="padding-left: 20px; line-height: 1.8; margin-bottom: 0;">
+            <li><b>🛒 TikTok Shop & Bán Hàng:</b> Phù hợp nhất với <code style="color: #e11d48;">Studio Tối Giản (Hiện đại, Sạch sẽ)</code>.</li>
+            <li><b>👶 Mẹ & Bé & Cùng Con Học:</b> Tối ưu với <code style="color: #e11d48;">Hoạt Hình Cắt Giấy / Tĩnh Vật</code> hoặc <code style="color: #e11d48;">Hoạt Hình 3D (Kiểu Pixar)</code>.</li>
+            <li><b>📖 Đời Sống, Giáo Dục & Gia Đình:</b> Rất hợp với <code style="color: #e11d48;">Điện Ảnh Chân Thực</code> (nếu tải nhiều ảnh KOC làm diễn viên) hoặc <code style="color: #e11d48;">Hoạt Hình 2D Ghibli</code>.</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+if is_sales:
+    st.info("💡 **Chế độ Bán Hàng:** Tự động chia từ 4-6 cảnh, trang phục bám sát thực tế kho/xưởng/showroom, chống nhắc 'livestream'.")
 
 st.markdown("---")
 input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô tả chi tiết dự án/sản phẩm (Ghi chú rõ thứ tự các ảnh nếu tải nhiều ảnh nhân vật):", height=80)
