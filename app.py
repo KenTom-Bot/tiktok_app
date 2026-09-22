@@ -739,9 +739,12 @@ if st.session_state.action_trigger:
 # ==============================================================================
 # RENDER NỘI DUNG HIỂN THỊ CHÍNH (NẾU KHÔNG CÓ TRIGGER ĐANG CHẠY)
 # ==============================================================================
+selected_style = style_mapping.get(selected_style_vn, "Cinematic Realism (Người thật / Siêu thực 8K)")
+
+# === BẮT ĐẦU ĐOẠN CODE CẦN THAY THẾ ===
 with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp 'Thể Loại & Phong Cách'", expanded=False):
     st.markdown("""
-    <div style="background-color: #f8fafc; padding: 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 0.95rem; color: #334155;">
+    <div style="background-color: #f8fafc; padding: 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 0.95rem; color: #334155; margin-bottom: 5px;">
         <h4 style="color: #0f172a; margin-top: 0; margin-bottom: 12px; font-size: 1.05rem;">🎯 Cẩm Nang Phối Hợp Sáng Tạo Nội Dung Đa Vũ Trụ</h4>
         <ul style="padding-left: 20px; line-height: 1.8; margin-bottom: 0;">
             <li><b>🛒 TikTok Shop & Bán Hàng:</b> Phù hợp nhất với <code style="color: #e11d48;">Studio Tối Giản (Hiện đại, Sạch sẽ)</code>.</li>
@@ -751,14 +754,15 @@ with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp '
     </div>
     """, unsafe_allow_html=True)
 
-if is_sales: st.info("💡 **Chế độ Bán Hàng:** Tự động chia từ 4-6 cảnh, trang phục bám sát thực tế kho/xưởng/showroom, chống nhắc 'livestream'.")
-else: st.info(f"⏱️ **Thời lượng mong muốn:** {target_duration_mins} phút")
+is_sales = "Bán Hàng" in selected_mode
+if is_sales:
+    st.info("💡 **Chế độ Bán Hàng:** Tự động chia từ 4-6 cảnh, trang phục bám sát thực tế kho/xưởng/showroom, chống nhắc 'livestream'.")
 
 st.markdown("---")
-input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô tả chi tiết dự án/sản phẩm (Ghi chú rõ thứ tự các ảnh nếu tải nhiều ảnh nhân vật):", height=80)
+st.markdown("### 📐 Cấu Hình Khung Hình, Mục Đích & Thời Lượng Chiến Dịch")
 
-st.markdown("### 👥 Quản Lý Nguồn Ảnh & Tuyển Diễn Viên (Casting)")
-col_p_img, col_c_img = st.columns([1, 1])
+col_ratio, col_goal, col_time = st.columns([1, 1, 1])
+# === KẾT THÚC ĐOẠN CODE CẦN THAY THẾ ===
 
 with col_p_img:
     st.markdown("**1. 📦 Tải ảnh Sản phẩm / Bối cảnh chính**")
