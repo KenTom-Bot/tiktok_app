@@ -667,7 +667,22 @@ def clone_script_id(target_id, current_mode, current_style, aspect_ratio, goal, 
         st.error(f"❌ Lỗi: {e}")
 
 # ==============================================================================
-# 1. RENDER GIAO DIỆN CẤU HÌNH ĐẦU TIÊN & KHAI BÁO BIẾN TOÀN CỤC
+# 1. KIỂM TRA ĐĂNG NHẬP & BẢO MẬT (SỬA LỖI MÀN HÌNH CHÍNH)
+# ==============================================================================
+st.markdown("""
+<div class="header-container">
+    <div class="header-badge">🌟 STUDIO VIDEO AI ĐA NĂNG TOÀN DIỆN</div>
+    <div class="main-title">🎬 Hệ Thống Kịch Bản Đa Vũ Trụ Pro</div>
+    <div class="sub-title">TikTok Shop, Mẹ & Bé Viral, TVC Điện Ảnh, Phim Đời Sống & Giáo Dục</div>
+</div>
+""", unsafe_allow_html=True)
+
+if not st.session_state.is_logged_in:
+    st.info("👈 **Vui lòng đăng nhập ở thanh công cụ bên trái để sử dụng hệ thống.**")
+    st.stop()  # Ngăn không cho chạy đoạn code UI phía dưới nếu chưa đăng nhập
+
+# ==============================================================================
+# 2. RENDER GIAO DIỆN CẤU HÌNH ĐẦU TIÊN & KHAI BÁO BIẾN TOÀN CỤC
 # ==============================================================================
 col_mode, col_style = st.columns([1.5, 1])
 with col_mode:
@@ -723,9 +738,8 @@ with col_time:
         target_duration_mins = st.number_input("⏱️ Nhập thời lượng mong muốn (Phút):", min_value=0.5, max_value=30.0, value=1.0, step=0.5)
 
 # ==============================================================================
-# 2. XỬ LÝ SỰ KIỆN NÚT BẤM (NGAY SAU KHI VẼ XONG UI CẤU HÌNH)
+# 3. XỬ LÝ SỰ KIỆN NÚT BẤM (NGAY SAU KHI VẼ XONG UI CẤU HÌNH)
 # ==============================================================================
-# Đặt ở đây đảm bảo biến is_sales và is_corporate đã có, không bao giờ bị lỗi NameError
 if st.session_state.action_trigger:
     action = st.session_state.action_trigger
     param = st.session_state.action_param
@@ -761,7 +775,7 @@ if st.session_state.action_trigger:
     st.stop() # Cắt luồng tại đây để không render danh sách cũ, tránh màn hình mờ/xám.
 
 # ==============================================================================
-# 3. NẾU KHÔNG CÓ HÀNH ĐỘNG NÀO ĐANG CHẠY (RENDER UI THƯỜNG)
+# 4. NẾU KHÔNG CÓ HÀNH ĐỘNG NÀO ĐANG CHẠY (RENDER UI THƯỜNG)
 # ==============================================================================
 
 with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp 'Thể Loại & Phong Cách'", expanded=False):
