@@ -442,9 +442,10 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
         duration_rule = f"QUY CHUẨN THỜI LƯỢNG KỂ CHUYỆN / REVIEW DÀI ({target_duration_mins} phút / {total_seconds} giây): Xây dựng cốt truyện có chiều sâu, chia số cảnh tự động sao cho tổng thời lượng đạt chuẩn."
 
     voiceover_instruction = """
-    7. QUY CHUẨN THUYẾT MINH & ĐỒNG BỘ ÂM THANH (STRICT AUDIO MATCHING):
-       - NHỊP ĐỘ VÀ NĂNG LƯỢNG (PACE & ENERGY): Giọng đọc giữa cảnh CÓ nhân vật và cảnh KHÔNG CÓ nhân vật (cận cảnh sản phẩm) phải ĐỒNG NHẤT TUYỆT ĐỐI. Trong video_prompt, luôn sử dụng lệnh ép buộc AI giữ nguyên "fast-paced, high-energy, identical voice identity and pacing". Tuyệt đối không để giọng bị biến thành giọng kể chuyện chậm rãi.
-       - ĐỒNG NHẤT GIỌNG MIỀN BẮC CHUẨN: Bắt buộc chèn lệnh "strict Northern Vietnamese accent, absolutely NO Southern or mixed accents" vào MỌI video_prompt để chặn hiện tượng AI tự động chuyển sang giọng Nam.
+    7. QUY CHUẨN THUYẾT MINH & ĐỒNG BỘ ÂM THANH (ABSOLUTE AUDIO MATCHING):
+       - CẤM DÙNG GIỌNG THUYẾT MINH PHIM TÀI LIỆU (NO NARRATOR VOICE): Giữa phân cảnh có người và phân cảnh cận sản phẩm (không có người), giọng nói phải là CỦA CÙNG MỘT NGƯỜI (Cùng KOC/Diễn viên đang nói ngoài hình). TUYỆT ĐỐI KHÔNG được chuyển sang giọng đọc phim tài liệu (documentary narrator) đều đều.
+       - NHỊP ĐỘ VÀ NĂNG LƯỢNG (PACE & ENERGY): Luôn sử dụng lệnh ép AI giữ nguyên "The exact same character speaking off-camera, fast-paced, high-energy, NO documentary narrator voice". Tuyệt đối không để giọng bị biến thành giọng kể chuyện chậm rãi.
+       - ĐỒNG NHẤT GIỌNG MIỀN BẮC CHUẨN (HÀ NỘI): Các AI TTS thường tự động chuyển sang giọng miền Nam khi gặp các từ "xả kho", "chốt đơn". Để chống lại điều này, BẮT BUỘC chèn lệnh "strict Northern Vietnamese (Hanoi) accent, ABSOLUTELY NO Southern/Saigon accent even when saying sales keywords" vào MỌI video_prompt.
        - PHIÊN ÂM TIẾNG VIỆT CHUẨN CHO AI (TTS PRONUNCIATION): Trong trường 'voiceover_vi', BẮT BUỘC phải viết rõ cách phát âm tiếng Việt bồi cho các con số, đơn vị đo lường, và từ tiếng Anh để AI Voice không đọc sai hoặc bị ngọng. 
          + Ví dụ: "10.000mAh" -> viết thành "mười nghìn mi li am pe giờ".
          + Ví dụ: "Sale" -> viết thành "seo", "Deal" -> "đi-u", "Voucher" -> "vâu chờ", "Hot" -> "hót", "Size" -> "sái".
@@ -598,8 +599,8 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     4. CẤM TỪ LIVESTREAM: TUYỆT ĐỐI KHÔNG dùng từ "livestream", "phiên live". Đây là video VOD.
     5. QUY TRÌNH TRANG PHỤC & KHUÔN MẶT: Dùng tên 'Character X'. BẮT BUỘC áp dụng trang phục "{outfit_setup}" cho TẤT CẢ các phân cảnh có mặt nhân vật để đảm bảo tính đồng nhất 100%. Luôn kèm lệnh 'featuring the exact identity of reference image X'.
     6. QUY TRÌNH SẢN PHẨM & TỶ LỆ KÍCH THƯỚC: TUYỆT ĐỐI KHÔNG làm sai lệch kiểu dáng và KHÔNG phóng to sản phẩm sai tỷ lệ. BẮT BUỘC DÙNG CỤM TỪ: "featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE, maintaining realistic scale and true-to-life proportions".
-    7. ĐỒNG BỘ GIỌNG ĐỌC NGOÀI HÌNH & MIỀN BẮC (STRICT VOICE MATCHING): Kể cả cảnh cận sản phẩm (không có người), BẮT BUỘC chèn lệnh: "fast-paced, high-energy, consistent pacing, identical voice identity, strict Northern Vietnamese accent, absolutely NO Southern accent" vào video_prompt để AI duy trì giọng Miền Bắc nhanh, mạnh mẽ, KHÔNG bị chậm thành giọng tài liệu.
-    8. KỶ LUẬT CHỐNG VIẾT TẮT (NO SHORTCUT RULE): Bạn TUYỆT ĐỐI KHÔNG ĐƯỢC phép lười biếng viết "Tương tự cảnh 1" ở các cảnh sau. Bạn BẮT BUỘC PHẢI VIẾT LẶP LẠI TOÀN BỘ CÁC LỆNH KHÓA (Khuôn mặt, Trang phục '{outfit_setup}', Tỷ lệ Sản phẩm, Giọng điệu) VÀO MỌI PHÂN CẢNH.
+    7. ĐỒNG BỘ GIỌNG ĐỌC NGOÀI HÌNH & MIỀN BẮC (ANTI-SOUTHERN BIAS RULE): Các AI âm thanh thường bị lỗi tự động chuyển sang giọng miền Nam khi gặp các từ khóa bán hàng ("xả kho", "giá sốc"). Để chống lại điều này, BẮT BUỘC chèn cụm lệnh sau vào MỌI video_prompt (kể cả cảnh không có người): "Audio: The exact same {fixed_gender} character speaking. Fast-paced, high-energy, strict Northern Vietnamese (Hanoi) accent. ABSOLUTELY NO Southern/Saigon accent even when saying sales keywords. ABSOLUTELY NO documentary narrator voice. Maintain the exact same enthusiastic sales tone".
+    8. KỶ LUẬT CHỐNG VIẾT TẮT (NO SHORTCUT RULE): Bạn TUYỆT ĐỐI KHÔNG ĐƯỢC phép lười biếng viết "Tương tự cảnh 1" ở các cảnh sau. Bạn BẮT BUỘC PHẢI VIẾT LẶP LẠI TOÀN BỘ CÁC LỆNH KHÓA (Khuôn mặt, Trang phục '{outfit_setup}', Tỷ lệ Sản phẩm, Giọng điệu ngoài hình) VÀO MỌI PHÂN CẢNH.
     
     Xuất chuẩn 1 Dict JSON duy nhất:
     {{
@@ -615,22 +616,22 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
           "duration": "6s", 
           "scene_setting": "Bối cảnh chi tiết", 
           "transition_type": "Cắt cứng dồn dập (Hard Cut)", 
-          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn: {fixed_tone}, nhịp độ nhanh năng lượng cao", 
+          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn (Hà Nội): {fixed_tone}, nhịp độ nhanh năng lượng cao (Nhân vật đang nói)", 
           "voiceover_vi": "Lời thuyết minh tiếng Việt ĐÃ ĐƯỢC PHIÊN ÂM (vd: mười nghìn mi li am pe giờ)", 
           "image_prompt": "Prompt Imagen 3 (tiếng Anh). CÓ NHÂN VẬT THÌ ÉP LỆNH: 'Character X... wearing {outfit_setup} and featuring the exact identity of reference image X'. BẮT BUỘC LỆNH SẢN PHẨM: 'featuring the EXACT design... maintaining realistic scale', no floating text", 
-          "video_prompt": "Prompt Veo 3 (tiếng Anh). BẮT BUỘC CÓ LỆNH ÂM THANH: fast-paced, high-energy, strict Northern Vietnamese accent, absolute no Southern accent mixing, consistent voiceover by the exact same {fixed_gender} character with {fixed_tone} tone, maintaining identical speed and identity across all scenes (even off-screen), reading [voiceover_vi]"
+          "video_prompt": "Prompt Veo 3 (tiếng Anh). BẮT BUỘC CÓ LỆNH ÂM THANH: 'Audio: The exact same {fixed_gender} character speaking on-camera. Fast-paced, high-energy, strict Northern Vietnamese (Hanoi) accent. ABSOLUTELY NO Southern/Saigon accent even for sales words. Reading: [voiceover_vi]'"
         }},
         {{
           "scene_number": 2,
           "duration": "4s",
-          "scene_setting": "Diễn biến tiếp theo...",
+          "scene_setting": "Quay cận cảnh sản phẩm (Không thấy người)...",
           "transition_type": "...",
-          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn: {fixed_tone}, nhịp độ nhanh năng lượng cao",
+          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn (Hà Nội): {fixed_tone}, nhịp độ nhanh năng lượng cao (Nhân vật nói ngoài hình)",
           "voiceover_vi": "Lời thuyết minh tiếp theo...",
           "image_prompt": "BẠN PHẢI VIẾT LẠI ĐẦY ĐỦ LỆNH TRANG PHỤC VÀ SẢN PHẨM NHƯ CẢNH 1. KHÔNG ĐƯỢC VIẾT TẮT.",
-          "video_prompt": "BẠN PHẢI VIẾT LẠI ĐẦY ĐỦ LỆNH ÂM THANH NHƯ CẢNH 1. KHÔNG ĐƯỢC VIẾT TẮT."
+          "video_prompt": "BẠN PHẢI VIẾT LẠI ĐẦY ĐỦ LỆNH ÂM THANH: 'Audio: The exact same {fixed_gender} character is speaking off-camera. Fast-paced, high-energy, strict Northern Vietnamese (Hanoi) accent. ABSOLUTELY NO Southern/Saigon accent even for sales words. ABSOLUTELY NO documentary narrator voice. Maintain the exact same enthusiastic sales tone and identity. Reading: [voiceover_vi]'"
         }}
-        // TỰ ĐỘNG SINH TIẾP CÁC CẢNH 3, 4, 5... LINH HOẠT ĐỂ ĐẠT TỔNG THỜI LƯỢNG (VIẾT ĐẦY ĐỦ LỆNH CHO TỪNG CẢNH)
+        // TỰ ĐỘNG SINH TIẾP CÁC CẢNH 3, 4, 5... LINH HOẠT ĐỂ ĐẠT TỔNG THỜI LƯỢNG (VIẾT ĐẦY ĐỦ LỆNH CHO TỪNG CẢNH NHƯ TRÊN)
       ]
     }}
     """
