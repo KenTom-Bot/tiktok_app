@@ -191,7 +191,6 @@ for key, default_val in [
     if key not in st.session_state:
         st.session_state[key] = default_val
 
-# Hệ thống hiển thị Global Toast tự động sau khi Rerun
 if st.session_state.global_toast:
     st.toast(st.session_state.global_toast, icon=st.session_state.global_toast_icon)
     st.session_state.global_toast = ""
@@ -272,11 +271,11 @@ with st.sidebar:
             st.session_state.current_input_context = ""
             st.session_state.active_project_title = "Chiến dịch mới"
             st.session_state.last_loaded_file_id = None  
-            st.session_state.file_uploader_key += 1 # Xóa uploader
+            st.session_state.file_uploader_key += 1 
             st.session_state.scroll_to_top = True
             st.session_state.character_profiles = []
-            st.session_state.main_input_context = "" # Xóa nội dung mô tả
-            st.session_state.num_chars_input = 0 # Đưa nhân vật về 0
+            st.session_state.main_input_context = "" 
+            st.session_state.num_chars_input = 0 
             
             st.session_state.global_toast = "Đã dọn dẹp và tạo dự án mới!"
             st.session_state.global_toast_icon = "✨"
@@ -442,7 +441,6 @@ def safe_copy_button(text_to_copy: str, button_label: str = "📋 Sao Chép Prom
     """, height=40)
 
 def clean_and_parse_json(text_content: str):
-    # Dọn dẹp JSON rác từ AI để chống lỗi Crash
     cleaned = re.sub(r'```(?:json)?', '', text_content).strip()
     match = re.search(r'(\{.*\}|\[.*\])', cleaned, re.DOTALL)
     if match:
@@ -451,13 +449,13 @@ def clean_and_parse_json(text_content: str):
         parsed = json.loads(cleaned)
         return parsed[0] if isinstance(parsed, list) and len(parsed) > 0 else parsed
     except json.JSONDecodeError as e:
-        # Tự động sửa lỗi AI vô tình dùng dấu xuống dòng trong string
         try:
+            # Lọc bỏ các dấu ngoặc kép không hợp lệ và dấu xuống dòng (thường gây lỗi json)
             cleaned_fix = cleaned.replace('\n', ' ')
             parsed = json.loads(cleaned_fix)
             return parsed[0] if isinstance(parsed, list) and len(parsed) > 0 else parsed
         except:
-            raise Exception(f"AI trả về định dạng bị lỗi: {str(e)}. Hãy thử bấm tạo lại.")
+            raise Exception(f"AI trả về định dạng bị lỗi cú pháp ({str(e)}). Hệ thống đã tự động lọc nhưng không thành công. Hãy bấm Tạo Lại.")
 
 def get_realtime_context():
     now = datetime.now()
@@ -477,14 +475,12 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
     
     format_instruction = "9:16 vertical video format, mobile-first framing" if aspect_ratio == "9:16" else "16:9 widescreen cinematic format, professional movie framing"
     
-    # 1. LOGIC KIỂM SOÁT THỜI LƯỢNG (GIỚI HẠN VEO 3 LIMITATION)
     total_seconds = int(target_duration_mins * 60)
     if is_sales:
         duration_rule = "QUY CHUẨN THỜI LƯỢNG BÁN HÀNG (24s - 35s): Phân rã tự động thành số lượng cảnh hợp lý linh hoạt, nhịp độ cực nhanh, tập trung dồn dập vào hook, test thực tế và chốt đơn."
     else:
         duration_rule = f"QUY CHUẨN THỜI LƯỢNG KỂ CHUYỆN / REVIEW DÀI ({target_duration_mins} phút / {total_seconds} giây): Xây dựng cốt truyện có chiều sâu. Vì AI Video (Veo 3) chỉ sinh được video dài tối đa 4s, 6s, 8s, nên bạn BẮT BUỘC phải chia TỔNG {total_seconds} GIÂY thành nhiều phân cảnh nhỏ (chỉ được chọn mốc 4s, 6s hoặc 8s mỗi cảnh). Để làm một hành động kéo dài (VD cảnh dài 16s), hãy chia làm 2 cảnh 8s liên tiếp."
 
-    # 2. LOGIC KIỂM SOÁT TÔNG ĐIỆU (TONE OF VOICE & SCRIPT FLOW)
     if is_sales:
         goal_directive = "MỤC TIÊU 'BÁN HÀNG': Kịch bản đánh thẳng vào nỗi đau, đưa giải pháp, test thực tế và Kêu gọi hành động (CTA) dồn dập."
         tone_instruction = "NHỊP ĐỘ VÀ NĂNG LƯỢNG (PACE & ENERGY): fast-paced, high-energy, enthusiastic sales tone."
@@ -526,7 +522,7 @@ MỤC TIÊU CHIẾN DỊCH: {goal}
 {master_director_directive}
 
 🛑 QUY TẮC BẮT BUỘC 100% (KHÔNG ĐƯỢC VI PHẠM):
-1. LƯU Ý QUAN TRỌNG VỀ JSON: BẮT BUỘC TRẢ VỀ JSON HỢP LỆ. TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP (") HOẶC XUỐNG DÒNG (\\n) BÊN TRONG CÁC CHUỖI GIÁ TRỊ VÌ SẼ GÂY LỖI HỆ THỐNG. DÙNG DẤU NGOẶC ĐƠN (') ĐỂ TRÍCH DẪN.
+1. LƯU Ý QUAN TRỌNG VỀ JSON: BẮT BUỘC TRẢ VỀ JSON HỢP LỆ. TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP (") HOẶC XUỐNG DÒNG (\\n) BÊN TRONG CÁC CHUỖI GIÁ TRỊ VÌ SẼ GÂY LỖI HỆ THỐNG. DÙNG DẤU NGOẶC ĐƠN (') ĐỂ TRÍCH DẪN NẾU CẦN.
 2. QUY TẮC QUỐC TỊCH: Nếu có con người chung chung, BẮT BUỘC chèn "Vietnamese".
 {char_rules}
 4. MÀN HÌNH SẠCH & GIỮ NGUYÊN LOGO SẢN PHẨM: Tuyệt đối không sinh ra chữ, phụ đề hay watermark rác xung quanh ('no floating text, no subtitles, clean background'). NHƯNG BẮT BUỘC phải giữ nguyên chính xác logo và các dòng chữ có sẵn trên bản thân sản phẩm ('keep exact product logo and typography from reference image').
@@ -605,6 +601,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
     {extra_rules}
     - Thêm key 'script_outfit_setup': Ghi rõ 1 câu miêu tả trang phục nhân vật PHÙ HỢP NGHIÊM NGẶT THỰC TẾ với bối cảnh của kịch bản này (vd: Áo polo công nhân, Vest công sở...). Bộ đồ này sẽ dùng xuyên suốt kịch bản.
     Xuất JSON chuẩn với key 'script_outlines'.
+    LƯU Ý CỰC KỲ QUAN TRỌNG: TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP (") HOẶC XUỐNG DÒNG (\n) TRONG GIÁ TRỊ JSON.
     """
     sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str)
     res = call_gemini_api([prompt_more], sys_inst)
@@ -624,7 +621,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     safe_angle = outline.get('angle', '').replace('"', "'").replace('\n', ' ')
     safe_hook = outline.get('target_hook', '').replace('"', "'").replace('\n', ' ')
     
-    # Định tuyến Cảm xúc & Thời lượng (Emotion & Pacing Routing)
+    # Định tuyến Cảm xúc & Thời lượng
     is_sales_mode = "Bán Hàng" in current_mode
     is_knowledge = "Chia sẻ kiến thức" in goal or "Review" in goal
     is_story = "Kể chuyện" in goal or "Phim ngắn" in goal
@@ -720,6 +717,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         // TỰ ĐỘNG CHIA & NỐI CÁC CẢNH 3, 4, 5... SAO CHO TỔNG THỜI GIAN CỘNG LẠI BẰNG CHÍNH XÁC QUY ĐỊNH (MỖI CẢNH ĐỀU PHẢI CHỌN ĐÚNG 4s, 6s HOẶC 8s)
       ]
     }}
+    LƯU Ý CỰC KỲ QUAN TRỌNG: TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP (") HOẶC XUỐNG DÒNG (\n) TRONG BẤT KỲ GIÁ TRỊ NÀO CỦA JSON.
     """
     sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str)
     res = call_gemini_api([prompt_detail], sys_inst)
@@ -733,7 +731,7 @@ def clone_script_id(target_id, current_mode, current_style, aspect_ratio, goal, 
     is_sales_mode = "Bán Hàng" in current_mode
     char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []), is_sales_mode)
     
-    p_clone = f"Dựa trên kịch bản: {json.dumps(target_script, ensure_ascii=False)}. Tạo đúng 5 biến thể mới (id từ {cur_len+1} đến {cur_len+5}). Xuất JSON key 'cloned_outlines'."
+    p_clone = f"Dựa trên kịch bản: {json.dumps(target_script, ensure_ascii=False)}. Tạo đúng 5 biến thể mới (id từ {cur_len+1} đến {cur_len+5}). Xuất JSON key 'cloned_outlines'. TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP HOẶC XUỐNG DÒNG TRONG JSON VALUE."
     sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str)
     res_c = call_gemini_api([p_clone], sys_inst)
     cloned_list = res_c.get("cloned_outlines", [])
@@ -773,7 +771,7 @@ col_mode, col_style = st.columns([1.5, 1])
 with col_mode:
     selected_mode = st.selectbox("🎯 Chọn Thể Loại Nội Dung:", options=allowed_modules)
 
-# KHAI BÁO CÁC CỜ NHẬN DIỆN (FLAGS) NGAY TẠI ĐÂY
+# KHAI BÁO CÁC CỜ NHẬN DIỆN (FLAGS)
 is_sales = "Bán Hàng" in selected_mode
 is_corporate = "Doanh Nghiệp" in selected_mode or "Tuyên Truyền" in selected_mode
 
@@ -827,7 +825,7 @@ is_knowledge = "Chia sẻ kiến thức" in content_goal or "Review" in content_
 is_story = "Kể chuyện" in content_goal or "Phim ngắn" in content_goal
 
 # ==============================================================================
-# 3. XỬ LÝ SỰ KIỆN NÚT BẤM (ANTI-STALE UI TRIGGER)
+# 3. XỬ LÝ SỰ KIỆN NÚT BẤM (ANTI-STALE UI TRIGGER) - CHỨA FIX LỖI ACTIVE SCRIPT
 # ==============================================================================
 if st.session_state.action_trigger:
     action = st.session_state.action_trigger
@@ -843,6 +841,7 @@ if st.session_state.action_trigger:
             st.markdown(f"<div class='loading-pulse'>⏳ HỆ THỐNG ĐANG XỬ LÝ: Đang dựng chi tiết phân cảnh cho kịch bản #{param}. Quá trình này có thể mất 15-20 giây. Vui lòng đợi...</div>", unsafe_allow_html=True)
             try:
                 create_scene_details_for_id(param, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
+                st.session_state.active_script_id = param  # <-- ĐÂY LÀ CHÌA KHÓA HIỂN THỊ KỊCH BẢN
                 st.session_state.global_toast = f"Đã dựng thành công chi tiết kịch bản #{param}!"
                 st.session_state.global_toast_icon = "✅"
                 st.session_state.scroll_to_top = True
