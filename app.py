@@ -577,8 +577,11 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     2. PHÂN RÃ THỜI LƯỢNG LINH HOẠT: Tổng thời lượng mục tiêu là {duration_str}. Tự động chia thành số lượng phân cảnh phù hợp (từ 4 đến 6 cảnh). Từng phân cảnh chỉ chọn thời lượng: 4s, 6s, hoặc 8s.
     3. PHIÊN ÂM TIẾNG VIỆT CHUẨN XÁC CHO AI (TTS RULE): Trong trường 'voiceover_vi', BẮT BUỘC viết âm đọc tiếng Việt bồi cho từ khó/tiếng Anh. (Vd: 10.000mAh phải viết là "mười nghìn mi li am pe giờ", Sale -> "seo", Deal -> "đi-u", freeship -> "phờ ri síp").
     4. CẤM TỪ LIVESTREAM: TUYỆT ĐỐI KHÔNG dùng từ "livestream", "phiên live". Thay bằng "trong video này", "tại giỏ hàng".
-    5. ĐỒNG BỘ GIỌNG ĐỌC NGOÀI HÌNH & MIỀN BẮC (STRICT VOICE MATCHING): Kể cả cảnh không có người, BẮT BUỘC chèn lệnh: "fast-paced, high-energy, consistent pacing, identical voice identity, strict Northern Vietnamese accent, absolutely NO Southern accent" vào video_prompt để AI duy trì giọng Miền Bắc nhanh, mạnh mẽ, không bị chậm thành phim tài liệu.
-    6. KỶ LUẬT CHỐNG VIẾT TẮT (NO SHORTCUT RULE): Bạn TUYỆT ĐỐI KHÔNG ĐƯỢC phép viết "Tương tự cảnh 1" ở các cảnh sau. Bạn BẮT BUỘC PHẢI VIẾT LẶP LẠI TOÀN BỘ CÁC LỆNH KHÓA (Khuôn mặt, Trang phục '{outfit_setup}', Tỷ lệ Sản phẩm, Giọng điệu) VÀO MỌI PHÂN CẢNH (từ cảnh 1 đến cảnh cuối cùng). Nếu bạn lười biếng viết tắt, AI tạo video sẽ bị mất bối cảnh.
+    5. QUY TRÌNH TRANG PHỤC & KHUÔN MẶT: Dùng tên 'Character X'. BẮT BUỘC áp dụng trang phục được quy định cho kịch bản này là: "{outfit_setup}" cho TẤT CẢ các phân cảnh có mặt nhân vật để đảm bảo tính đồng nhất 100%. Luôn kèm lệnh 'featuring the exact identity of reference image X'.
+    6. QUY TRÌNH SẢN PHẨM & TỶ LỆ KÍCH THƯỚC: TUYỆT ĐỐI KHÔNG làm sai lệch kiểu dáng và KHÔNG phóng to sản phẩm sai tỷ lệ. BẮT BUỘC DÙNG CỤM TỪ: "featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE, maintaining realistic scale and true-to-life proportions".
+    7. ĐỒNG BỘ GIỌNG ĐỌC NGOÀI HÌNH & MIỀN BẮC (STRICT VOICE MATCHING): Kể cả cảnh không có người, BẮT BUỘC chèn lệnh: "fast-paced, high-energy, consistent pacing, identical voice identity, strict Northern Vietnamese accent, absolutely NO Southern accent" vào video_prompt để AI duy trì giọng Miền Bắc nhanh, mạnh mẽ, không bị chậm thành phim tài liệu.
+    8. MÀN HÌNH SẠCH RÁC: Tuyệt đối không sinh ra chữ lơ lửng hay phụ đề (`no floating text, clean background`).
+    9. KỶ LUẬT CHỐNG VIẾT TẮT (NO SHORTCUT RULE): Bạn TUYỆT ĐỐI KHÔNG ĐƯỢC phép viết "Tương tự cảnh 1" ở các cảnh sau. Bạn BẮT BUỘC PHẢI VIẾT LẶP LẠI TOÀN BỘ CÁC LỆNH KHÓA (Khuôn mặt, Trang phục '{outfit_setup}', Tỷ lệ Sản phẩm, Giọng điệu) VÀO MỌI PHÂN CẢNH (từ cảnh 1 đến cảnh cuối cùng). Nếu bạn lười biếng viết tắt, AI tạo video sẽ bị mất bối cảnh.
     
     Xuất chuẩn 1 Dict JSON duy nhất:
     {{
@@ -609,7 +612,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
           "image_prompt": "BẠN PHẢI VIẾT LẠI ĐẦY ĐỦ LỆNH TRANG PHỤC VÀ SẢN PHẨM NHƯ CẢNH 1. KHÔNG ĐƯỢC VIẾT TẮT.",
           "video_prompt": "BẠN PHẢI VIẾT LẠI ĐẦY ĐỦ LỆNH ÂM THANH NHƯ CẢNH 1. KHÔNG ĐƯỢC VIẾT TẮT."
         }}
-        // TỰ ĐỘNG SINH TIẾP CÁC CẢNH 3, 4, 5... (VIẾT ĐẦY ĐỦ LỆNH CHO TỪNG CẢNH)
+        // TỰ ĐỘNG SINH TIẾP CÁC CẢNH TÙY CHỌN ĐỂ ĐẠT TỔNG THỜI LƯỢNG (VIẾT ĐẦY ĐỦ LỆNH CHO TỪNG CẢNH)
       ]
     }}
     """
@@ -645,10 +648,8 @@ def clone_script_id(target_id, current_mode, current_style, aspect_ratio, goal, 
         st.error(f"❌ Lỗi: {e}")
 
 # ==============================================================================
-# QUẢN LÝ GIAO DIỆN & RENDER TRIGGER EVENT CÙNG CẤP
+# GIAO DIỆN CHÍNH (CẤU HÌNH) - RENDER TRƯỚC KHI BẮT TRIGGER
 # ==============================================================================
-
-# Lấy các biến cấu hình giao diện trước
 col_mode, col_style = st.columns([1.5, 1])
 with col_mode:
     selected_mode = st.selectbox("🎯 Chọn Thể Loại Nội Dung:", options=ALL_MODULES)
@@ -678,15 +679,32 @@ with col_style:
     }
     selected_style = style_mapping.get(selected_style_vn, "Cinematic Realism (Người thật / Siêu thực 8K)")
 
+# Khôi phục Expander và Info Box theo yêu cầu
+with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp 'Thể Loại & Phong Cách'", expanded=False):
+    st.markdown("""
+    <div style="background-color: #f8fafc; padding: 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 0.95rem; color: #334155; margin-bottom: 5px;">
+        <h4 style="color: #0f172a; margin-top: 0; margin-bottom: 12px; font-size: 1.05rem;">🎯 Cẩm Nang Phối Hợp Sáng Tạo Nội Dung Đa Vũ Trụ</h4>
+        <ul style="padding-left: 20px; line-height: 1.8; margin-bottom: 0;">
+            <li><b>🛒 TikTok Shop & Bán Hàng:</b> Phù hợp nhất với <code style="color: #e11d48;">Studio Tối Giản (Hiện đại, Sạch sẽ)</code>.</li>
+            <li><b>👶 Mẹ & Bé & Cùng Con Học:</b> Tối ưu với <code style="color: #e11d48;">Hoạt Hình Cắt Giấy / Tĩnh Vật</code> hoặc <code style="color: #e11d48;">Hoạt Hình 3D (Kiểu Pixar)</code>.</li>
+            <li><b>📖 Đời Sống, Giáo Dục & Gia Đình:</b> Rất hợp với <code style="color: #e11d48;">Điện Ảnh Chân Thực</code> (nếu tải nhiều ảnh KOC làm diễn viên) hoặc <code style="color: #e11d48;">Hoạt Hình 2D Ghibli</code>.</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+is_sales = "Bán Hàng" in selected_mode
+if is_sales:
+    st.info("💡 **Chế độ Bán Hàng:** Tự động chia từ 4-6 cảnh, trang phục bám sát thực tế kho/xưởng/showroom, chống nhắc 'livestream'.")
+
+st.markdown("---")
+st.markdown("### 📐 Cấu Hình Khung Hình, Mục Đích & Thời Lượng Chiến Dịch")
+
 col_ratio, col_goal, col_time = st.columns([1, 1, 1])
 with col_ratio:
     aspect_ratio_choice = st.selectbox("Tỷ lệ khung hình video:", ["9:16 (Dọc - TikTok, Reels, Shorts)", "16:9 (Ngang - YouTube, Phim dài, Facebook)"], index=0)
     selected_aspect = "9:16" if "9:16" in aspect_ratio_choice else "16:9"
 
 with col_goal:
-    is_sales = "Bán Hàng" in selected_mode
-    is_corporate = "Doanh Nghiệp" in selected_mode or "Tuyên Truyền" in selected_mode
-    
     if is_sales:
         content_goal = "Chuyển đổi đơn hàng & Chốt Sale trực tiếp (Sales & Conversion)"
     elif is_corporate:
@@ -739,29 +757,12 @@ if st.session_state.action_trigger:
 # ==============================================================================
 # RENDER NỘI DUNG HIỂN THỊ CHÍNH (NẾU KHÔNG CÓ TRIGGER ĐANG CHẠY)
 # ==============================================================================
-selected_style = style_mapping.get(selected_style_vn, "Cinematic Realism (Người thật / Siêu thực 8K)")
-
-# === BẮT ĐẦU ĐOẠN CODE CẦN THAY THẾ ===
-with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp 'Thể Loại & Phong Cách'", expanded=False):
-    st.markdown("""
-    <div style="background-color: #f8fafc; padding: 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 0.95rem; color: #334155; margin-bottom: 5px;">
-        <h4 style="color: #0f172a; margin-top: 0; margin-bottom: 12px; font-size: 1.05rem;">🎯 Cẩm Nang Phối Hợp Sáng Tạo Nội Dung Đa Vũ Trụ</h4>
-        <ul style="padding-left: 20px; line-height: 1.8; margin-bottom: 0;">
-            <li><b>🛒 TikTok Shop & Bán Hàng:</b> Phù hợp nhất với <code style="color: #e11d48;">Studio Tối Giản (Hiện đại, Sạch sẽ)</code>.</li>
-            <li><b>👶 Mẹ & Bé & Cùng Con Học:</b> Tối ưu với <code style="color: #e11d48;">Hoạt Hình Cắt Giấy / Tĩnh Vật</code> hoặc <code style="color: #e11d48;">Hoạt Hình 3D (Kiểu Pixar)</code>.</li>
-            <li><b>📖 Đời Sống, Giáo Dục & Gia Đình:</b> Rất hợp với <code style="color: #e11d48;">Điện Ảnh Chân Thực</code> (nếu tải nhiều ảnh KOC làm diễn viên) hoặc <code style="color: #e11d48;">Hoạt Hình 2D Ghibli</code>.</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
-
-is_sales = "Bán Hàng" in selected_mode
-if is_sales:
-    st.info("💡 **Chế độ Bán Hàng:** Tự động chia từ 4-6 cảnh, trang phục bám sát thực tế kho/xưởng/showroom, chống nhắc 'livestream'.")
 
 st.markdown("---")
-st.markdown("### 📐 Cấu Hình Khung Hình, Mục Đích & Thời Lượng Chiến Dịch")
+input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô tả chi tiết dự án/sản phẩm (Ghi chú rõ thứ tự các ảnh nếu tải nhiều ảnh nhân vật):", height=80)
 
-col_ratio, col_goal, col_time = st.columns([1, 1, 1])
+st.markdown("### 👥 Quản Lý Nguồn Ảnh & Tuyển Diễn Viên (Casting)")
+col_p_img, col_c_img = st.columns([1, 1])
 
 with col_p_img:
     st.markdown("**1. 📦 Tải ảnh Sản phẩm / Bối cảnh chính**")
@@ -1025,7 +1026,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
         except Exception as e:
             st.error(f"❌ Lỗi thực thi: {e}")
 
-if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
+if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict) and not st.session_state.action_trigger:
     st.divider()
     st.markdown(f"### 🔍 **Phân Tích DNA Chi Tiết Đa Tầng — [{selected_mode.upper()}]**")
     ca = st.session_state.content_analysis
@@ -1050,7 +1051,7 @@ if st.session_state.content_analysis and isinstance(st.session_state.content_ana
 # ==============================================================================
 all_combined_scripts_list = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
 
-if all_combined_scripts_list and st.session_state.active_script_id is None:
+if all_combined_scripts_list and st.session_state.active_script_id is None and not st.session_state.action_trigger:
     st.divider()
     
     completed_scripts = [sc for sc in all_combined_scripts_list if sc.get("id") in st.session_state.generated_details]
@@ -1103,7 +1104,7 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
         st.rerun()
 
 # GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC ĐIỀU HƯỚNG
-if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
+if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details and not st.session_state.action_trigger:
     st.divider()
 
     if st.button("⬅️ Quay lại danh sách kịch bản tổng", key="btn_back_to_list_main"):
