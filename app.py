@@ -2,13 +2,11 @@ import streamlit as st
 import streamlit.components.v1 as components
 from google import genai
 from google.genai import types
-from PIL import Image
 import json
 import base64
 import os
 import re
 import time
-import io
 from datetime import datetime, timedelta
 
 # ==============================================================================
@@ -57,7 +55,6 @@ st.markdown("""
         letter-spacing: 0.5px;
         border: 1px solid #fca5a5;
     }
-    
     div[data-testid="stSelectbox"] label p {
         font-size: 1.15rem !important;
         font-weight: 800 !important;
@@ -71,7 +68,6 @@ st.markdown("""
         border: 2px solid #cbd5e1 !important;
         border-radius: 10px !important;
     }
-
     .custom-card {
         background: #ffffff;
         border: 1.5px solid #e2e8f0;
@@ -81,7 +77,6 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
     .card-title-add { color: #d97706; font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
-    
     div[data-testid="stButton"] > button {
         width: 100% !important;
         border-radius: 8px !important;
@@ -109,7 +104,6 @@ st.markdown("""
     .stCodeBlock { margin-top: -6px !important; margin-bottom: 4px !important; }
     .badge-pending { color: #d97706; font-weight: 700; background: #fef3c7; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
     .badge-ready { color: #15803d; font-weight: 700; background: #dcfce7; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
-    
     .support-box {
         background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
         border: 1.5px solid #86efac;
@@ -120,7 +114,6 @@ st.markdown("""
     }
     [data-testid="stFileUploader"] { padding: 0px !important; }
     [data-testid="stFileUploader"] > section { padding: 8px !important; }
-    
     @keyframes pulse {
         0% { transform: scale(0.98); opacity: 0.8; }
         50% { transform: scale(1.02); opacity: 1; }
@@ -242,7 +235,6 @@ def format_analysis_field(field_val) -> str:
         return "<br>".join([f"• <b>{str(k).replace('_', ' ').title()}:</b> {str(v)}" for k, v in field_val.items()])
     elif isinstance(field_val, list):
         return "<br>".join([f"• {str(item)}" for item in field_val])
-    
     text = str(field_val).strip()
     text = re.sub(r'<<\.?', '', text)
     text = text.replace('<b>', '').replace('</b>', '')
@@ -250,7 +242,6 @@ def format_analysis_field(field_val) -> str:
     text = re.sub(r'(?i)(?:\b|^)(?:1[\.\)]\s*)?chức năng\s*[:\.-]?', '<br>• <b>Chức năng:</b>', text)
     text = re.sub(r'(?i)(?:\b|^)(?:2[\.\)]\s*)?tài chính\s*[:\.-]?', '<br>• <b>Tài chính:</b>', text)
     text = re.sub(r'(?i)(?:\b|^)(?:3[\.\)]\s*)?cảm xúc\s*[:\.-]?', '<br>• <b>Cảm xúc:</b>', text)
-    
     lines = [l.strip() for l in text.split('<br>') if l.strip()]
     formatted_output = []
     for line in lines:
@@ -281,11 +272,11 @@ with st.sidebar:
             st.session_state.current_input_context = ""
             st.session_state.active_project_title = "Chiến dịch mới"
             st.session_state.last_loaded_file_id = None  
-            st.session_state.file_uploader_key += 1
+            st.session_state.file_uploader_key += 1 # Xóa uploader
             st.session_state.scroll_to_top = True
             st.session_state.character_profiles = []
-            st.session_state.main_input_context = "" 
-            st.session_state.num_chars_input = 0 
+            st.session_state.main_input_context = "" # Xóa nội dung mô tả
+            st.session_state.num_chars_input = 0 # Đưa nhân vật về 0
             
             st.session_state.global_toast = "Đã dọn dẹp và tạo dự án mới!"
             st.session_state.global_toast_icon = "✨"
@@ -692,23 +683,23 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
       "scenes": [
         {{
           "scene_number": 1, 
-          "duration": "6s", 
-          "scene_setting": "Bối cảnh chi tiết", 
-          "transition_type": "Cắt cứng dồn dập (Hard Cut)", 
+          "duration": "8s", 
+          "scene_setting": "Bối cảnh hành động diễn ra dài...", 
+          "transition_type": "Mở đầu", 
           "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn (Hà Nội): {tone_vn} (Nhân vật đang nói)", 
           "voiceover_vi": "Lời thuyết minh tiếng Việt ĐÃ ĐƯỢC PHIÊN ÂM (vd: mười nghìn mi li am pe giờ)", 
-          "image_prompt": "Prompt Imagen 3 (tiếng Anh). CÓ NHÂN VẬT THÌ ÉP LỆNH: 'Character X... wearing {outfit_setup} and featuring the exact identity of reference image X'. BẮT BUỘC LỆNH SẢN PHẨM: 'featuring the EXACT design... maintaining realistic scale', no floating text", 
+          "image_prompt": "Prompt Imagen 3 (tiếng Anh). CÓ NHÂN VẬT THÌ ÉP LỆNH: 'Character X... wearing {outfit_setup} and featuring the exact identity of reference image X'. BẮT BUỘC LỆNH SẢN PHẨM: 'featuring the EXACT design... maintaining realistic scale'", 
           "video_prompt": "Prompt Veo 3 (tiếng Anh). BẮT BUỘC CÓ LỆNH ÂM THANH: 'Audio: The exact same {fixed_gender} character speaking on-camera. {tone_en}. Strict Northern Vietnamese (Hanoi) accent. ABSOLUTELY NO Southern/Saigon accent. Reading: [voiceover_vi]'"
         }},
         {{
           "scene_number": 2,
-          "duration": "4s",
-          "scene_setting": "Quay cận cảnh sản phẩm (Không thấy người)...",
-          "transition_type": "...",
-          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn (Hà Nội): {tone_vn} (Nhân vật nói ngoài hình)",
+          "duration": "8s",
+          "scene_setting": "Tiếp tục diễn biến kéo dài của cảnh 1 (Nối cảnh để tạo thành 16s)...",
+          "transition_type": "Nối liền mạch (Match Cut)",
+          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn (Hà Nội): {tone_vn}",
           "voiceover_vi": "Lời thuyết minh tiếp theo...",
-          "image_prompt": "BẠN PHẢI VIẾT LẠI ĐẦY ĐỦ LỆNH TRANG PHỤC VÀ SẢN PHẨM NHƯ CẢNH 1. KHÔNG ĐƯỢC VIẾT TẮT.",
-          "video_prompt": "BẠN PHẢI VIẾT LẠI ĐẦY ĐỦ LỆNH ÂM THANH: 'Audio: The exact same {fixed_gender} character is speaking off-camera. {tone_en}. Strict Northern Vietnamese (Hanoi) accent. ABSOLUTELY NO Southern/Saigon accent. ABSOLUTELY NO documentary narrator voice. Reading: [voiceover_vi]'"
+          "image_prompt": "Dùng frame ảnh cuối cùng của phân cảnh trước (Cảnh 1) làm ảnh đầu vào (Image-to-Video) để giữ sự liền mạch tuyệt đối.",
+          "video_prompt": "BẠN PHẢI VIẾT LẠI ĐẦY ĐỦ LỆNH ÂM THANH NHƯ CẢNH 1: 'Audio: The exact same {fixed_gender} character is speaking... {tone_en}... Strict Northern Vietnamese (Hanoi) accent. Reading: [voiceover_vi]'"
         }}
         // TỰ ĐỘNG CHIA & NỐI CÁC CẢNH 3, 4, 5... SAO CHO TỔNG THỜI GIAN CỘNG LẠI BẰNG CHÍNH XÁC QUY ĐỊNH (MỖI CẢNH ĐỀU PHẢI CHỌN ĐÚNG 4s, 6s HOẶC 8s)
       ]
@@ -734,11 +725,37 @@ def clone_script_id(target_id, current_mode, current_style, aspect_ratio, goal, 
     st.session_state.cloned_scripts.extend(cloned_list)
 
 # ==============================================================================
-# 1. RENDER GIAO DIỆN CẤU HÌNH ĐẦU TIÊN & KHAI BÁO BIẾN TOÀN CỤC
+# 1. KIỂM TRA ĐĂNG NHẬP & BẢO MẬT
 # ==============================================================================
+st.markdown("""
+<div class="header-container">
+    <div class="header-badge">🌟 STUDIO VIDEO AI ĐA NĂNG TOÀN DIỆN</div>
+    <div class="main-title">🎬 Hệ Thống Kịch Bản Đa Vũ Trụ Pro</div>
+    <div class="sub-title">TikTok Shop, Mẹ & Bé Viral, TVC Điện Ảnh, Phim Đời Sống & Giáo Dục</div>
+</div>
+""", unsafe_allow_html=True)
+
+if not st.session_state.is_logged_in:
+    st.info("👈 **Vui lòng đăng nhập ở thanh công cụ bên trái để sử dụng hệ thống.**")
+    st.stop() 
+
+# ==============================================================================
+# 2. RENDER GIAO DIỆN CẤU HÌNH ĐẦU TIÊN & KHAI BÁO BIẾN TOÀN CỤC
+# ==============================================================================
+
+# XỬ LÝ PHÂN QUYỀN HIỂN THỊ DANH MỤC THỂ LOẠI (RBAC)
+allowed_modules = ALL_MODULES
+user_email = st.session_state.get("current_user_email", "")
+if user_email and user_email != ADMIN_EMAIL:
+    user_roles = st.session_state.licensed_accounts.get(user_email, {}).get("roles", [])
+    if "Tất cả thể loại" not in user_roles:
+        allowed_modules = [m for m in ALL_MODULES if m in user_roles]
+        if not allowed_modules: 
+            allowed_modules = [ALL_MODULES[0]]
+
 col_mode, col_style = st.columns([1.5, 1])
 with col_mode:
-    selected_mode = st.selectbox("🎯 Chọn Thể Loại Nội Dung:", options=ALL_MODULES)
+    selected_mode = st.selectbox("🎯 Chọn Thể Loại Nội Dung:", options=allowed_modules)
 
 # KHAI BÁO CÁC CỜ NHẬN DIỆN (FLAGS) NGAY TẠI ĐÂY
 is_sales = "Bán Hàng" in selected_mode
@@ -794,7 +811,7 @@ is_knowledge = "Chia sẻ kiến thức" in content_goal or "Review" in content_
 is_story = "Kể chuyện" in content_goal or "Phim ngắn" in content_goal
 
 # ==============================================================================
-# 2. XỬ LÝ SỰ KIỆN NÚT BẤM (ANTI-STALE UI TRIGGER)
+# 3. XỬ LÝ SỰ KIỆN NÚT BẤM (ANTI-STALE UI TRIGGER)
 # ==============================================================================
 if st.session_state.action_trigger:
     action = st.session_state.action_trigger
@@ -849,7 +866,7 @@ if st.session_state.action_trigger:
     st.stop() # Dừng toàn bộ code bên dưới để màn hình cũ KHÔNG BỊ VẼ LẠI
 
 # ==============================================================================
-# 3. NẾU KHÔNG CÓ HÀNH ĐỘNG NÀO ĐANG CHẠY (RENDER UI THƯỜNG)
+# 4. NẾU KHÔNG CÓ HÀNH ĐỘNG NÀO ĐANG CHẠY (RENDER UI THƯỜNG)
 # ==============================================================================
 
 with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp 'Thể Loại & Phong Cách'", expanded=False):
@@ -918,6 +935,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
             char_rules_str = generate_char_rules_string(profiles_to_save, is_sales)
             realtime_ctx = get_realtime_context()
             
+            # XỬ LÝ ĐỊNH TUYẾN TÔNG ĐIỆU VÀ CẤU TRÚC KỊCH BẢN TRONG BƯỚC PHÂN TÍCH
             if is_sales:
                 tone_suggestion = "Năng lượng cao, chốt sale"
                 specific_rules = """
