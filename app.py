@@ -444,17 +444,15 @@ def safe_copy_button(text_to_copy: str, button_label: str = "📋 Sao Chép Prom
 
 def clean_and_parse_json(text_content: str):
     # LỌC JSON CHỐNG CRASH TOÀN DIỆN
-    cleaned = text_content.strip()
+    cleaned = re.sub(r'```(?:json)?', '', text_content).strip()
     match = re.search(r'(\{.*\}|\[.*\])', cleaned, re.DOTALL)
     if match:
         cleaned = match.group(0)
         
     try:
-        # strict=False cho phép các chuỗi chứa \n, \t mà không bị crash
         parsed = json.loads(cleaned, strict=False)
         return parsed[0] if isinstance(parsed, list) and len(parsed) > 0 else parsed
     except json.JSONDecodeError:
-        # Nếu AI vẫn lỡ dùng dấu ngoặc kép lồng nhau ("kịch bản "sale" đỉnh"), dùng ast.literal_eval
         try:
             py_str = cleaned.replace('true', 'True').replace('false', 'False').replace('null', 'None')
             parsed = ast.literal_eval(py_str)
@@ -470,7 +468,7 @@ def get_realtime_context():
     elif month in [5, 6, 7]: season = "Mùa Hè"
     elif month in [8, 9, 10]: season = "Mùa Thu (Mùa tựu trường / Back-to-school)"
     else: season = "Mùa Đông (Mùa lễ hội cuối năm / Winter holidays)"
-    return f"THỜI GIAN THỰC TẾ HIỆN TẠI LÀ: Tháng {month} năm {year} (Thuộc {season}). BẠN BẮT BUỘC PHẢI điều chỉnh kịch bản (Bối cảnh, Hook, Lý do mua hàng) sao cho logic và PHÙ HỢP VỚI THỜI ĐIỂM {season} này. TUYỆT ĐỐI KHÔNG làm sai lệch mùa vụ thực tế."
+    return f"THỜI GIAN THỰC TẾ: Tháng {month}/{year} ({season}). TƯ DUY ÁP DỤNG MÙA VỤ (CRITICAL): BẠN PHẢI PHÂN TÍCH SẢN PHẨM THỰC TẾ. CHỈ áp dụng bối cảnh mùa vụ/thời gian này vào Hook hoặc Lý do mua hàng NẾU nó thực sự giải quyết nỗi đau hoặc kích thích mong muốn của khách hàng cho RIÊNG sản phẩm này. NẾU sản phẩm KHÔNG LIÊN QUAN đến mùa vụ (sản phẩm dùng quanh năm, thiết bị công nghiệp...), HÃY BỎ QUA HOÀN TOÀN yếu tố thời gian và tập trung 100% vào USP/Nỗi đau cốt lõi. Tuyệt đối không nhồi nhét mùa vụ một cách rập khuôn, gượng ép vào những sản phẩm không phù hợp."
 
 def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str, target_duration_mins: float = 0.5, char_rules: str = "") -> str:
     is_sales = ("Bán Hàng" in mode or "Sales" in goal)
@@ -507,12 +505,12 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
        - {goal_directive}
        - CẤM DÙNG GIỌNG THUYẾT MINH PHIM TÀI LIỆU (NO NARRATOR VOICE): Giữa phân cảnh có người và phân cảnh cận sản phẩm (không có người), giọng nói phải là CỦA CÙNG MỘT NGƯỜI (Cùng KOC/Diễn viên đang nói ngoài hình). TUYỆT ĐỐI KHÔNG được chuyển sang giọng đọc phim tài liệu (documentary narrator) đều đều.
        - {tone_instruction} Luôn sử dụng lệnh ép AI giữ nguyên tone này trong mục video_prompt.
-       - ĐỒNG NHẤT GIỌNG MIỀN BẮC CHUẨN (HÀ NỘI): Bắt buộc chèn lệnh "strict standard Northern Vietnamese (Hanoi) accent, strongly suppress any Southern or Saigon accents even when using sales keywords like 'xả kho', 'siêu sale'" vào MỌI video_prompt.
+       - ĐỒNG NHẤT GIỌNG MIỀN BẮC CHUẨN (HÀ NỘI): Bắt buộc chèn lệnh "strict standard Northern Vietnamese (Hanoi) accent, strongly suppress any Southern or Saigon accents even when using sales keywords like 'xả kho', 'siêu sale'" vào MỌI video_prompt để chặn tuyệt đối hiện tượng AI tự động chuyển sang giọng Nam.
        - PHIÊN ÂM TIẾNG VIỆT CHUẨN CHO AI (TTS PRONUNCIATION): Trong trường 'voiceover_vi', BẮT BUỘC phải viết rõ cách phát âm tiếng Việt bồi cho các con số, đơn vị đo lường, và từ tiếng Anh để AI Voice không đọc sai hoặc bị ngọng. (VD: 10.000mAh -> mười nghìn mi li am pe giờ).
-    8. KỶ LUẬT NGÔN TỪ & CHỐNG VI PHẠM CHÍNH SÁCH (STRICT PLATFORM COMPLIANCE):
-       - TUYỆT ĐỐI KHÔNG dùng từ ngữ cam kết tuyệt đối: "100%", "tuyệt đối", "cam kết", "chắc chắn", "vĩnh viễn", "trị dứt điểm", "nhất", "số 1".
+    8. KỶ LUẬT NGÔN TỪ & CHỐNG VI PHẠM CHÍNH SÁCH TIKTOK/FB/YOUTUBE (STRICT PLATFORM COMPLIANCE):
+       - TUYỆT ĐỐI KHÔNG dùng từ ngữ cam kết tuyệt đối: "100%", "tuyệt đối", "cam kết", "chắc chắn", "vĩnh viễn", "trị dứt điểm", "nhất", "số 1". ĐÂY LÀ QUY ĐỊNH SỐNG CÒN ĐỂ CHỐNG VI PHẠM Y TẾ.
        - KHÔNG tuyên bố y tế sai lệch/thần thánh hóa: (Ví dụ: KHÔNG nói "chống cận thị tuyệt đối", chỉ nói "hỗ trợ bảo vệ mắt"; KHÔNG nói "trị mụn vĩnh viễn", chỉ nói "hỗ trợ giảm mụn"). Dùng từ ngữ an toàn, khách quan.
-       - KHÔNG dùng từ khóa cấm của TikTok/FB/YT: "livestream", "phiên live", "đang live", "chuyển khoản", "bệnh tật". Thay bằng "trong video này", "tại giỏ hàng", "hỗ trợ cải thiện".
+       - KHÔNG dùng từ khóa cấm của thuật toán: "livestream", "phiên live", "đang live", "chuyển khoản", "bệnh tật". Thay bằng "trong video này", "tại giỏ hàng", "hỗ trợ cải thiện".
     """
 
     master_director_directive = "CHẾ ĐỘ CHUYÊN GIA CAO CẤP: Tối ưu hóa sâu sắc các thông số điện ảnh chuyên sâu (Lighting setup, Lens focal length, Color grading, Camera movement physics) cho Imagen 3 và Veo 3."
@@ -529,8 +527,8 @@ MỤC TIÊU CHIẾN DỊCH: {goal}
 1. LƯU Ý QUAN TRỌNG VỀ JSON: BẮT BUỘC TRẢ VỀ JSON HỢP LỆ. TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP (") HOẶC XUỐNG DÒNG (\\n) BÊN TRONG CÁC CHUỖI GIÁ TRỊ VÌ SẼ GÂY LỖI HỆ THỐNG. DÙNG DẤU NGOẶC ĐƠN (') ĐỂ TRÍCH DẪN NẾU CẦN.
 2. QUY TẮC QUỐC TỊCH: Nếu có con người chung chung, BẮT BUỘC chèn "Vietnamese".
 {char_rules}
-4. MÀN HÌNH SẠCH & CẤM ICON UI (NO SHOPPING CARTS): Tuyệt đối không sinh ra chữ, phụ đề, biểu tượng giỏ hàng (shopping cart), hay các nút bấm UI mạng xã hội ('no floating text, no subtitles, no UI elements, no shopping cart icons, no social media buttons, clean background'). NHƯNG BẮT BUỘC phải giữ nguyên chính xác logo và các dòng chữ có sẵn trên bản thân sản phẩm.
-5. KHÓA KIỂU DÁNG SẢN PHẨM & TỶ LỆ KÍCH THƯỚC: Bắt buộc dùng lệnh "featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE, maintaining realistic scale and true-to-life proportions" để mô tả sản phẩm. KHÔNG phóng to sản phẩm sai tỷ lệ thực tế. Đánh giá kích thước vật lý dựa trên ảnh tải lên (VD: nhỏ bằng bàn tay).
+4. MÀN HÌNH SẠCH & CẤM ICON UI (NO SHOPPING CARTS): Tuyệt đối không sinh ra chữ, phụ đề, biểu tượng giỏ hàng (shopping cart), hay các nút bấm UI mạng xã hội ('no floating text, no subtitles, no UI elements, no shopping cart icons, no social media buttons, clean background'). NHƯNG BẮT BUỘC phải giữ nguyên chính xác logo và các dòng chữ có sẵn trên bản thân sản phẩm ('keep exact product logo and typography from reference image').
+5. KHÓA KIỂU DÁNG SẢN PHẨM & TỶ LỆ KÍCH THƯỚC: Bắt buộc dùng lệnh "featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE, maintaining realistic scale and true-to-life proportions" để mô tả sản phẩm. KHÔNG phóng to sản phẩm sai tỷ lệ thực tế. Đánh giá kích thước vật lý dựa trên ảnh tải lên (VD: nhỏ bằng bàn tay, to bằng nửa người, cao đến gối...).
 6. CHUYỂN CẢNH THÔNG MINH & NỐI CẢNH DÀI (SMART TRANSITIONS): Cắt cứng dồn dập (Hard Cut) hoặc Chuyển cảnh khớp hành động mượt mà (Match Cut). ĐỐI VỚI CÁC CẢNH DÀI BỊ CẮT NHỎ THÀNH NHIỀU CẢNH 4S/6S/8S: Cảnh sau sẽ phải dùng frame cuối của cảnh trước làm ảnh tham chiếu để tạo video nối tiếp liền mạch.
 {voiceover_instruction}
 """
