@@ -466,7 +466,7 @@ def get_realtime_context():
     elif month in [5, 6, 7]: season = "Mùa Hè"
     elif month in [8, 9, 10]: season = "Mùa Thu (Mùa tựu trường / Back-to-school)"
     else: season = "Mùa Đông (Mùa lễ hội cuối năm / Winter holidays)"
-    return f"THỜI GIAN THỰC TẾ: Tháng {month}/{year} ({season}). TƯ DUY ÁP DỤNG MÙA VỤ (CRITICAL): BẠN PHẢI PHÂN TÍCH SẢN PHẨM THỰC TẾ. CHỈ áp dụng bối cảnh mùa vụ/thời gian này vào Hook hoặc Lý do mua hàng NẾU nó thực sự giải quyết nỗi đau hoặc kích thích mong muốn của khách hàng cho RIÊNG sản phẩm này. NẾU sản phẩm KHÔNG LIÊN QUAN đến mùa vụ (sản phẩm dùng quanh năm, thiết bị công nghiệp...), HÃY BỎ QUA HOÀN TOÀN yếu tố thời gian và tập trung 100% vào USP/Nỗi đau cốt lõi. Tuyệt đối không nhồi nhét mùa vụ một cách rập khuôn, gượng ép vào những sản phẩm không phù hợp."
+    return f"THỜI GIAN THỰC TẾ: Tháng {month}/{year} ({season}). TƯ DUY ÁP DỤNG MÙA VỤ (CRITICAL): BẠN PHẢI PHÂN TÍCH SẢN PHẨM THỰC TẾ. CHỈ áp dụng bối cảnh mùa vụ/thời gian này vào Hook hoặc Lý do mua hàng NẾU nó thực sự giải quyết nỗi đau hoặc kích thích mong muốn của khách hàng cho RIÊNG sản phẩm này. NẾU sản phẩm KHÔNG LIÊN QUAN đến mùa vụ (sản phẩm dùng quanh năm, thiết bị công nghiệp...), HÃY BỎ QUA HOÀN TOÀN yếu tố thời gian và tập trung 100% vào USP/Nỗi đau cốt lõi."
 
 def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str, target_duration_mins: float = 0.5, char_rules: str = "") -> str:
     is_sales = ("Bán Hàng" in mode or "Sales" in goal)
@@ -478,7 +478,7 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
     
     total_seconds = int(target_duration_mins * 60)
     if is_sales:
-        duration_rule = "QUY CHUẨN THỜI LƯỢNG BÁN HÀNG (24s - 35s): Phân rã tự động thành số lượng cảnh hợp lý linh hoạt, nhịp độ cực nhanh, tập trung dồn dập vào hook, test thực tế và chốt đơn."
+        duration_rule = "QUY CHUẨN THỜI LƯỢNG BÁN HÀNG TIKTOK (25s - 35s): BẮT BUỘC sinh ra đầy đủ 4 đến 6 phân cảnh nối tiếp nhau để đạt tổng thời gian 25-35 giây. Mỗi cảnh bắt buộc phải là mốc 4s, 6s, hoặc 8s. CẤU TRÚC VIRAL BẮT BUỘC: Cảnh 1 (Hook giật gân/Tò mò), Cảnh 2-3 (Kích thích nỗi đau & Đưa giải pháp), Cảnh 4-5 (Demo chứng minh thực tế), Cảnh cuối (CTA chốt đơn khẩn trương)."
     else:
         duration_rule = f"QUY CHUẨN THỜI LƯỢNG KỂ CHUYỆN / REVIEW DÀI ({target_duration_mins} phút / {total_seconds} giây): Xây dựng cốt truyện có chiều sâu. Vì AI Video (Veo 3) chỉ sinh được video dài tối đa 4s, 6s, 8s, nên bạn BẮT BUỘC phải chia TỔNG {total_seconds} GIÂY thành nhiều phân cảnh nhỏ (chỉ được chọn mốc 4s, 6s hoặc 8s mỗi cảnh). Để làm một hành động kéo dài (VD cảnh dài 16s), hãy chia làm 2 cảnh 8s liên tiếp."
 
@@ -503,7 +503,7 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
        - {goal_directive}
        - CẤM DÙNG GIỌNG THUYẾT MINH PHIM TÀI LIỆU (NO NARRATOR VOICE): Giọng nói phải là CỦA CÙNG MỘT NGƯỜI (KOC/Diễn viên). TUYỆT ĐỐI KHÔNG được chuyển sang giọng đọc phim tài liệu (documentary narrator) đều đều.
        - {tone_instruction} Luôn sử dụng lệnh ép AI giữ nguyên tone này trong mục video_prompt.
-       - ĐỒNG NHẤT GIỌNG MIỀN BẮC CHUẨN (HÀ NỘI): Bắt buộc chèn lệnh "strict standard Northern Vietnamese (Hanoi) accent, strongly suppress any Southern or Saigon accents even when using sales keywords like 'xả kho', 'siêu sale'" vào MỌI video_prompt để chặn tuyệt đối hiện tượng AI tự động chuyển sang giọng Nam.
+       - ĐỒNG NHẤT GIỌNG MIỀN BẮC CHUẨN (HÀ NỘI): Bắt buộc chèn lệnh "strict standard Northern Vietnamese (Hanoi) accent, strongly suppress any Southern or Saigon accents even when using sales keywords like 'xả kho', 'siêu sale'" vào MỌI video_prompt.
        - PHIÊN ÂM TIẾNG VIỆT CHUẨN KHI ĐỌC (TTS PRONUNCIATION): Viết rõ cách đọc tiếng Việt bồi cho số/từ tiếng Anh theo cách nói TỰ NHIÊN NHẤT. Ví dụ: '10.000mAh' -> 'mười nghìn mi li am pe giờ', 'inox 304' -> 'i nốc ba linh tư' (KHÔNG đọc ba trăm linh bốn), 'Sale' -> 'seo', '199k' -> 'một trăm chín chín cành'.
     8. BỘ LỌC CHÍNH SÁCH ĐA NỀN TẢNG (TIKTOK SHOP, FB, YOUTUBE COMPLIANCE):
        - TUYỆT ĐỐI KHÔNG DÙNG TỪ NGỮ CỰC ĐOAN, CAM KẾT HOẶC TUYỆT ĐỐI HÓA: Cấm dùng "100%", "tuyệt đối", "cực kỳ", "siêu" (nếu nói quá), "cam kết", "chắc chắn", "vĩnh viễn", "trị dứt điểm", "nhất", "số 1", "hoàn toàn".
@@ -526,10 +526,10 @@ MỤC TIÊU CHIẾN DỊCH: {goal}
 1. LƯU Ý QUAN TRỌNG VỀ JSON: BẮT BUỘC TRẢ VỀ JSON HỢP LỆ. TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP (") HOẶC XUỐNG DÒNG (\\n) BÊN TRONG CÁC CHUỖI GIÁ TRỊ VÌ SẼ GÂY LỖI HỆ THỐNG. DÙNG DẤU NGOẶC ĐƠN (') ĐỂ TRÍCH DẪN NẾU CẦN.
 2. QUY TẮC QUỐC TỊCH: Nếu có con người chung chung, BẮT BUỘC chèn "Vietnamese".
 {char_rules}
-4. CẤM HIỂN THỊ UI/GIỎ HÀNG KHI KÊU GỌI HÀNH ĐỘNG (CRITICAL - TRÁNH BỊ PHẠT VI PHẠM GIAO DIỆN): Khi voiceover có các câu Call-to-Action như "nhấn vào giỏ hàng", AI Video thường bị ảo giác và vẽ thêm icon giỏ hàng lên hình. ĐỂ CHỐNG LẠI, bạn bắt buộc thêm lệnh "Cinematic shot ONLY. ABSOLUTELY NO UI elements, NO shopping cart icons, NO on-screen text or social media overlays even during call-to-action" vào MỌI image_prompt và video_prompt.
-5. KHÓA KIỂU DÁNG SẢN PHẨM & TỶ LỆ KÍCH THƯỚC: Bắt buộc dùng lệnh "featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE, maintaining realistic scale and true-to-life proportions" để mô tả sản phẩm. KHÔNG phóng to sản phẩm sai tỷ lệ thực tế. Đánh giá kích thước vật lý dựa trên ảnh tải lên.
-6. 100% CÓ MẶT NHÂN VẬT (ALWAYS ON-SCREEN): Bắt buộc mọi phân cảnh (kể cả giới thiệu chi tiết sản phẩm) đều phải có sự xuất hiện của nhân vật (cầm, chỉ trỏ, tương tác). Tuyệt đối không làm video B-Roll tĩnh chỉ quay sản phẩm mà không có người.
-7. CHUYỂN CẢNH THÔNG MINH & NỐI CẢNH DÀI (SMART TRANSITIONS): Cắt cứng dồn dập (Hard Cut) hoặc Chuyển cảnh khớp hành động mượt mà (Match Cut). ĐỐI VỚI CÁC CẢNH DÀI BỊ CẮT NHỎ THÀNH NHIỀU CẢNH 4S/6S/8S: Cảnh sau sẽ phải dùng frame cuối của cảnh trước làm ảnh tham chiếu để tạo video nối tiếp liền mạch.
+4. CẤM HIỂN THỊ UI/GIỎ HÀNG KHI KÊU GỌI HÀNH ĐỘNG (CRITICAL): Khi voiceover có các câu Call-to-Action, AI Video thường bị ảo giác và vẽ thêm icon giỏ hàng lên hình. Bắt buộc thêm lệnh "Cinematic shot ONLY. ABSOLUTELY NO UI elements, NO shopping cart icons, NO on-screen text or social media overlays even during call-to-action" vào MỌI image_prompt và video_prompt.
+5. KHÓA KIỂU DÁNG SẢN PHẨM & TỶ LỆ KÍCH THƯỚC: Bắt buộc dùng lệnh "featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE, maintaining realistic scale and true-to-life proportions" để mô tả sản phẩm. KHÔNG phóng to sản phẩm sai tỷ lệ thực tế.
+6. 100% CÓ MẶT NHÂN VẬT (ALWAYS ON-SCREEN): Bắt buộc mọi phân cảnh (kể cả giới thiệu chi tiết sản phẩm) đều phải có sự xuất hiện của nhân vật (cầm, chỉ trỏ, tương tác). Tuyệt đối không làm video B-Roll tĩnh chỉ quay sản phẩm.
+7. CHUYỂN CẢNH THÔNG MINH & NỐI CẢNH DÀI (SMART TRANSITIONS): Cắt cứng dồn dập (Hard Cut) hoặc Chuyển cảnh khớp hành động mượt mà (Match Cut). Đối với các cảnh bị cắt nhỏ, cảnh sau phải dùng frame cuối của cảnh trước làm ảnh tham chiếu để tạo video nối tiếp liền mạch.
 {voiceover_instruction}
 """
     return base
@@ -559,7 +559,7 @@ def generate_char_rules_string(profiles, is_sales_mode=False):
     rules += "   - KHUÔN MẶT: Bắt buộc dùng lệnh 'featuring the exact identity of reference image X' để AI không tự chế mặt.\n"
     
     if is_sales_mode:
-        rules += "   - TRANG PHỤC THỰC TẾ & ĐỒNG NHẤT 100% VỀ MÀU SẮC (NỘI DUNG BÁN HÀNG): App sẽ tự thiết lập 1 bộ trang phục (script_outfit_setup) PHÙ HỢP VỚI THỰC TẾ bối cảnh VÀ BẮT BUỘC GHI RÕ MÀU SẮC (Ví dụ: áo polo màu xanh dương, áo bảo hộ màu cam). TUYỆT ĐỐI CẤM mặc áo thun lòe loẹt, đồ đi chơi hay váy vóc diêm dúa sai môi trường. BỘ ĐỒ VÀ MÀU SẮC NÀY PHẢI ĐƯỢC GIỮ NGUYÊN 100% TRONG TOÀN BỘ CÁC CẢNH của kịch bản đó, AI không được tự ý đổi màu áo giữa các cảnh."
+        rules += "   - TRANG PHỤC THỰC TẾ & ĐỒNG NHẤT 100% VỀ MÀU SẮC (NỘI DUNG BÁN HÀNG): App sẽ tự thiết lập 1 bộ trang phục (script_outfit_setup) PHÙ HỢP VỚI THỰC TẾ bối cảnh VÀ BẮT BUỘC GHI RÕ MÀU SẮC (Ví dụ: áo polo màu xanh dương, áo bảo hộ màu cam). BỘ ĐỒ VÀ MÀU SẮC NÀY PHẢI ĐƯỢC GIỮ NGUYÊN 100% TRONG TOÀN BỘ CÁC CẢNH của kịch bản đó, AI không được tự ý đổi màu áo giữa các cảnh."
     else:
         rules += "   - TRANG PHỤC LINH HOẠT THEO NGỮ CẢNH: Trang phục nhân vật có thể thay đổi linh hoạt theo thời gian/không gian của từng phân cảnh (VD: sáng đi làm mặc vest, tối về nhà mặc đồ ngủ) để đảm bảo tính logic câu chuyện."
     
@@ -601,8 +601,9 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
     
     QUY ĐỊNH BẮT BUỘC CHO KỊCH BẢN MỚI:
     {extra_rules}
-    - Thêm key 'script_outfit_setup': Ghi rõ 1 câu miêu tả trang phục nhân vật PHÙ HỢP NGHIÊM NGẶT THỰC TẾ với bối cảnh của kịch bản này (BẮT BUỘC CHỈ ĐỊNH RÕ MÀU SẮC, vd: Áo polo màu xanh navy, Vest công sở màu đen...). Bộ đồ và màu sắc này sẽ dùng xuyên suốt kịch bản.
-    - BỘ LỌC CHÍNH SÁCH: KHÔNG DÙNG TỪ NGỮ CAM KẾT (100%, tuyệt đối, dứt điểm, số 1). KHÔNG DÙNG CÁC TỪ ĐE DỌA (độc hại, ung thư). KHÔNG TẠO KHAN HIẾM GIẢ BẰNG SỐ LƯỢNG (100 chiếc, 50 đơn). CHỈ DÙNG TỪ 'SỐ LƯỢNG CÓ HẠN'.
+    - Thêm key 'script_outfit_setup': Ghi rõ 1 câu miêu tả trang phục nhân vật (BẮT BUỘC CHỈ ĐỊNH RÕ MÀU SẮC, vd: Áo polo màu xanh navy...).
+    - TUYỆT ĐỐI KHÔNG DÙNG TỪ NGỮ CAM KẾT HOẶC Y TẾ (100%, tuyệt đối, dứt điểm).
+    - KHÔNG DÙNG CON SỐ ĐỂ TẠO KHAN HIẾM GIẢ NHƯ 100 CHIẾC HAY 50 ĐƠN. CHỈ DÙNG TỪ 'SỐ LƯỢNG CÓ HẠN'.
     Xuất JSON chuẩn với key 'script_outlines'.
     LƯU Ý CỰC KỲ QUAN TRỌNG: TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP CHƯA ESCAPE (") HOẶC XUỐNG DÒNG BÊN TRONG CÁC GIÁ TRỊ JSON.
     """
@@ -624,16 +625,14 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     safe_angle = outline.get('angle', '').replace('"', "'").replace('\n', ' ')
     safe_hook = outline.get('target_hook', '').replace('"', "'").replace('\n', ' ')
     
-    # Định tuyến Cảm xúc & Thời lượng
     is_sales_mode = "Bán Hàng" in current_mode
     is_knowledge = "Chia sẻ kiến thức" in goal or "Review" in goal
     is_story = "Kể chuyện" in goal or "Phim ngắn" in goal
     is_corporate = "Doanh Nghiệp" in current_mode or "Tuyên Truyền" in current_mode
 
     if target_duration_mins <= 0.5:
-        total_sec = 30
-        duration_str = "24s - 35s (Chuyển đổi bán hàng)"
-        duration_rule_scene = "Từng phân cảnh CHỈ ĐƯỢC CHỌN mốc: 4s, 6s, hoặc 8s."
+        duration_str = "25s - 35s (Chuyển đổi bán hàng TikTok)"
+        duration_rule_scene = "Từng phân cảnh CHỈ ĐƯỢC CHỌN mốc: 4s, 6s, hoặc 8s. Bạn PHẢI TẠO TỪ 4 ĐẾN 6 PHÂN CẢNH để tổng thời gian ghép lại nằm trong khoảng 25s - 35s. Phải chia đủ cấu trúc: Hook -> Giải quyết nỗi đau -> Trải nghiệm -> Chốt đơn."
     else:
         total_sec = int(target_duration_mins * 60)
         duration_str = f"{total_sec}s ({target_duration_mins} phút)"
@@ -644,18 +643,17 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         tone_vn = "nhịp độ nhanh, năng lượng cao, chốt sale"
     elif is_knowledge:
         tone_en = "fast-paced, engaging, sharp, professional tone, absolutely NO slow or overly emotional voice"
-        tone_vn = "nhịp độ nhanh, dứt khoát, lôi cuốn, chuyên nghiệp (Tuyệt đối không dùng giọng chậm rãi hay rườm rà)"
+        tone_vn = "nhịp độ nhanh, dứt khoát, lôi cuốn, chuyên nghiệp"
     elif is_story:
         tone_en = "expressive, emotional storytelling tone, adaptive pacing"
-        tone_vn = "truyền cảm, nhấn nhá theo mạch cảm xúc câu chuyện"
+        tone_vn = "truyền cảm, nhấn nhá theo mạch cảm xúc"
     elif is_corporate:
         tone_en = "confident, professional, authoritative tone, steady pacing"
-        tone_vn = "đĩnh đạc, tự tin, chuyên nghiệp, đáng tin cậy"
+        tone_vn = "đĩnh đạc, tự tin, chuyên nghiệp"
     else:
         tone_en = "natural, engaging, dynamic pacing"
-        tone_vn = "tự nhiên, gần gũi, lôi cuốn, năng lượng linh hoạt"
+        tone_vn = "tự nhiên, gần gũi, lôi cuốn"
 
-    # Ép buộc Giới tính phải rõ ràng
     v_profile = outline.get("voice_profile", {})
     if isinstance(v_profile, str):
         fixed_gender = "Nữ"
@@ -676,18 +674,18 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     {realtime_ctx}
     Ý tưởng kịch bản: ID {target_id} - {safe_title}
     Bối cảnh định hướng: {safe_setting} | Góc tiếp cận: {safe_angle} | Hook: {safe_hook}
-    TRANG PHỤC CỐ ĐỊNH CHO KỊCH BẢN NÀY: {outfit_setup} (Lưu ý: Phải bám sát thực tế bối cảnh và GIỮ ĐÚNG MÀU SẮC).
+    TRANG PHỤC CỐ ĐỊNH CHO KỊCH BẢN NÀY: {outfit_setup} (Lưu ý: GIỮ ĐÚNG MÀU SẮC).
     
     QUY ĐỊNH ĐẠO DIỄN & LÊN PROMPT TIẾNG ANH (BẮT BUỘC):
-    1. KHÓA CỨNG GIỚI TÍNH, TÔNG GIỌNG & NHỊP ĐỘ: Sử dụng 100% giọng đọc của **{fixed_gender}**. Bắt buộc tuân thủ đạo diễn âm thanh: {tone_vn}.
-    2. KỶ LUẬT THỜI LƯỢNG VÀ NỐI CẢNH (VEO 3 LIMITATION): Tổng thời lượng mục tiêu là {duration_str}. {duration_rule_scene}
-    3. KỸ THUẬT NỐI CẢNH (SEAMLESS CONTINUITY): Đối với các phân cảnh nhỏ được cắt ra từ 1 cảnh dài (để duy trì cùng một hành động/khung hình), tại trường `image_prompt` của cảnh nối tiếp, BẠN CHỈ CẦN GHI LỆNH: "Dùng frame ảnh cuối cùng của phân cảnh trước làm ảnh đầu vào (Image-to-Video) để giữ sự liền mạch tuyệt đối". KHÔNG cần viết lại prompt sinh ảnh mới.
-    4. PHIÊN ÂM TIẾNG VIỆT CHUẨN XÁC CHO AI (TTS RULE): BẮT BUỘC viết âm đọc tiếng Việt bồi cho từ khó/tiếng Anh. (Vd: 10.000mAh -> "mười nghìn mi li am pe giờ", "inox 304" -> "i nốc ba linh tư").
-    5. BỘ LỌC CHÍNH SÁCH TIKTOK/FB/YOUTUBE: TUYỆT ĐỐI KHÔNG dùng từ ngữ đe dọa (độc hại, ung thư). KHÔNG dùng từ ngữ cam kết y tế/làm đẹp phi lý (100%, tuyệt đối, dứt điểm). Cấm từ "livestream". KHÔNG dùng con số cụ thể tồn kho ảo (100 chiếc, 50 đơn). Thay bằng "số lượng ưu đãi có hạn".
+    1. KHÓA CỨNG GIỚI TÍNH, TÔNG GIỌNG: Sử dụng 100% giọng đọc của **{fixed_gender}**. Đạo diễn âm thanh: {tone_vn}.
+    2. KỶ LUẬT THỜI LƯỢNG & CẤU TRÚC VIRAL: Bạn BẮT BUỘC PHẢI TẠO ĐẦY ĐỦ số lượng phân cảnh (khoảng 4 đến 6 cảnh) để tổng thời lượng cộng lại đạt chuẩn {duration_str}. Đối với nội dung bán hàng, phải áp dụng cấu trúc: Cảnh 1 (Hook tò mò), Cảnh 2-3 (Nỗi đau & Giải pháp), Cảnh 4 (Demo thực tế), Cảnh cuối (CTA chốt đơn). {duration_rule_scene}
+    3. KỸ THUẬT NỐI CẢNH: Đối với các phân cảnh dài bị cắt nhỏ, BẠN CHỈ CẦN GHI LỆNH: "Dùng frame ảnh cuối cùng của phân cảnh trước làm ảnh đầu vào (Image-to-Video) để giữ sự liền mạch tuyệt đối" vào trường `image_prompt`.
+    4. PHIÊN ÂM TIẾNG VIỆT CHUẨN XÁC CHO AI (TTS RULE): BẮT BUỘC viết âm đọc tiếng Việt bồi cho từ khó/tiếng Anh. (Vd: "inox 304" -> "i nốc ba linh tư", "199k" -> "một trăm chín chín cành").
+    5. BỘ LỌC CHÍNH SÁCH TIKTOK/FB: TUYỆT ĐỐI KHÔNG dùng từ ngữ đe dọa (độc hại, ung thư). KHÔNG dùng từ ngữ cam kết y tế/làm đẹp phi lý (100%, tuyệt đối, dứt điểm). Cấm từ "livestream". KHÔNG dùng con số cụ thể tồn kho ảo (100 chiếc, 50 đơn). Thay bằng "số lượng ưu đãi có hạn".
     6. CẤM UI ICON & GIỎ HÀNG (CRITICAL): Mọi `image_prompt` và `video_prompt` phải có lệnh 'Cinematic shot ONLY. ABSOLUTELY NO UI elements, NO shopping cart icons, NO on-screen text overlays even during call-to-action'.
     7. 100% HIỆN DIỆN NHÂN VẬT (ALWAYS ON-SCREEN): Nhân vật PHẢI XUẤT HIỆN trong toàn bộ phân cảnh, tương tác thực tế với sản phẩm.
-    8. ĐỒNG BỘ GIỌNG ĐỌC TRỰC TIẾP & MIỀN BẮC (ANTI-SOUTHERN BIAS RULE): Nhân vật nói trên hình, BẮT BUỘC chèn lệnh: "Audio: The exact same {fixed_gender} character speaking on-camera. {tone_en}. Strict standard Northern Vietnamese (Hanoi) accent. Strongly suppress Southern/Saigon accent. ABSOLUTELY NO documentary narrator voice." vào MỌI video_prompt.
-    9. KỶ LUẬT CHỐNG VIẾT TẮT (NO SHORTCUT RULE): Lặp lại đầy đủ cấu trúc chỉ đạo âm thanh và hình ảnh cho từng cảnh.
+    8. ĐỒNG BỘ GIỌNG ĐỌC TRỰC TIẾP & MIỀN BẮC: Nhân vật nói trên hình, BẮT BUỘC chèn lệnh: "Audio: The exact same {fixed_gender} character speaking on-camera. {tone_en}. Strict standard Northern Vietnamese (Hanoi) accent. Strongly suppress Southern/Saigon accent. ABSOLUTELY NO documentary narrator voice." vào MỌI video_prompt.
+    9. KỶ LUẬT CHỐNG VIẾT TẮT: Bạn TUYỆT ĐỐI KHÔNG ĐƯỢC lười biếng bỏ trống phần `video_prompt`. 
     
     Xuất chuẩn 1 Dict JSON duy nhất:
     {{
@@ -700,25 +698,25 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
       "scenes": [
         {{
           "scene_number": 1, 
-          "duration": "8s", 
+          "duration": "6s", 
           "scene_setting": "Bối cảnh hành động diễn ra dài...", 
           "transition_type": "Mở đầu", 
           "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn (Hà Nội): {tone_vn} (Nhân vật đang nói trên hình)", 
-          "voiceover_vi": "Lời thuyết minh tiếng Việt ĐÃ ĐƯỢC PHIÊN ÂM TỰ NHIÊN (vd: mười nghìn mi li am pe giờ, i nốc ba linh tư)", 
+          "voiceover_vi": "Lời thuyết minh tiếng Việt ĐÃ ĐƯỢC PHIÊN ÂM TỰ NHIÊN", 
           "image_prompt": "Prompt Imagen 3 (tiếng Anh). CÓ NHÂN VẬT THÌ ÉP LỆNH: 'Character X... wearing the EXACT SAME {outfit_setup} (strictly maintaining identical color, texture, and design across all scenes) and featuring the exact identity of reference image X'. BẮT BUỘC LỆNH SẢN PHẨM: 'featuring the EXACT design... Cinematic shot ONLY. ABSOLUTELY NO UI elements, NO shopping cart icons, NO text overlays'", 
           "video_prompt": "Prompt Veo 3 (tiếng Anh). BẮT BUỘC CÓ LỆNH ÂM THANH & HÌNH ẢNH: 'Audio: The exact same {fixed_gender} character speaking on-camera. {tone_en}. Strict standard Northern Vietnamese (Hanoi) accent. Strongly suppress Southern/Saigon accent. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements, NO shopping cart icons, NO text overlays. Reading: [voiceover_vi]'"
         }},
         {{
           "scene_number": 2, 
-          "duration": "8s", 
-          "scene_setting": "Tiếp tục diễn biến kéo dài: Nhân vật đang cầm và chỉ cận cảnh vào chi tiết sản phẩm (Nối cảnh để tạo thành 16s)...", 
+          "duration": "6s", 
+          "scene_setting": "Tiếp tục diễn biến...", 
           "transition_type": "Nối liền mạch (Match Cut)", 
-          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn (Hà Nội): {tone_vn} (Nhân vật đang nói trên hình)", 
+          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn (Hà Nội): {tone_vn}", 
           "voiceover_vi": "Lời thuyết minh tiếp theo...", 
           "image_prompt": "Dùng frame ảnh cuối cùng của phân cảnh trước (Cảnh 1) làm ảnh đầu vào (Image-to-Video) để giữ sự liền mạch tuyệt đối.", 
-          "video_prompt": "BẠN PHẢI VIẾT LẠI ĐẦY ĐỦ LỆNH ÂM THANH NHƯ CẢNH 1: 'Audio: The exact same {fixed_gender} character is speaking on-camera... {tone_en}... Strict standard Northern Vietnamese (Hanoi) accent. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements, NO shopping cart icons, NO text overlays. Reading: [voiceover_vi]'"
+          "video_prompt": "BẠN PHẢI VIẾT LẠI ĐẦY ĐỦ LỆNH ÂM THANH NHƯ CẢNH 1..."
         }}
-        // TỰ ĐỘNG CHIA & NỐI CÁC CẢNH 3, 4, 5... SAO CHO TỔNG THỜI GIAN CỘNG LẠI BẰNG CHÍNH XÁC QUY ĐỊNH (MỖI CẢNH ĐỀU PHẢI CHỌN ĐÚNG 4s, 6s HOẶC 8s)
+        // BẠN PHẢI SINH RA ĐẦY ĐỦ CÁC CẢNH 3, 4, 5, 6... SAO CHO TỔNG THỜI LƯỢNG ĐẠT CHUẨN (25-35s cho bán hàng). KHÔNG ĐƯỢC VIẾT TẮT HAY BỎ DỞ.
       ]
     }}
     LƯU Ý CỰC KỲ QUAN TRỌNG: TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP CHƯA ESCAPE HOẶC DẤU XUỐNG DÒNG (\\n) BÊN TRONG CÁC GIÁ TRỊ STRING CỦA JSON.
@@ -813,7 +811,7 @@ with col_goal:
     if is_sales:
         content_goal = "Chuyển đổi đơn hàng & Chốt Sale trực tiếp (Sales & Conversion)"
     elif is_corporate:
-        content_goal = st.selectbox("Mục đích sản xuất video:", ["Kể chuyện dài tập / Phim tài liệu thương hiệu", "Truyền cảm hứng & Lan tỏa thông điệp xã hội"], index=0)
+        content_goal = st.selectbox("Mục đích sản xuất video:", ["Kể chuyện dài tập / Phim tài liệu thương hiệu", "Truền cảm hứng & Lan tỏa thông điệp xã hội"], index=0)
     else:
         content_goal = st.selectbox("Mục đích sản xuất video:", ["Viral & Xây dựng thương hiệu cá nhân", "Kể chuyện dài tập / Phim ngắn", "Chia sẻ kiến thức / Review chuyên sâu"], index=0)
 
@@ -827,7 +825,7 @@ is_knowledge = "Chia sẻ kiến thức" in content_goal or "Review" in content_
 is_story = "Kể chuyện" in content_goal or "Phim ngắn" in content_goal
 
 # ==============================================================================
-# 3. XỬ LÝ SỰ KIỆN NÚT BẤM (ANTI-STALE UI TRIGGER) - FIX ACTIVE SCRIPT
+# 3. XỬ LÝ SỰ KIỆN NÚT BẤM (ANTI-STALE UI TRIGGER)
 # ==============================================================================
 if st.session_state.action_trigger:
     action = st.session_state.action_trigger
@@ -883,7 +881,7 @@ if st.session_state.action_trigger:
     st.stop()
 
 # ==============================================================================
-# 4. NẾU KHÔNG CÓ HÀNH ĐỘNG NÀO ĐANG CHẠY (RENDER UI THƯỜNG)
+# 4. NẾU KHÔNG CÓ HÀĐỘNG NÀO ĐANG CHẠY (RENDER UI THƯỜNG)
 # ==============================================================================
 
 with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp 'Thể Loại & Phong Cách'", expanded=False):
@@ -963,7 +961,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
                 3. BỐI CẢNH BẮT BUỘC: Kho hàng, Xưởng sản xuất, hoặc Showroom trưng bày. Không làm bối cảnh lifestyle.
                 4. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Dựa vào ảnh KOC, điền CHÍNH XÁC 'Nam' hoặc 'Nữ' vào mục 'gender'.
                 5. KỶ LUẬT THÔNG SỐ SẢN PHẨM: TUYỆT ĐỐI KHÔNG tự bịa ra thông số kỹ thuật (như dung tích 2L, công suất 1000W) nếu không nhìn thấy rõ trên ảnh hoặc người dùng không cung cấp. Nếu không chắc chắn, chỉ mô tả ngoại hình.
-                6. BỘ LỌC CHÍNH SÁCH TUYỆT ĐỐI: TUYỆT ĐỐI KHÔNG dùng từ ngữ cam kết tuyệt đối (100%, tuyệt đối, dứt điểm, số 1). KHÔNG tuyên bố y tế sai lệch (VD: không nói "chống cận thị tuyệt đối", chỉ nói "hỗ trợ bảo vệ mắt"; không dùng từ "độc hại", "ung thư"). Cấm từ "livestream", "phiên live". CẤM số lượng tồn kho ảo ("100 chiếc", "50 đơn"). Sử dụng ngôn ngữ an toàn, khách quan.
+                6. BỘ LỌC CHÍNH SÁCH TUYỆT ĐỐI: TUYỆT ĐỐI KHÔNG dùng từ ngữ cam kết tuyệt đối (100%, tuyệt đối, dứt điểm, số 1). KHÔNG tuyên bố y tế sai lệch (VD: không nói "chống cận thị tuyệt đối", chỉ nói "hỗ trợ bảo vệ mắt"). Cấm từ "livestream", "phiên live". CẤM số lượng cụ thể ("100 chiếc", "50 đơn"). Sử dụng ngôn ngữ an toàn, khách quan.
                 """
             elif is_knowledge:
                 tone_suggestion = "Nhanh, dứt khoát, lôi cuốn, chuyên nghiệp"
@@ -1234,7 +1232,6 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
             st.markdown(f"**🖼️ Prompt Ảnh (Imagen 3 - {selected_aspect}):**")
             st.code(img_p, language="text")
             
-            # Ẩn nút Copy nếu là lệnh "Dùng frame ảnh cuối..."
             if "Dùng frame ảnh cuối" not in img_p and "dùng frame ảnh cuối" not in img_p.lower():
                 safe_copy_button(img_p, f"📋 Sao Chép Prompt Ảnh Cảnh {idx}")
             
