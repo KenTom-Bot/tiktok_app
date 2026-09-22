@@ -121,18 +121,17 @@ st.markdown("""
     [data-testid="stFileUploader"] { padding: 0px !important; }
     [data-testid="stFileUploader"] > section { padding: 8px !important; }
     
-    /* Animation loading mượt mà */
     @keyframes pulse {
-        0% { transform: scale(0.98); opacity: 0.8; }
+        0% { transform: scale(0.95); opacity: 0.8; }
         50% { transform: scale(1.02); opacity: 1; }
-        100% { transform: scale(0.98); opacity: 0.8; }
+        100% { transform: scale(0.95); opacity: 0.8; }
     }
     .loading-pulse {
         animation: pulse 1.5s infinite ease-in-out;
         color: #d90429;
-        font-weight: 800;
+        font-weight: bold;
         text-align: center;
-        padding: 25px;
+        padding: 20px;
         background: #fef2f2;
         border: 2px dashed #fca5a5;
         border-radius: 12px;
@@ -182,9 +181,6 @@ def save_licensed_accounts(accounts_dict):
     except Exception as e:
         st.error(f"Lỗi lưu danh sách tài khoản: {e}")
 
-# ==============================================================================
-# KHỞI TẠO SESSION STATE
-# ==============================================================================
 for key, default_val in [
     ("content_analysis", None), ("all_scripts", []), ("cloned_scripts", []), 
     ("expanded_scripts", []), ("generated_details", {}), ("active_script_id", None), 
@@ -656,11 +652,16 @@ def clone_script_id(target_id, current_mode, current_style, aspect_ratio, goal, 
         st.error(f"❌ Lỗi: {e}")
 
 # ==============================================================================
-# 1. RENDER GIAO DIỆN CẤU HÌNH (LUÔN HIỂN THỊ ĐẦY ĐỦ TRƯỚC TIÊN)
+# 1. RENDER GIAO DIỆN CẤU HÌNH ĐẦU TIÊN & KHAI BÁO BIẾN TOÀN CỤC
 # ==============================================================================
 col_mode, col_style = st.columns([1.5, 1])
 with col_mode:
     selected_mode = st.selectbox("🎯 Chọn Thể Loại Nội Dung:", options=ALL_MODULES)
+
+# KHAI BÁO CÁC CỜ NHẬN DIỆN (FLAGS) NGAY TẠI ĐÂY ĐỂ TRÁNH NAME ERROR
+is_sales = "Bán Hàng" in selected_mode
+is_corporate = "Doanh Nghiệp" in selected_mode or "Tuyên Truyền" in selected_mode
+
 with col_style:
     selected_style_vn = st.selectbox("🎨 Chọn Phong Cách Hình Ảnh:", options=[
         "Điện Ảnh Chân Thực (Người thật / Siêu thực 8K)", 
@@ -687,25 +688,6 @@ with col_style:
     }
     selected_style = style_mapping.get(selected_style_vn, "Cinematic Realism (Người thật / Siêu thực 8K)")
 
-with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp 'Thể Loại & Phong Cách'", expanded=False):
-    st.markdown("""
-    <div style="background-color: #f8fafc; padding: 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 0.95rem; color: #334155; margin-bottom: 5px;">
-        <h4 style="color: #0f172a; margin-top: 0; margin-bottom: 12px; font-size: 1.05rem;">🎯 Cẩm Nang Phối Hợp Sáng Tạo Nội Dung Đa Vũ Trụ</h4>
-        <ul style="padding-left: 20px; line-height: 1.8; margin-bottom: 0;">
-            <li><b>🛒 TikTok Shop & Bán Hàng:</b> Phù hợp nhất với <code style="color: #e11d48;">Studio Tối Giản (Hiện đại, Sạch sẽ)</code>.</li>
-            <li><b>👶 Mẹ & Bé & Cùng Con Học:</b> Tối ưu với <code style="color: #e11d48;">Hoạt Hình Cắt Giấy / Tĩnh Vật</code> hoặc <code style="color: #e11d48;">Hoạt Hình 3D (Kiểu Pixar)</code>.</li>
-            <li><b>📖 Đời Sống, Giáo Dục & Gia Đình:</b> Rất hợp với <code style="color: #e11d48;">Điện Ảnh Chân Thực</code> (nếu tải nhiều ảnh KOC làm diễn viên) hoặc <code style="color: #e11d48;">Hoạt Hình 2D Ghibli</code>.</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
-
-is_sales = "Bán Hàng" in selected_mode
-if is_sales:
-    st.info("💡 **Chế độ Bán Hàng:** Tự động chia số cảnh linh hoạt, trang phục bám sát thực tế kho/xưởng/showroom, chống nhắc 'livestream'.")
-
-st.markdown("---")
-st.markdown("### 📐 Cấu Hình Khung Hình, Mục Đích & Thời Lượng Chiến Dịch")
-
 col_ratio, col_goal, col_time = st.columns([1, 1, 1])
 with col_ratio:
     aspect_ratio_choice = st.selectbox("Tỷ lệ khung hình video:", ["9:16 (Dọc - TikTok, Reels, Shorts)", "16:9 (Ngang - YouTube, Phim dài, Facebook)"], index=0)
@@ -725,38 +707,10 @@ with col_time:
     else:
         target_duration_mins = st.number_input("⏱️ Nhập thời lượng mong muốn (Phút):", min_value=0.5, max_value=30.0, value=1.0, step=0.5)
 
-st.markdown("---")
-input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô tả chi tiết dự án/sản phẩm (Ghi chú rõ thứ tự các ảnh nếu tải nhiều ảnh nhân vật):", height=80)
-
-st.markdown("### 👥 Quản Lý Nguồn Ảnh & Tuyển Diễn Viên (Casting)")
-col_p_img, col_c_img = st.columns([1, 1])
-
-with col_p_img:
-    st.markdown("**1. 📦 Tải ảnh Sản phẩm / Bối cảnh chính**")
-    uploaded_files = st.file_uploader("Chọn nhiều ảnh sản phẩm", type=["jpg", "jpeg", "png"], accept_multiple_files=True, label_visibility="collapsed")
-
-with col_c_img:
-    st.markdown("**2. 👤 Số lượng Nhân vật KOC/Gia đình tham chiếu**")
-    num_chars = st.number_input("Chọn từ 0 đến 8 nhân vật:", min_value=0, max_value=8, value=0, step=1)
-
-char_inputs = []
-if num_chars > 0:
-    with st.expander(f"🎭 HỒ SƠ DIỄN VIÊN ({num_chars} Nhân vật) - Kéo thả ảnh và Nhập vai trò", expanded=True):
-        n_cols = 4 if num_chars > 2 else 2
-        grid_cols = st.columns(n_cols)
-        for i in range(num_chars):
-            with grid_cols[i % n_cols]:
-                with st.container(border=True):
-                    st.markdown(f"<div style='color:#d90429; font-weight:800; font-size:14px; margin-bottom:5px;'>👤 Diễn viên {i+1}</div>", unsafe_allow_html=True)
-                    c_role = st.text_input("Vai trò", key=f"c_role_{i}", placeholder="Vd: Mẹ 30 tuổi...", label_visibility="collapsed")
-                    c_file = st.file_uploader("Ảnh", type=["jpg", "jpeg", "png"], key=f"c_img_{i}", label_visibility="collapsed")
-                    if c_file and c_role.strip():
-                        char_inputs.append({"id": i+1, "role": c_role.strip(), "file": c_file})
-
 # ==============================================================================
 # 2. XỬ LÝ SỰ KIỆN NÚT BẤM (NGAY SAU KHI VẼ XONG UI CẤU HÌNH)
 # ==============================================================================
-# Đây là chìa khóa để giữ nguyên UI phía trên, chỉ thay thế khu vực phía dưới bằng Loading
+# Đặt ở đây đảm bảo biến is_sales và is_corporate đã có, không bao giờ bị lỗi NameError
 if st.session_state.action_trigger:
     action = st.session_state.action_trigger
     param = st.session_state.action_param
@@ -792,8 +746,64 @@ if st.session_state.action_trigger:
     st.stop() # Cắt luồng tại đây để không render danh sách cũ, tránh màn hình mờ/xám.
 
 # ==============================================================================
-# 3. NÚT PHÂN TÍCH CHÍNH & RENDER KẾT QUẢ
+# 3. NẾU KHÔNG CÓ HÀNH ĐỘNG NÀO ĐANG CHẠY (RENDER UI THƯỜNG)
 # ==============================================================================
+
+with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp 'Thể Loại & Phong Cách'", expanded=False):
+    st.markdown("""
+    <div style="background-color: #f8fafc; padding: 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 0.95rem; color: #334155; margin-bottom: 5px;">
+        <h4 style="color: #0f172a; margin-top: 0; margin-bottom: 12px; font-size: 1.05rem;">🎯 Cẩm Nang Phối Hợp Sáng Tạo Nội Dung Đa Vũ Trụ</h4>
+        <ul style="padding-left: 20px; line-height: 1.8; margin-bottom: 0;">
+            <li><b>🛒 TikTok Shop & Bán Hàng:</b> Phù hợp nhất với <code style="color: #e11d48;">Studio Tối Giản (Hiện đại, Sạch sẽ)</code>.</li>
+            <li><b>👶 Mẹ & Bé & Cùng Con Học:</b> Tối ưu với <code style="color: #e11d48;">Hoạt Hình Cắt Giấy / Tĩnh Vật</code> hoặc <code style="color: #e11d48;">Hoạt Hình 3D (Kiểu Pixar)</code>.</li>
+            <li><b>📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp:</b> Cực kỳ tương thích với <code style="color: #e11d48;">Điện Ảnh Chân Thực (Người thật / Siêu thực 8K)</code>.</li>
+            <li><b>🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan:</b> Khuyên dùng <code style="color: #e11d48;">Điện Ảnh Chân Thực</code> hoặc <code style="color: #e11d48;">Studio Tối Giản</code>.</li>
+            <li><b>🌿 Du Lịch & Phong Cảnh Đất Nước:</b> Rất hợp với <code style="color: #e11d48;">Điện Ảnh Chân Thực</code> hoặc <code style="color: #e11d48;">Tranh Thủy Mặc Cổ Phong</code>.</li>
+            <li><b>🚗 Xe Cộ & Trải Nghiệm Lái:</b> Nên chọn <code style="color: #e11d48;">Điện Ảnh Chân Thực</code> hoặc mang hơi hướng <code style="color: #e11d48;">Phim Cổ Điển Hoài Niệm</code>.</li>
+            <li><b>🍲 Ẩm Thực & Đời Sống:</b> Tôn lên vẻ đẹp món ăn với <code style="color: #e11d48;">Điện Ảnh Chân Thực</code> hoặc <code style="color: #e11d48;">Studio Tối Giản</code>.</li>
+            <li><b>📖 Đời Sống & Giáo Dục:</b> Khuyên dùng <code style="color: #e11d48;">Điện Ảnh Chân Thực</code> (nếu có KOC) hoặc <code style="color: #e11d48;">Hoạt Hình 2D Ghibli</code>.</li>
+            <li><b>🏛️ Lịch Sử & Tín Ngưỡng Di Sản:</b> Đặc biệt hợp với <code style="color: #e11d48;">Tranh Thủy Mặc Cổ Phong</code>.</li>
+            <li><b>🧘 Chữa Lành & Phong Cách Sống:</b> Tạo cảm giác nhẹ nhàng với <code style="color: #e11d48;">Hoạt Hình 2D Ghibli</code> hoặc <code style="color: #e11d48;">Trầm Buồn / Kịch Tính</code>.</li>
+            <li><b>📢 Tuyên Truyền, Phóng Sự & Thông Điệp Xã Hội:</b> Sử dụng <code style="color: #e11d48;">Điện Ảnh Chân Thực</code> hoặc màu sắc <code style="color: #e11d48;">Trầm Buồn / Kịch Tính</code>.</li>
+            <li><b>🏢 Giới Thiệu Doanh Nghiệp & Hồ Sơ Năng Lực:</b> Thể hiện sự chuyên nghiệp bằng <code style="color: #e11d48;">Điện Ảnh Chân Thực</code>.</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+if is_sales:
+    st.info("💡 **Chế độ Bán Hàng:** Tự động chia số cảnh linh hoạt, trang phục bám sát thực tế kho/xưởng/showroom, chống nhắc 'livestream'.")
+else:
+    st.info(f"⏱️ **Thời lượng mong muốn:** {target_duration_mins} phút")
+
+st.markdown("---")
+input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô tả chi tiết dự án/sản phẩm (Ghi chú rõ thứ tự các ảnh nếu tải nhiều ảnh nhân vật):", height=80)
+
+st.markdown("### 👥 Quản Lý Nguồn Ảnh & Tuyển Diễn Viên (Casting)")
+col_p_img, col_c_img = st.columns([1, 1])
+
+with col_p_img:
+    st.markdown("**1. 📦 Tải ảnh Sản phẩm / Bối cảnh chính**")
+    uploaded_files = st.file_uploader("Chọn nhiều ảnh sản phẩm", type=["jpg", "jpeg", "png"], accept_multiple_files=True, label_visibility="collapsed")
+
+with col_c_img:
+    st.markdown("**2. 👤 Số lượng Nhân vật KOC/Gia đình tham chiếu**")
+    num_chars = st.number_input("Chọn từ 0 đến 8 nhân vật:", min_value=0, max_value=8, value=0, step=1)
+
+char_inputs = []
+if num_chars > 0:
+    with st.expander(f"🎭 HỒ SƠ DIỄN VIÊN ({num_chars} Nhân vật) - Kéo thả ảnh và Nhập vai trò", expanded=True):
+        n_cols = 4 if num_chars > 2 else 2
+        grid_cols = st.columns(n_cols)
+        for i in range(num_chars):
+            with grid_cols[i % n_cols]:
+                with st.container(border=True):
+                    st.markdown(f"<div style='color:#d90429; font-weight:800; font-size:14px; margin-bottom:5px;'>👤 Diễn viên {i+1}</div>", unsafe_allow_html=True)
+                    c_role = st.text_input("Vai trò", key=f"c_role_{i}", placeholder="Vd: Mẹ 30 tuổi...", label_visibility="collapsed")
+                    c_file = st.file_uploader("Ảnh", type=["jpg", "jpeg", "png"], key=f"c_img_{i}", label_visibility="collapsed")
+                    if c_file and c_role.strip():
+                        char_inputs.append({"id": i+1, "role": c_role.strip(), "file": c_file})
+
+# Xử lý Logic Phân tích chính
 if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files or char_inputs)):
     st.toast("⏳ Đang kết nối phân tích DNA... Vui lòng đợi trong giây lát!", icon="🤖")
     with st.spinner("⏳ Đang phân tích DNA chuyên sâu và Gán vai diễn viên..."):
@@ -811,7 +821,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
                 3. BỐI CẢNH BẮT BUỘC: Kho hàng, Xưởng sản xuất, hoặc Showroom trưng bày. Không làm bối cảnh lifestyle.
                 4. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Dựa vào ảnh KOC, điền CHÍNH XÁC 'Nam' hoặc 'Nữ' vào mục 'gender'.
                 5. ƯỚC LƯỢNG KÍCH THƯỚC: Phân tích kích thước thật của sản phẩm từ ảnh để AI không phóng to (vd: nhỏ gọn trong tay).
-                6. CẤM TỪ LIVESTREAM: TUYỆT ĐỐI KHÔNG sử dụng các từ "livestream", "phiên live". Thay bằng "trong video này", "hôm nay".
+                6. CẤM TỪ LIVESTREAM: TUYỆT ĐỐI KHÔNG sử dụng các từ "livestream", "phiên live". Đây là video ngắn quay sẵn. Thay bằng "trong video này", "hôm nay".
                 """
                 script_outlines_json = """
                   "script_outlines": [
