@@ -122,16 +122,16 @@ st.markdown("""
     [data-testid="stFileUploader"] > section { padding: 8px !important; }
     
     @keyframes pulse {
-        0% { transform: scale(0.95); opacity: 0.8; }
+        0% { transform: scale(0.98); opacity: 0.8; }
         50% { transform: scale(1.02); opacity: 1; }
-        100% { transform: scale(0.95); opacity: 0.8; }
+        100% { transform: scale(0.98); opacity: 0.8; }
     }
     .loading-pulse {
         animation: pulse 1.5s infinite ease-in-out;
         color: #d90429;
-        font-weight: bold;
+        font-weight: 800;
         text-align: center;
-        padding: 20px;
+        padding: 25px;
         background: #fef2f2;
         border: 2px dashed #fca5a5;
         border-radius: 12px;
@@ -421,6 +421,16 @@ def clean_and_parse_json(text_content: str):
     parsed = json.loads(cleaned.strip())
     return parsed[0] if isinstance(parsed, list) and len(parsed) > 0 else parsed
 
+def get_realtime_context():
+    now = datetime.now()
+    month = now.month
+    year = now.year
+    if month in [2, 3, 4]: season = "Mùa Xuân"
+    elif month in [5, 6, 7]: season = "Mùa Hè"
+    elif month in [8, 9, 10]: season = "Mùa Thu (Mùa tựu trường / Back-to-school)"
+    else: season = "Mùa Đông (Mùa lễ hội cuối năm / Winter holidays)"
+    return f"THỜI GIAN THỰC TẾ HIỆN TẠI LÀ: Tháng {month} năm {year} (Thuộc {season}). BẠN BẮT BUỘC PHẢI điều chỉnh kịch bản (Bối cảnh, Hook, Lý do mua hàng) sao cho logic và PHÙ HỢP VỚI THỜI ĐIỂM {season} này. TUYỆT ĐỐI KHÔNG làm sai lệch mùa vụ thực tế."
+
 def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str, target_duration_mins: float = 0.5, char_rules: str = "") -> str:
     is_sales = ("Bán Hàng" in mode or "Sales" in goal)
     format_instruction = "9:16 vertical video format, mobile-first framing" if aspect_ratio == "9:16" else "16:9 widescreen cinematic format, professional movie framing"
@@ -514,10 +524,12 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
         extra_rules = "- Khai thác sâu khía cạnh cảm xúc, trải nghiệm thực tế gia đình/giáo dục."
         
     char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []), is_sales_mode)
+    realtime_ctx = get_realtime_context()
         
     prompt_more = f"""
     DỮ LIỆU SẢN PHẨM GỐC (DNA): {json.dumps(dna_data, ensure_ascii=False)}
     Ghi chú từ người dùng: "{product_ctx}"
+    {realtime_ctx}
     
     Dựa trên thông tin SẢN PHẨM GỐC (DNA) ở trên và kết quả phân tích DNA đã thực hiện cho thể loại '{current_mode}' phong cách '{current_style}'.
     Hãy tạo thêm đúng 5 kịch bản mới (id từ {cur_len + 1} đến {cur_len + 5}) với các key: id, title, setting_style, script_outfit_setup, angle, target_hook, recommended_scenes_count, voice_profile.
@@ -569,10 +581,12 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         duration_str = f"{total_sec}s ({target_duration_mins} phút)"
         
     char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []), is_sales_mode)
+    realtime_ctx = get_realtime_context()
     
     prompt_detail = f"""
     Ngữ cảnh sản phẩm/dịch vụ: "{product_ctx}"
     Thể loại nội dung: "{current_mode}" | Mục tiêu chiến dịch: "{goal}" | Tỷ lệ khung hình: "{aspect_ratio}"
+    {realtime_ctx}
     Ý tưởng kịch bản: ID {target_id} - {outline.get('title')}
     Bối cảnh định hướng: {outline.get('setting_style')} | Góc tiếp cận: {outline.get('angle')} | Hook: {outline.get('target_hook')}
     TRANG PHỤC CỐ ĐỊNH CHO KỊCH BẢN NÀY: {outfit_setup} (Lưu ý: Phải bám sát thực tế bối cảnh. Nếu ở kho/xưởng phải là đồ công nhân/đồng phục, KHÔNG mặc lòe loẹt).
@@ -813,6 +827,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
             
             st.session_state.current_input_context = input_text.strip() if input_text else "Phân tích trực tiếp từ hình ảnh đính kèm sản phẩm/dự án."
             char_rules_str = generate_char_rules_string(profiles_to_save, is_sales)
+            realtime_ctx = get_realtime_context()
             
             if is_sales:
                 specific_rules = """
@@ -999,6 +1014,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
             prompt_text = f"""
             Phân tích siêu chuyên sâu chủ đề cho thể loại '{selected_mode}' theo phong cách '{selected_style}'. 
             Thông tin mô tả: "{st.session_state.current_input_context}"
+            {realtime_ctx}
 
             QUY ĐỊNH ĐỘNG VỀ NHẬN DIỆN (RẤT QUAN TRỌNG):
             {specific_rules}
@@ -1043,7 +1059,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
         except Exception as e:
             st.error(f"❌ Lỗi thực thi: {e}")
 
-if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict):
+if st.session_state.content_analysis and isinstance(st.session_state.content_analysis, dict) and not st.session_state.action_trigger:
     st.divider()
     st.markdown(f"### 🔍 **Phân Tích DNA Chi Tiết Đa Tầng — [{selected_mode.upper()}]**")
     ca = st.session_state.content_analysis
@@ -1068,7 +1084,7 @@ if st.session_state.content_analysis and isinstance(st.session_state.content_ana
 # ==============================================================================
 all_combined_scripts_list = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
 
-if all_combined_scripts_list and st.session_state.active_script_id is None:
+if all_combined_scripts_list and st.session_state.active_script_id is None and not st.session_state.action_trigger:
     st.divider()
     
     completed_scripts = [sc for sc in all_combined_scripts_list if sc.get("id") in st.session_state.generated_details]
@@ -1121,7 +1137,7 @@ if all_combined_scripts_list and st.session_state.active_script_id is None:
         st.rerun()
 
 # GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC ĐIỀU HƯỚNG
-if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
+if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details and not st.session_state.action_trigger:
     st.divider()
 
     if st.button("⬅️ Quay lại danh sách kịch bản tổng", key="btn_back_to_list_main"):
