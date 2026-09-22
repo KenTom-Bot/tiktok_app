@@ -147,6 +147,7 @@ client = genai.Client(api_key=api_key)
 ACCOUNTS_FILE = "accounts.json"
 ADMIN_EMAIL = "binhnguyenmedia.vn@gmail.com"
 
+# Danh sách Modun Hệ thống
 ALL_MODULES = [
     "🛒 TikTok Shop & Bán Hàng", "👶 Mẹ & Bé & Cùng Con Học (Viral Parenting)", "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp",
     "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan", "🌿 Du Lịch & Phong Cảnh Đất Nước", "🚗 Xe Cộ & Trải Nghiệm Lái",
@@ -495,7 +496,7 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
        - ĐỒNG NHẤT GIỌNG MIỀN BẮC CHUẨN: Bắt buộc chèn lệnh "strict Northern Vietnamese accent, absolutely NO Southern or mixed accents" vào MỌI video_prompt để chặn pha giọng vùng miền.
        - PHIÊN ÂM TIẾNG VIỆT CHUẨN CHO AI (TTS PRONUNCIATION): Trong trường 'voiceover_vi', BẮT BUỘC phải viết rõ cách phát âm tiếng Việt bồi cho các con số, đơn vị đo lường, và từ tiếng Anh để AI Voice không đọc sai hoặc bị ngọng. 
          + Ví dụ: "10.000mAh" -> viết thành "mười nghìn mi li am pe giờ".
-         + Ví dụ: "Sale" -> viết thành "seo", "Deal" -> "đi-u", "Voucher" -> "vâu chờ", "Hot" -> "hót", "Size" -> "sái", "Livestream" (nếu có dùng ở mảng khác) -> "lai chim".
+         + Ví dụ: "Sale" -> viết thành "seo", "Deal" -> "đi-u", "Voucher" -> "vâu chờ", "Hot" -> "hót", "Size" -> "sái", "Livestream" -> "lai chim".
     8. QUY CHUẨN TỪ VỰNG DÀNH CHO VIDEO QUAY SẴN (VOD / SHORT VIDEO):
        - Đây KHÔNG PHẢI là video phát trực tiếp. TUYỆT ĐỐI CẤM sử dụng các từ khóa: "livestream", "phiên live", "đang live".
        - Hãy thay thế bằng: "trong video này", "ngay bây giờ", "ngay tại giỏ hàng", "hôm nay".
@@ -611,7 +612,6 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         fixed_gender, fixed_tone = "Nữ", v_profile
     elif isinstance(v_profile, dict):
         fixed_gender = v_profile.get("gender", "Nữ")
-        # Làm sạch các giá trị lỗi từ AI như "Nam/Nữ", "Nam hay Nữ", "Xác định từ ảnh..."
         if "hay Nữ" in fixed_gender or "/" in fixed_gender or "xác định" in fixed_gender.lower() or not fixed_gender.strip():
             fixed_gender = "Nữ" 
         fixed_tone = v_profile.get("tone", "Truyền cảm chuyên nghiệp")
@@ -702,59 +702,8 @@ def clone_script_id(target_id, current_mode, current_style, aspect_ratio, goal, 
         st.error(f"❌ Lỗi: {e}")
 
 # ==============================================================================
-# HỆ THỐNG ĐIỀU HƯỚNG VÀ NGĂN CHẶN MỜ MÀN HÌNH (ANTI-STALE UI TRIGGER)
+# GIAO DIỆN CHÍNH (CẤU HÌNH) - RENDER TRƯỚC KHI BẮT TRIGGER
 # ==============================================================================
-# Bắt buộc đặt trước khi render nội dung chính để Spinner che lấp và ngăn việc vẽ giao diện cũ
-if st.session_state.action_trigger:
-    action = st.session_state.action_trigger
-    param = st.session_state.action_param
-    
-    # Xóa trigger để không bị lặp lại vô hạn
-    st.session_state.action_trigger = None
-    st.session_state.action_param = None
-    
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    if action == "create_detail":
-        st.toast(f"⏳ Đang kết nối AI dựng chi tiết kịch bản #{param}...", icon="🎬")
-        with st.container(border=True):
-            st.markdown(f"<div class='loading-pulse'>⏳ HỆ THỐNG ĐANG XỬ LÝ: Đang dựng chi tiết phân cảnh cho kịch bản #{param}. Quá trình này có thể mất 15-20 giây. Vui lòng đợi...</div>", unsafe_allow_html=True)
-            create_scene_details_for_id(param, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
-            time.sleep(0.2)
-            st.rerun() # Refresh màn hình sau khi làm xong
-        
-    elif action == "clone_script":
-        st.toast(f"⏳ Đang nhân bản biến thể cho kịch bản #{param}...", icon="🧬")
-        with st.container(border=True):
-            st.markdown(f"<div class='loading-pulse'>⏳ HỆ THỐNG ĐANG XỬ LÝ: Đang nhân bản 5 biến thể độc đáo từ kịch bản #{param}. Vui lòng đợi...</div>", unsafe_allow_html=True)
-            clone_script_id(param, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
-            time.sleep(0.2)
-            st.rerun()
-        
-    elif action == "generate_more":
-        st.toast("⏳ Đang suy nghĩ góc tiếp cận mới...", icon="🧠")
-        with st.container(border=True):
-            st.markdown("<div class='loading-pulse'>⏳ HỆ THỐNG ĐANG XỬ LÝ: Đang phân tích DNA để sáng tạo thêm 5 kịch bản mới. Vui lòng đợi...</div>", unsafe_allow_html=True)
-            add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
-            time.sleep(0.2)
-            st.rerun()
-        
-    st.stop() # Cực kỳ quan trọng: Dừng toàn bộ code bên dưới để màn hình cũ KHÔNG BỊ VẼ LẠI và chuyển màu xám.
-
-# ==============================================================================
-# GIAO DIỆN CHÍNH
-# ==============================================================================
-st.markdown("""
-<div class="header-container">
-    <div class="header-badge">🌟 STUDIO VIDEO AI ĐA NĂNG TOÀN DIỆN</div>
-    <div class="main-title">🎬 Hệ Thống Kịch Bản Đa Vũ Trụ Pro</div>
-    <div class="sub-title">TikTok Shop, Mẹ & Bé Viral, TVC Điện Ảnh, Phim Đời Sống & Giáo Dục</div>
-</div>
-""", unsafe_allow_html=True)
-
-if not st.session_state.is_logged_in:
-    st.warning("⚠️ **Vui lòng đăng nhập ở thanh Sidebar bên trái để bắt đầu sử dụng hệ thống.**")
-    st.stop()
-
 col_mode, col_style = st.columns([1.5, 1])
 with col_mode:
     selected_mode = st.selectbox("🎯 Chọn Thể Loại Nội Dung:", options=ALL_MODULES)
@@ -839,9 +788,6 @@ with col_time:
 st.markdown("---")
 input_text = st.text_area("✍️ Tóm tắt ý tưởng, chủ đề hoặc mô tả chi tiết dự án/sản phẩm (Ghi chú rõ thứ tự các ảnh nếu tải nhiều ảnh nhân vật):", height=80)
 
-# ==============================================================================
-# QUẢN LÝ ẢNH SẢN PHẨM & ĐA NHÂN VẬT ĐỘNG (LAYOUT LƯỚI GỌN GÀNG)
-# ==============================================================================
 st.markdown("### 👥 Quản Lý Nguồn Ảnh & Tuyển Diễn Viên (Casting)")
 col_p_img, col_c_img = st.columns([1, 1])
 
@@ -867,7 +813,47 @@ if num_chars > 0:
                     if c_file and c_role.strip():
                         char_inputs.append({"id": i+1, "role": c_role.strip(), "file": c_file})
 
-# Xử lý Logic Phân tích chính
+# ==============================================================================
+# BẮT ĐẦU TRIGGER EVENT TRỰC TIẾP (SAU KHI CÁC BIẾN ĐÃ ĐƯỢC KHỞI TẠO)
+# ==============================================================================
+if st.session_state.action_trigger:
+    action = st.session_state.action_trigger
+    param = st.session_state.action_param
+    
+    # Xóa trigger để không bị lặp lại vô hạn
+    st.session_state.action_trigger = None
+    st.session_state.action_param = None
+    
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    if action == "create_detail":
+        st.toast(f"⏳ Đang kết nối AI dựng chi tiết kịch bản #{param}...", icon="🎬")
+        with st.container(border=True):
+            st.markdown(f"<div class='loading-pulse'>⏳ HỆ THỐNG ĐANG XỬ LÝ: Đang dựng chi tiết phân cảnh cho kịch bản #{param}. Quá trình này có thể mất 15-20 giây. Vui lòng đợi...</div>", unsafe_allow_html=True)
+            create_scene_details_for_id(param, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
+            time.sleep(0.2)
+            st.rerun() # Refresh màn hình sau khi làm xong
+        
+    elif action == "clone_script":
+        st.toast(f"⏳ Đang nhân bản biến thể cho kịch bản #{param}...", icon="🧬")
+        with st.container(border=True):
+            st.markdown(f"<div class='loading-pulse'>⏳ HỆ THỐNG ĐANG XỬ LÝ: Đang nhân bản 5 biến thể độc đáo từ kịch bản #{param}. Vui lòng đợi...</div>", unsafe_allow_html=True)
+            clone_script_id(param, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
+            time.sleep(0.2)
+            st.rerun()
+        
+    elif action == "generate_more":
+        st.toast("⏳ Đang suy nghĩ góc tiếp cận mới...", icon="🧠")
+        with st.container(border=True):
+            st.markdown("<div class='loading-pulse'>⏳ HỆ THỐNG ĐANG XỬ LÝ: Đang phân tích DNA để sáng tạo thêm 5 kịch bản mới. Vui lòng đợi...</div>", unsafe_allow_html=True)
+            add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
+            time.sleep(0.2)
+            st.rerun()
+        
+    st.stop() # Cực kỳ quan trọng: Dừng toàn bộ code bên dưới để màn hình cũ KHÔNG BỊ VẼ LẠI và gây lỗi xám mờ.
+
+# ==============================================================================
+# XỬ LÝ PHÂN TÍCH DNA (NÚT CHÍNH)
+# ==============================================================================
 if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files or char_inputs)):
     st.toast("⏳ Đang kết nối phân tích DNA... Vui lòng đợi trong giây lát!", icon="🤖")
     with st.spinner("⏳ Đang phân tích DNA chuyên sâu và Gán vai diễn viên..."):
