@@ -118,12 +118,21 @@ st.markdown("""
         text-align: center;
         margin-top: 15px;
     }
-    /* Compact File Uploader in grid */
-    [data-testid="stFileUploader"] {
-        padding: 0px !important;
+    [data-testid="stFileUploader"] { padding: 0px !important; }
+    [data-testid="stFileUploader"] > section { padding: 8px !important; }
+    
+    /* Animation loading */
+    @keyframes pulse {
+        0% { transform: scale(0.95); opacity: 0.8; }
+        50% { transform: scale(1.02); opacity: 1; }
+        100% { transform: scale(0.95); opacity: 0.8; }
     }
-    [data-testid="stFileUploader"] > section {
-        padding: 8px !important;
+    .loading-pulse {
+        animation: pulse 1.5s infinite ease-in-out;
+        color: #d90429;
+        font-weight: bold;
+        text-align: center;
+        padding: 20px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -138,9 +147,8 @@ client = genai.Client(api_key=api_key)
 ACCOUNTS_FILE = "accounts.json"
 ADMIN_EMAIL = "binhnguyenmedia.vn@gmail.com"
 
-# Danh sách Modun Hệ thống
 ALL_MODULES = [
-    "🛒 TikTok Shop & Bán Hàng", "👶 Mẹ & Bé & Cùng Con Học (Viral Parenting)", "📺 TVC Quảng Cáo & Thương chuyên nghiệp",
+    "🛒 TikTok Shop & Bán Hàng", "👶 Mẹ & Bé & Cùng Con Học (Viral Parenting)", "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp",
     "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan", "🌿 Du Lịch & Phong Cảnh Đất Nước", "🚗 Xe Cộ & Trải Nghiệm Lái",
     "🍲 Ẩm Thực & Đời Sống", "📖 Đời Sống & Giáo Dục", "🏛️ Lịch Sử & Tín Ngưỡng Di Sản", "🧘 Chữa Lành & Phong Cách Sống",
     "📢 Tuyên Truyền, Phóng Sự & Thông Điệp Xã Hội", "🏢 Giới Thiệu Doanh Nghiệp & Hồ Sơ Năng Lực"
@@ -188,13 +196,10 @@ for key, default_val in [
 if st.session_state.scroll_to_top:
     components.html(f"""
         <script>
-            var run_id = "{time.time()}"; 
             setTimeout(function() {{
                 var parentDoc = window.parent.document;
                 var mainElements = parentDoc.querySelectorAll('.main, .block-container, [data-testid="stAppViewContainer"]');
-                mainElements.forEach(function(el) {{
-                    el.scrollTo({{top: 0, behavior: 'smooth'}});
-                }});
+                mainElements.forEach(function(el) {{ el.scrollTo({{top: 0, behavior: 'smooth'}}); }});
                 window.parent.scrollTo({{top: 0, behavior: 'smooth'}});
             }}, 300);
         </script>
@@ -487,10 +492,10 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
     voiceover_instruction = """
     7. QUY CHUẨN THUYẾT MINH & ĐỒNG BỘ ÂM THANH (STRICT AUDIO MATCHING):
        - NHỊP ĐỘ VÀ NĂNG LƯỢNG (PACE & ENERGY): Giọng đọc giữa cảnh CÓ nhân vật và cảnh KHÔNG CÓ nhân vật (cận cảnh sản phẩm) phải ĐỒNG NHẤT TUYỆT ĐỐI. Trong video_prompt, luôn sử dụng lệnh ép buộc AI giữ nguyên "fast-paced, high-energy, identical voice identity and pacing".
-       - ĐỒNG NHẤT GIỌNG MIỀN BẮC CHUẨN: Bắt buộc chèn lệnh "strict Northern Vietnamese accent, absolutely NO Southern or mixed accents" vào MỌI video_prompt để chặn pha giọng Nam.
-       - PHIÊN ÂM TIẾNG VIỆT CHUẨN CHO AI (TTS PRONUNCIATION): Trong trường 'voiceover_vi', BẮT BUỘC phải viết rõ cách phát âm tiếng Việt cho các số, đơn vị, từ tiếng Anh để AI Voice không đọc sai. 
+       - ĐỒNG NHẤT GIỌNG MIỀN BẮC CHUẨN: Bắt buộc chèn lệnh "strict Northern Vietnamese accent, absolutely NO Southern or mixed accents" vào MỌI video_prompt để chặn pha giọng vùng miền.
+       - PHIÊN ÂM TIẾNG VIỆT CHUẨN CHO AI (TTS PRONUNCIATION): Trong trường 'voiceover_vi', BẮT BUỘC phải viết rõ cách phát âm tiếng Việt bồi cho các con số, đơn vị đo lường, và từ tiếng Anh để AI Voice không đọc sai hoặc bị ngọng. 
          + Ví dụ: "10.000mAh" -> viết thành "mười nghìn mi li am pe giờ".
-         + Ví dụ: "Sale" -> viết thành "seo", "Deal" -> "đi-u", "Voucher" -> "vâu chờ", "Hot" -> "hót", "Size" -> "sái".
+         + Ví dụ: "Sale" -> viết thành "seo", "Deal" -> "đi-u", "Voucher" -> "vâu chờ", "Hot" -> "hót", "Size" -> "sái", "Livestream" (nếu có dùng ở mảng khác) -> "lai chim".
     8. QUY CHUẨN TỪ VỰNG DÀNH CHO VIDEO QUAY SẴN (VOD / SHORT VIDEO):
        - Đây KHÔNG PHẢI là video phát trực tiếp. TUYỆT ĐỐI CẤM sử dụng các từ khóa: "livestream", "phiên live", "đang live".
        - Hãy thay thế bằng: "trong video này", "ngay bây giờ", "ngay tại giỏ hàng", "hôm nay".
@@ -510,7 +515,7 @@ MỤC TIÊU CHIẾN DỊCH: {goal}
 1. QUY TẮC QUỐC TỊCH: Nếu có con người chung chung, BẮT BUỘC chèn "Vietnamese" (Ví dụ: Vietnamese grandfather, Vietnamese mother). Tuyệt đối không để chung chung.
 {char_rules}
 3. MÀN HÌNH SẠCH & GIỮ NGUYÊN LOGO SẢN PHẨM: Tuyệt đối không sinh ra chữ, phụ đề hay watermark rác xung quanh ('no floating text, no subtitles, clean background'). NHƯNG BẮT BUỘC phải giữ nguyên chính xác logo và các dòng chữ có sẵn trên bản thân sản phẩm ('keep exact product logo and typography from reference image').
-4. KHÓA KIỂU DÁNG SẢN PHẨM & TỶ LỆ KÍCH THƯỚC (PRODUCT OBJECT ANCHOR): Bắt buộc dùng lệnh "featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE, maintaining realistic scale and true-to-life proportions" để mô tả sản phẩm. TUYỆT ĐỐI KHÔNG tự bịa ra kiểu dáng hay phóng to sản phẩm sai tỷ lệ thực tế. Bắt buộc phải đánh giá kích thước vật lý dựa trên ảnh tải lên (VD: nhỏ bằng bàn tay, cao đến gối...).
+4. KHÓA KIỂU DÁNG SẢN PHẨM & TỶ LỆ KÍCH THƯỚC (PRODUCT OBJECT ANCHOR): Bắt buộc dùng lệnh "featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE, maintaining realistic scale and true-to-life proportions" để mô tả sản phẩm. TUYỆT ĐỐI KHÔNG tự bịa ra kiểu dáng hay phóng to sản phẩm sai tỷ lệ thực tế. Bắt buộc phải đánh giá kích thước vật lý dựa trên ảnh tải lên (VD: nhỏ bằng bàn tay, to bằng nửa người, cao đến gối...).
 5. CHUYỂN CẢNH THÔNG MINH (SMART TRANSITIONS): Cắt cứng dồn dập (Hard Cut) hoặc Chuyển cảnh khớp hành động mượt mà (Match Cut).
 {voiceover_instruction}
 """
@@ -530,7 +535,7 @@ def call_gemini_api(contents, system_inst):
             else: raise e
     raise Exception("Lỗi kết nối Gemini API sau nhiều lần thử.")
 
-def generate_char_rules_string(profiles):
+def generate_char_rules_string(profiles, is_sales_mode=False):
     if not profiles:
         return "2. KHÓA ĐA NHÂN VẬT: Không có nhân vật cụ thể tham chiếu."
         
@@ -538,68 +543,76 @@ def generate_char_rules_string(profiles):
     for p in profiles:
         rules += f"     + Nhân vật {p['id']}: Đóng vai '{p['role']}'. Lệnh bắt buộc: 'Character {p['id']} ({p['role']}) wearing [trang_phục_đã_chọn_cho_kịch_bản_này] and featuring the exact identity of reference image {p['id']}'.\n"
     rules += "   - KHUÔN MẶT: Bắt buộc dùng lệnh 'featuring the exact identity of reference image X' để AI không tự chế mặt.\n"
-    rules += "   - TRANG PHỤC LINH HOẠT THEO BỐI CẢNH KỊCH BẢN: App sẽ tự động thiết lập 1 bộ trang phục (script_outfit_setup) phù hợp nhất với bối cảnh của TỪNG kịch bản. Tuy nhiên, bộ trang phục này sẽ được ĐỒNG NHẤT khóa cứng xuyên suốt tất cả các phân cảnh bên trong kịch bản đó để nhân vật không bị thay quần áo loạn xạ giữa video."
+    
+    if is_sales_mode:
+        rules += "   - TRANG PHỤC ĐỒNG NHẤT (NỘI DUNG BÁN HÀNG): App sẽ tự động thiết lập 1 bộ trang phục (script_outfit_setup) phù hợp nhất với bối cảnh của TỪNG kịch bản (ví dụ kho thì đồ công nhân, showroom thì đồ quản lý). BỘ ĐỒ NÀY PHẢI ĐƯỢC GIỮ NGUYÊN 100% TRONG TOÀN BỘ CÁC CẢNH của kịch bản đó, tuyệt đối không cho nhân vật thay đồ giữa chừng."
+    else:
+        rules += "   - TRANG PHỤC LINH HOẠT THEO NGỮ CẢNH: Trang phục nhân vật có thể thay đổi linh hoạt theo thời gian/không gian của từng phân cảnh (VD: sáng đi làm mặc vest, tối về nhà mặc đồ ngủ) để đảm bảo tính logic."
+    
     return rules
 
+# ==============================================================================
+# HỆ THỐNG XỬ LÝ LÕI AI (CORE FUNCTIONS)
+# ==============================================================================
+
 def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float):
-    with st.spinner("⏳ Đang khai thác thêm 5 góc tiếp cận độc quyền bám sát sản phẩm & chiến dịch..."):
-        all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
-        cur_len = len(all_sources)
-        product_ctx = st.session_state.get("current_input_context", "Sản phẩm hiện tại")
-        dna_data = st.session_state.get("content_analysis", {}) 
+    all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
+    cur_len = len(all_sources)
+    product_ctx = st.session_state.get("current_input_context", "Sản phẩm hiện tại")
+    dna_data = st.session_state.get("content_analysis", {}) 
+    
+    is_corporate = "Doanh Nghiệp" in current_mode or "Tuyên Truyền" in current_mode
+    is_sales_mode = "Bán Hàng" in current_mode
+    
+    if is_corporate:
+        extra_rules = "- Bối cảnh không gian văn phòng, nhà xưởng quy mô, dự án thực tế hoặc cộng đồng.\n- Không thúc ép mua hàng."
+    elif is_sales_mode:
+        extra_rules = "- BẮT BUỘC CHUYỂN ĐỔI GÓC TIẾP CẬN: Hãy tạo 5 kịch bản mới tập trung vào: Review tính năng chi tiết, Đập hộp (Unboxing), Trải nghiệm thực tế (Lifestyle), Feedback khách hàng, Hướng dẫn sử dụng. KHÔNG làm xả kho/kho hàng nữa.\n- TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ.\n- TUYỆT ĐỐI CẤM SỬ DỤNG TỪ 'LIVESTREAM', 'PHIÊN LIVE'. Dùng 'video này'."
+    else:
+        extra_rules = "- Khai thác sâu khía cạnh cảm xúc, trải nghiệm thực tế gia đình/giáo dục."
         
-        is_corporate = "Doanh Nghiệp" in current_mode or "Tuyên Truyền" in current_mode
-        is_sales_mode = "Bán Hàng" in current_mode
+    char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []), is_sales_mode)
         
-        if is_corporate:
-            extra_rules = "- Bối cảnh không gian văn phòng, nhà xưởng quy mô, dự án thực tế hoặc cộng đồng.\n- Không thúc ép mua hàng."
-        elif is_sales_mode:
-            extra_rules = "- BẮT BUỘC CHUYỂN ĐỔI GÓC TIẾP CẬN: Hãy tạo 5 kịch bản mới tập trung vào: Review tính năng chi tiết, Đập hộp (Unboxing), Trải nghiệm thực tế (Lifestyle), Feedback khách hàng, Hướng dẫn sử dụng. KHÔNG làm xả kho/kho hàng nữa.\n- TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ.\n- TUYỆT ĐỐI CẤM SỬ DỤNG TỪ 'LIVESTREAM', 'PHIÊN LIVE'. Dùng 'video này'."
-        else:
-            extra_rules = "- Khai thác sâu khía cạnh cảm xúc, trải nghiệm thực tế gia đình/giáo dục."
-            
-        char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []))
-            
-        prompt_more = f"""
-        DỮ LIỆU SẢN PHẨM GỐC (DNA): {json.dumps(dna_data, ensure_ascii=False)}
-        Ghi chú từ người dùng: "{product_ctx}"
-        
-        Dựa trên thông tin SẢN PHẨM GỐC (DNA) ở trên và kết quả phân tích DNA đã thực hiện cho thể loại '{current_mode}' phong cách '{current_style}'.
-        Hãy tạo thêm đúng 5 kịch bản mới (id từ {cur_len + 1} đến {cur_len + 5}) với các key: id, title, setting_style, script_outfit_setup, angle, target_hook, recommended_scenes_count, voice_profile.
-        
-        QUY ĐỊNH BẮT BUỘC CHO KỊCH BẢN MỚI:
-        {extra_rules}
-        - Thêm key 'script_outfit_setup': Ghi rõ 1 câu miêu tả trang phục nhân vật phù hợp với bối cảnh của kịch bản này (vd: Áo thun năng động, Vest công sở...). Bộ đồ này sẽ dùng xuyên suốt kịch bản.
-        Xuất JSON chuẩn với key 'script_outlines'.
-        """
-        try:
-            sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str)
-            res = call_gemini_api([prompt_more], sys_inst)
-            new_scripts = res.get("script_outlines", [])
-            for i, sc in enumerate(new_scripts): sc["id"] = cur_len + i + 1
-            st.session_state.expanded_scripts.extend(new_scripts)
-            st.session_state.scroll_to_top = True
-            st.success("✅ Đã bổ sung 5 kịch bản mới bám sát DNA gốc!")
-            time.sleep(0.3)
-            st.rerun()
-        except Exception as e:
-            st.error(f"Lỗi gọi thêm kịch bản: {e}")
+    prompt_more = f"""
+    DỮ LIỆU SẢN PHẨM GỐC (DNA): {json.dumps(dna_data, ensure_ascii=False)}
+    Ghi chú từ người dùng: "{product_ctx}"
+    
+    Dựa trên thông tin SẢN PHẨM GỐC (DNA) ở trên và kết quả phân tích DNA đã thực hiện cho thể loại '{current_mode}' phong cách '{current_style}'.
+    Hãy tạo thêm đúng 5 kịch bản mới (id từ {cur_len + 1} đến {cur_len + 5}) với các key: id, title, setting_style, script_outfit_setup, angle, target_hook, recommended_scenes_count, voice_profile.
+    
+    QUY ĐỊNH BẮT BUỘC CHO KỊCH BẢN MỚI:
+    {extra_rules}
+    - Thêm key 'script_outfit_setup': Ghi rõ 1 câu miêu tả trang phục nhân vật phù hợp với bối cảnh của kịch bản này (vd: Áo thun năng động, Vest công sở...). Bộ đồ này sẽ dùng xuyên suốt kịch bản.
+    Xuất JSON chuẩn với key 'script_outlines'.
+    """
+    try:
+        sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str)
+        res = call_gemini_api([prompt_more], sys_inst)
+        new_scripts = res.get("script_outlines", [])
+        for i, sc in enumerate(new_scripts): sc["id"] = cur_len + i + 1
+        st.session_state.expanded_scripts.extend(new_scripts)
+        st.session_state.scroll_to_top = True
+        st.success("✅ Đã bổ sung 5 kịch bản mới bám sát DNA gốc!")
+    except Exception as e:
+        st.error(f"❌ Lỗi gọi thêm kịch bản: {e}")
 
 def create_scene_details_for_id(target_id: int, current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float):
     all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
     outline = next((sc for sc in all_sources if isinstance(sc, dict) and sc.get("id") == target_id), None)
     if not outline:
-        st.error(f"Không tìm thấy thông tin cho kịch bản #{target_id}")
+        st.error(f"❌ Không tìm thấy thông tin cho kịch bản #{target_id}")
         return
     
     product_ctx = st.session_state.get("current_input_context", "Dự án hiện tại")
     
+    # Chuẩn hóa biến Giới tính (Chỉ Nam hoặc Nữ)
     v_profile = outline.get("voice_profile", {})
     if isinstance(v_profile, str):
         fixed_gender, fixed_tone = "Nữ", v_profile
     elif isinstance(v_profile, dict):
         fixed_gender = v_profile.get("gender", "Nữ")
-        if "hay Nữ" in fixed_gender or "xác định" in fixed_gender.lower() or not fixed_gender.strip():
+        # Làm sạch các giá trị lỗi từ AI như "Nam/Nữ", "Nam hay Nữ", "Xác định từ ảnh..."
+        if "hay Nữ" in fixed_gender or "/" in fixed_gender or "xác định" in fixed_gender.lower() or not fixed_gender.strip():
             fixed_gender = "Nữ" 
         fixed_tone = v_profile.get("tone", "Truyền cảm chuyên nghiệp")
     else:
@@ -612,89 +625,120 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         total_sec = 30
         
     duration_str = f"{total_sec}s ({target_duration_mins} phút)" if target_duration_mins > 0.5 else "24s - 35s (Chuyển đổi bán hàng)"
-    char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []))
     
-    with st.spinner(f"🎬 Đang dựng chi tiết cảnh quay #{target_id} (Thời lượng: {duration_str} | Giọng cố định: {fixed_gender})..."):
-        prompt_detail = f"""
-        Ngữ cảnh sản phẩm/dịch vụ: "{product_ctx}"
-        Thể loại nội dung: "{current_mode}" | Mục tiêu chiến dịch: "{goal}" | Tỷ lệ khung hình: "{aspect_ratio}"
-        Ý tưởng kịch bản: ID {target_id} - {outline.get('title')}
-        Bối cảnh định hướng: {outline.get('setting_style')} | Góc tiếp cận: {outline.get('angle')} | Hook: {outline.get('target_hook')}
-        TRANG PHỤC CỐ ĐỊNH CHO KỊCH BẢN NÀY: {outfit_setup}
-        
-        QUY ĐỊNH ĐẠO DIỄN & LÊN PROMPT TIẾNG ANH (BẮT BUỘC):
-        1. KHÓA CỨNG GIỚI TÍNH, TÔNG GIỌNG & NHỊP ĐỘ (PACE & ENERGY ANCHOR): Sử dụng 100% giọng đọc của **{fixed_gender}** với tông giọng **{fixed_tone}**.
-        2. PHIÊN ÂM TIẾNG VIỆT CHUẨN XÁC CHO AI (TTS RULE): Trong trường 'voiceover_vi', BẮT BUỘC viết âm đọc tiếng Việt cho từ khó. (Vd: 10.000mAh phải viết là "mười nghìn mi li am pe giờ", Sale -> "seo", Deal -> "đi-u", freeship -> "phờ ri síp").
-        3. CẤM TỪ LIVESTREAM: TUYỆT ĐỐI KHÔNG dùng từ "livestream", "phiên live". Thay bằng "trong video này", "tại giỏ hàng".
-        4. PHÂN RÃ THỜI LƯỢNG CỰC KỲ KHẮT KHE: Tổng thời lượng khớp chính xác {total_sec} giây. Mỗi phân cảnh CHỈ ĐƯỢC PHÉP chọn 1 trong 3 mức thời lượng: 4s, 6s hoặc 8s. 
-        5. QUY TRÌNH TRANG PHỤC & KHUÔN MẶT: Dùng tên 'Character X'. BẮT BUỘC áp dụng trang phục được quy định cho kịch bản này là: "{outfit_setup}" cho TẤT CẢ các phân cảnh có mặt nhân vật để đảm bảo tính đồng nhất 100%. Luôn kèm lệnh 'featuring the exact identity of reference image X'.
-        6. QUY TRÌNH SẢN PHẨM & TỶ LỆ KÍCH THƯỚC: TUYỆT ĐỐI KHÔNG làm sai lệch kiểu dáng và KHÔNG phóng to sản phẩm sai tỷ lệ. BẮT BUỘC DÙNG CỤM TỪ: "featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE, maintaining realistic scale and true-to-life proportions".
-        7. ĐỒNG BỘ GIỌNG ĐỌC NGOÀI HÌNH & MIỀN BẮC (STRICT VOICE MATCHING): Kể cả cảnh không có người, BẮT BUỘC chèn lệnh: "fast-paced, high-energy, consistent pacing, identical voice identity, strict Northern Vietnamese accent, absolutely NO Southern accent" vào video_prompt để AI duy trì giọng Miền Bắc nhanh, mạnh mẽ, không bị chậm thành phim tài liệu.
-        8. MÀN HÌNH SẠCH RÁC: Tuyệt đối không sinh ra chữ lơ lửng hay phụ đề (`no floating text, clean background`).
-        
-        Xuất chuẩn 1 Dict JSON duy nhất:
+    is_sales_mode = "Bán Hàng" in current_mode
+    char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []), is_sales_mode)
+    
+    outfit_prompt_instruction = "'Character X... wearing the exact same outfit and featuring the exact identity of reference image X'" if is_sales_mode else "'Character X... wearing [context outfit] and featuring the exact identity of reference image X'"
+    
+    prompt_detail = f"""
+    Ngữ cảnh sản phẩm/dịch vụ: "{product_ctx}"
+    Thể loại nội dung: "{current_mode}" | Mục tiêu chiến dịch: "{goal}" | Tỷ lệ khung hình: "{aspect_ratio}"
+    Ý tưởng kịch bản: ID {target_id} - {outline.get('title')}
+    Bối cảnh định hướng: {outline.get('setting_style')} | Góc tiếp cận: {outline.get('angle')} | Hook: {outline.get('target_hook')}
+    TRANG PHỤC CỐ ĐỊNH CHO KỊCH BẢN NÀY: {outfit_setup}
+    
+    QUY ĐỊNH ĐẠO DIỄN & LÊN PROMPT TIẾNG ANH (BẮT BUỘC):
+    1. KHÓA CỨNG GIỚI TÍNH, TÔNG GIỌNG & NHỊP ĐỘ (PACE & ENERGY ANCHOR): Sử dụng 100% giọng đọc của **{fixed_gender}** với tông giọng **{fixed_tone}**.
+    2. PHIÊN ÂM TIẾNG VIỆT CHUẨN XÁC CHO AI (TTS RULE): Trong trường 'voiceover_vi', BẮT BUỘC viết âm đọc tiếng Việt bồi cho từ khó/tiếng Anh. (Vd: 10.000mAh phải viết là "mười nghìn mi li am pe giờ", Sale -> "seo", Deal -> "đi-u", freeship -> "phờ ri síp").
+    3. CẤM TỪ LIVESTREAM: TUYỆT ĐỐI KHÔNG dùng từ "livestream", "phiên live". Thay bằng "trong video này", "tại giỏ hàng".
+    4. PHÂN RÃ THỜI LƯỢNG CỰC KỲ KHẮT KHE: Tổng thời lượng khớp chính xác {total_sec} giây. Mỗi phân cảnh CHỈ ĐƯỢC PHÉP chọn 1 trong 3 mức thời lượng: 4s, 6s hoặc 8s. 
+    5. QUY TRÌNH TRANG PHỤC & KHUÔN MẶT: Dùng tên 'Character X'. BẮT BUỘC áp dụng trang phục được quy định cho kịch bản này là: "{outfit_setup}" cho TẤT CẢ các phân cảnh có mặt nhân vật để đảm bảo tính đồng nhất 100%. Luôn kèm lệnh 'featuring the exact identity of reference image X'.
+    6. QUY TRÌNH SẢN PHẨM & TỶ LỆ KÍCH THƯỚC: TUYỆT ĐỐI KHÔNG làm sai lệch kiểu dáng và KHÔNG phóng to sản phẩm sai tỷ lệ. BẮT BUỘC DÙNG CỤM TỪ: "featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE, maintaining realistic scale and true-to-life proportions".
+    7. ĐỒNG BỘ GIỌNG ĐỌC NGOÀI HÌNH & MIỀN BẮC (STRICT VOICE MATCHING): Kể cả cảnh không có người, BẮT BUỘC chèn lệnh: "fast-paced, high-energy, consistent pacing, identical voice identity, strict Northern Vietnamese accent, absolutely NO Southern accent" vào video_prompt để AI duy trì giọng Miền Bắc nhanh, mạnh mẽ, không bị chậm thành phim tài liệu.
+    8. MÀN HÌNH SẠCH RÁC: Tuyệt đối không sinh ra chữ lơ lửng hay phụ đề (`no floating text, clean background`).
+    
+    Xuất chuẩn 1 Dict JSON duy nhất:
+    {{
+      "id": {target_id}, 
+      "title": "{outline.get('title')}", 
+      "setting_style": "{outline.get('setting_style')}",
+      "script_outfit_setup": "{outfit_setup}",
+      "voice_profile": {{"gender": "{fixed_gender}", "tone": "{fixed_tone}"}},
+      "total_estimated_duration": "{duration_str}",
+      "scenes": [
         {{
-          "id": {target_id}, 
-          "title": "{outline.get('title')}", 
-          "setting_style": "{outline.get('setting_style')}",
-          "script_outfit_setup": "{outfit_setup}",
-          "voice_profile": {{"gender": "{fixed_gender}", "tone": "{fixed_tone}"}},
-          "total_estimated_duration": "{duration_str}",
-          "scenes": [
-            {{
-              "scene_number": 1, 
-              "duration": "6s", 
-              "scene_setting": "Bối cảnh chi tiết", 
-              "transition_type": "Cắt cứng dồn dập (Hard Cut)", 
-              "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn: {fixed_tone}, nhịp độ nhanh...", 
-              "voiceover_vi": "Lời thuyết minh tiếng Việt ĐÃ ĐƯỢC PHIÊN ÂM (vd: mười nghìn mi li am pe giờ)", 
-              "image_prompt": "Prompt Imagen 3 (tiếng Anh). Nếu có nhân vật phải gán rõ 'Character X... wearing {outfit_setup} and featuring the exact identity of reference image X'. BẮT BUỘC MÔ TẢ KÍCH THƯỚC THẬT CỦA SẢN PHẨM (vd: a small palm-sized product) kèm lệnh 'featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE... maintaining realistic scale', no floating text", 
-              "video_prompt": "Prompt Veo 3 (tiếng Anh). Kèm audio: fast-paced, high-energy, strict Northern Vietnamese accent, absolute no Southern accent mixing, consistent voiceover by the exact same {fixed_gender} character with {fixed_tone} tone, maintaining identical speed and identity across all scenes (even off-screen), reading [voiceover_vi]"
-            }}
-          ]
+          "scene_number": 1, 
+          "duration": "6s", 
+          "scene_setting": "Bối cảnh chi tiết", 
+          "transition_type": "Cắt cứng dồn dập (Hard Cut)", 
+          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn: {fixed_tone}, nhịp độ nhanh...", 
+          "voiceover_vi": "Lời thuyết minh tiếng Việt ĐÃ ĐƯỢC PHIÊN ÂM (vd: mười nghìn mi li am pe giờ, deal sốc -> đi-u sốc)", 
+          "image_prompt": "Prompt Imagen 3 (tiếng Anh). Nếu có nhân vật phải gán rõ 'Character X... wearing {outfit_setup} and featuring the exact identity of reference image X'. BẮT BUỘC MÔ TẢ KÍCH THƯỚC THẬT CỦA SẢN PHẨM (vd: a small palm-sized product) kèm lệnh 'featuring the EXACT design, shape, materials, and branding of the PRODUCT REFERENCE IMAGE... maintaining realistic scale', no floating text", 
+          "video_prompt": "Prompt Veo 3 (tiếng Anh). Kèm audio: fast-paced, high-energy, strict Northern Vietnamese accent, absolute no Southern accent mixing, consistent voiceover by the exact same {fixed_gender} character with {fixed_tone} tone, maintaining identical speed and identity across all scenes (even off-screen), reading [voiceover_vi]"
         }}
-        """
-        try:
-            sys_inst = get_system_instructions(current_mode, selected_style, selected_aspect, content_goal, target_duration_mins, char_rules_str)
-            res = call_gemini_api([prompt_detail], sys_inst)
-            if isinstance(res, list): res = res[0]
-            
-            st.session_state.generated_details[target_id] = res
-            st.session_state.active_script_id = target_id
-            st.session_state.scroll_to_top = True
-            st.success(f"✅ Đã dựng thành công chi tiết kịch bản #{target_id}!")
-            time.sleep(0.3)
-            st.rerun()
-        except Exception as e:
-            st.error(f"❌ Lỗi dựng chi tiết kịch bản: {e}")
+      ]
+    }}
+    """
+    try:
+        sys_inst = get_system_instructions(current_mode, selected_style, selected_aspect, content_goal, target_duration_mins, char_rules_str)
+        res = call_gemini_api([prompt_detail], sys_inst)
+        if isinstance(res, list): res = res[0]
+        
+        st.session_state.generated_details[target_id] = res
+        st.session_state.active_script_id = target_id
+        st.session_state.scroll_to_top = True
+        st.success(f"✅ Đã dựng thành công chi tiết kịch bản #{target_id}!")
+    except Exception as e:
+        st.error(f"❌ Lỗi dựng chi tiết kịch bản: {e}")
 
 def clone_script_id(target_id, current_mode, current_style, aspect_ratio, goal, target_duration_mins):
-    with st.spinner(f"🚀 Đang nhân bản 5 biến thể từ kịch bản #{target_id}..."):
-        try:
-            target_script = st.session_state.generated_details[target_id]
-            all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
-            cur_len = len(all_sources)
-            char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []))
-            
-            p_clone = f"Dựa trên kịch bản: {json.dumps(target_script, ensure_ascii=False)}. Tạo đúng 5 biến thể mới (id từ {cur_len+1} đến {cur_len+5}). Xuất JSON key 'cloned_outlines'."
-            sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str)
-            res_c = call_gemini_api([p_clone], sys_inst)
-            cloned_list = res_c.get("cloned_outlines", [])
-            for idx_c, cl in enumerate(cloned_list): cl["id"] = cur_len + idx_c + 1
-            st.session_state.cloned_scripts.extend(cloned_list)
-            st.session_state.scroll_to_top = True
-            st.success("✅ Đã nhân bản thành công 5 biến thể mới!")
-            time.sleep(0.3)
-            st.rerun()
-        except Exception as e:
-            st.error(f"Lỗi: {e}")
+    target_script = st.session_state.generated_details[target_id]
+    all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
+    cur_len = len(all_sources)
+    is_sales_mode = "Bán Hàng" in current_mode
+    char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []), is_sales_mode)
+    
+    p_clone = f"Dựa trên kịch bản: {json.dumps(target_script, ensure_ascii=False)}. Tạo đúng 5 biến thể mới (id từ {cur_len+1} đến {cur_len+5}). Xuất JSON key 'cloned_outlines'."
+    sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str)
+    try:
+        res_c = call_gemini_api([p_clone], sys_inst)
+        cloned_list = res_c.get("cloned_outlines", [])
+        for idx_c, cl in enumerate(cloned_list): cl["id"] = cur_len + idx_c + 1
+        st.session_state.cloned_scripts.extend(cloned_list)
+        st.session_state.scroll_to_top = True
+        st.success("✅ Đã nhân bản thành công 5 biến thể mới!")
+    except Exception as e:
+        st.error(f"❌ Lỗi: {e}")
 
 # ==============================================================================
-# BẮT ĐẦU TRIGGER EVENT TRỰC TIẾP (BỎ QUA ST.RERUN ĐỂ TRÁNH MỜ MÀN HÌNH)
+# HỆ THỐNG ĐIỀU HƯỚNG VÀ NGĂN CHẶN MỜ MÀN HÌNH (ANTI-STALE UI TRIGGER)
 # ==============================================================================
+# Bắt buộc đặt trước khi render nội dung chính để Spinner che lấp và ngăn việc vẽ giao diện cũ
 if st.session_state.action_trigger:
-    st.info("🔄 Ứng dụng đang đồng bộ dữ liệu. Xin vui lòng đợi...")
+    action = st.session_state.action_trigger
+    param = st.session_state.action_param
+    
+    # Xóa trigger để không bị lặp lại vô hạn
     st.session_state.action_trigger = None
+    st.session_state.action_param = None
+    
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    if action == "create_detail":
+        st.toast(f"⏳ Đang kết nối AI dựng chi tiết kịch bản #{param}...", icon="🎬")
+        with st.container(border=True):
+            st.markdown(f"<div class='loading-pulse'>⏳ HỆ THỐNG ĐANG XỬ LÝ: Đang dựng chi tiết phân cảnh cho kịch bản #{param}. Quá trình này có thể mất 15-20 giây. Vui lòng đợi...</div>", unsafe_allow_html=True)
+            create_scene_details_for_id(param, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
+            time.sleep(0.2)
+            st.rerun() # Refresh màn hình sau khi làm xong
+        
+    elif action == "clone_script":
+        st.toast(f"⏳ Đang nhân bản biến thể cho kịch bản #{param}...", icon="🧬")
+        with st.container(border=True):
+            st.markdown(f"<div class='loading-pulse'>⏳ HỆ THỐNG ĐANG XỬ LÝ: Đang nhân bản 5 biến thể độc đáo từ kịch bản #{param}. Vui lòng đợi...</div>", unsafe_allow_html=True)
+            clone_script_id(param, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
+            time.sleep(0.2)
+            st.rerun()
+        
+    elif action == "generate_more":
+        st.toast("⏳ Đang suy nghĩ góc tiếp cận mới...", icon="🧠")
+        with st.container(border=True):
+            st.markdown("<div class='loading-pulse'>⏳ HỆ THỐNG ĐANG XỬ LÝ: Đang phân tích DNA để sáng tạo thêm 5 kịch bản mới. Vui lòng đợi...</div>", unsafe_allow_html=True)
+            add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
+            time.sleep(0.2)
+            st.rerun()
+        
+    st.stop() # Cực kỳ quan trọng: Dừng toàn bộ code bên dưới để màn hình cũ KHÔNG BỊ VẼ LẠI và chuyển màu xám.
 
 # ==============================================================================
 # GIAO DIỆN CHÍNH
@@ -823,30 +867,8 @@ if num_chars > 0:
                     if c_file and c_role.strip():
                         char_inputs.append({"id": i+1, "role": c_role.strip(), "file": c_file})
 
-# === VÙNG BẮT ĐẦU TRIGGER CHỐNG LỖI BÓNG MỜ ===
-if st.session_state.action_trigger:
-    st.toast("⏳ Đang kết nối với AI để xử lý... Vui lòng đợi trong giây lát!", icon="🤖")
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    
-    if st.session_state.action_trigger == "create_detail":
-        t_id = st.session_state.action_param
-        st.session_state.action_trigger = None
-        st.session_state.action_param = None
-        create_scene_details_for_id(t_id, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
-        
-    elif st.session_state.action_trigger == "clone_script":
-        t_id = st.session_state.action_param
-        st.session_state.action_trigger = None
-        st.session_state.action_param = None
-        clone_script_id(t_id, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
-        
-    elif st.session_state.action_trigger == "generate_more":
-        st.session_state.action_trigger = None
-        add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
-# ==========================================================
-
 # Xử lý Logic Phân tích chính
-if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files or char_inputs)):
+if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files or char_inputs)):
     st.toast("⏳ Đang kết nối phân tích DNA... Vui lòng đợi trong giây lát!", icon="🤖")
     with st.spinner("⏳ Đang phân tích DNA chuyên sâu và Gán vai diễn viên..."):
         try:
@@ -854,14 +876,14 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
             st.session_state.character_profiles = profiles_to_save
             
             st.session_state.current_input_context = input_text.strip() if input_text else "Phân tích trực tiếp từ hình ảnh đính kèm sản phẩm/dự án."
-            char_rules_str = generate_char_rules_string(profiles_to_save)
+            char_rules_str = generate_char_rules_string(profiles_to_save, is_sales)
             
             if is_sales:
                 specific_rules = """
                 1. Về Giá cả: TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ. Chỉ sử dụng: "giá tận xưởng", "deal sốc giới hạn".
                 2. BẮT BUỘC 5 KỊCH BẢN ĐẦU TIÊN: Phải xoay quanh các chủ đề: Xả kho, Giảm giá, Deal sốc, Siêu sale.
                 3. BỐI CẢNH BẮT BUỘC: 5 kịch bản này phải diễn ra tại: Kho hàng, Xưởng sản xuất, hoặc Showroom trưng bày. Không làm bối cảnh lifestyle.
-                4. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Dựa vào ảnh NHÂN VẬT THAM CHIẾU (KOC/KOL) tải lên, bắt buộc tự động nhận diện chính xác giới tính là Nam hay Nữ để điền vào mục 'gender' của 'voice_profile' và gán đúng giới tính vào vai diễn. Tuyệt đối không để chung chung Nam/Nữ.
+                4. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Dựa vào ảnh NHÂN VẬT THAM CHIẾU (KOC/KOL) tải lên, bắt buộc tự động nhận diện chính xác giới tính là Nam hay Nữ để điền vào mục 'gender' của 'voice_profile'. (TUYỆT ĐỐI CHỈ ĐIỀN ĐÚNG CHỮ 'Nam' HOẶC 'Nữ', KHÔNG CÓ KÝ TỰ THỪA).
                 5. KÍCH THƯỚC THỰC TẾ: Ước lượng chính xác kích thước thật của sản phẩm từ ảnh để AI không phóng to sai sự thật. (Ví dụ: nhỏ gọn trong lòng bàn tay).
                 6. CẤM TỪ LIVESTREAM: TUYỆT ĐỐI KHÔNG sử dụng các từ "livestream", "phiên live". Đây là video ngắn quay sẵn. Thay bằng "trong video này", "hôm nay".
                 """
@@ -875,7 +897,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
                       "target_hook": "Câu mở đầu giật gân chốt đơn (Không đưa giá cụ thể, không nhắc livestream)",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ' sau khi phân tích ảnh]", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
+                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
                     },
                     {
                       "id": 2,
@@ -885,7 +907,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
                       "target_hook": "Câu mở đầu (không nhắc livestream)",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ' sau khi phân tích ảnh]", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
+                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
                     },
                     {
                       "id": 3,
@@ -895,7 +917,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
                       "target_hook": "Câu mở đầu (không nhắc livestream)",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ' sau khi phân tích ảnh]", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
+                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
                     },
                     {
                       "id": 4,
@@ -905,7 +927,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
                       "target_hook": "Câu mở đầu (không nhắc livestream)",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ' sau khi phân tích ảnh]", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
+                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
                     },
                     {
                       "id": 5,
@@ -915,7 +937,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận: Xả kho, dọn kho, siêu sale",
                       "target_hook": "Câu mở đầu (không nhắc livestream)",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ' sau khi phân tích ảnh]", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
+                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Năng lượng cao, chốt sale"}
                     }
                   ]
                 """
@@ -934,7 +956,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận chuyển đổi",
                       "target_hook": "Câu mở đầu thu hút",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ' sau khi phân tích ảnh]", "age_range": "25-35", "tone": "Truyền cảm, thuyết minh chuyên nghiệp"}
+                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Truyền cảm, thuyết minh chuyên nghiệp"}
                     },
                     {
                       "id": 2,
@@ -944,7 +966,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ' sau khi phân tích ảnh]", "age_range": "25-35", "tone": "Trầm ấm, thuyết minh"}
+                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Trầm ấm, thuyết minh"}
                     },
                     {
                       "id": 3,
@@ -954,7 +976,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ' sau khi phân tích ảnh]", "age_range": "25-35", "tone": "Hào hứng"}
+                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Hào hứng"}
                     },
                     {
                       "id": 4,
@@ -964,7 +986,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ' sau khi phân tích ảnh]", "age_range": "25-35", "tone": "Thuyết phục"}
+                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Thuyết phục"}
                     },
                     {
                       "id": 5,
@@ -974,7 +996,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ' sau khi phân tích ảnh]", "age_range": "25-35", "tone": "Tin cậy"}
+                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Tin cậy"}
                     }
                   ]
                 """
@@ -993,7 +1015,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận chuyển đổi",
                       "target_hook": "Câu mở đầu thu hút",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ' sau khi phân tích ảnh]", "age_range": "25-35", "tone": "Truyền cảm, thuyết minh chuyên nghiệp"}
+                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Truyền cảm, thuyết minh chuyên nghiệp"}
                     },
                     {
                       "id": 2,
@@ -1003,7 +1025,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ' sau khi phân tích ảnh]", "age_range": "25-35", "tone": "Trầm ấm, thuyết minh"}
+                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Trầm ấm, thuyết minh"}
                     },
                     {
                       "id": 3,
@@ -1013,7 +1035,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ' sau khi phân tích ảnh]", "age_range": "25-35", "tone": "Hào hứng"}
+                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Hào hứng"}
                     },
                     {
                       "id": 4,
@@ -1023,7 +1045,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ' sau khi phân tích ảnh]", "age_range": "25-35", "tone": "Thuyết phục"}
+                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Thuyết phục"}
                     },
                     {
                       "id": 5,
@@ -1033,7 +1055,7 @@ if not st.session_state.action_trigger and st.button("🚀 Bắt Đầu Phân T�
                       "angle": "Góc tiếp cận",
                       "target_hook": "Câu mở đầu",
                       "recommended_scenes_count": "5",
-                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ' sau khi phân tích ảnh]", "age_range": "25-35", "tone": "Tin cậy"}
+                      "voice_profile": {"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "Tin cậy"}
                     }
                   ]
                 """
