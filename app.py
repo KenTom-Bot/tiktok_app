@@ -612,7 +612,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
     QUY ĐỊNH BẮT BUỘC CHO KỊCH BẢN MỚI:
     {extra_rules}
     - Thêm key 'script_outfit_setup': Ghi rõ 1 câu miêu tả trang phục nhân vật (BẮT BUỘC CHỈ ĐỊNH RÕ MÀU SẮC).
-    - TUYỆT ĐỐI KHÔNG DÙNG TỪ NGỮ CAM KẾT HOẶC Y TẾ (100%, tuyệt đối, dứt điểm). KHÔNG DÙNG CÁC TỪ ĐE DỌA NHƯ ĐỘC HẠI. KHÔNG DÙNG CON SỐ TỒN KHO ẢO.
+    - TUYỆT ĐỐI KHÔNG DÙNG TỪ NGỮ CAM KẾT HOẶC Y TẾ. KHÔNG DÙNG CON SỐ TỒN KHO ẢO.
     Xuất JSON chuẩn với key 'script_outlines'.
     LƯU Ý CỰC KỲ QUAN TRỌNG: TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP CHƯA ESCAPE (") HOẶC XUỐNG DÒNG BÊN TRONG CÁC GIÁ TRỊ JSON.
     """
@@ -1115,7 +1115,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
             
             st.session_state.content_analysis = res.get("content_analysis")
             st.session_state.all_scripts = res.get("script_outlines", [])
-            st.session_state.cloned_scripts, st.session_state.expanded_scripts, st.session_state.generated_details, st.session_state.active_script_id = None, [], {}, None
+            st.session_state.cloned_scripts, st.session_state.expanded_scripts, st.session_state.generated_details, st.session_state.active_script_id = [], [], {}, None
             st.session_state.scroll_to_top = True
             
             st.session_state.global_toast = "Đã phân tích DNA và khởi tạo dự án thành công!"
@@ -1153,15 +1153,21 @@ all_combined_scripts_list = st.session_state.all_scripts + st.session_state.clon
 if all_combined_scripts_list and st.session_state.active_script_id is None and not st.session_state.action_trigger:
     st.divider()
     
-    completed_scripts = [sc for sc in all_combined_scripts_list if int(sc.get("id")) in st.session_state.generated_details]
-    pending_scripts = [sc for sc in all_combined_scripts_list if int(sc.get("id")) not in st.session_state.generated_details]
+    completed_scripts = []
+    pending_scripts = []
+    for sc in all_combined_scripts_list:
+        sc_id = int(sc.get("id", 0))
+        if sc_id in st.session_state.generated_details:
+            completed_scripts.append(sc)
+        else:
+            pending_scripts.append(sc)
 
     st.markdown("### 🎬 **1. Kịch Bản Đã Hoàn Thiện Chi Tiết (Sẵn Sàng Sản Xuất & Nhân Bản)**")
     if not completed_scripts:
         st.info("💡 Chưa có kịch bản nào được tạo chi tiết. Hãy chọn một kịch bản ở bên dưới để bắt đầu dựng cảnh!")
     else:
         for outline in completed_scripts:
-            sc_id = outline.get("id")
+            sc_id = int(outline.get("id", 0))
             with st.container(border=True):
                 col_i1, col_btn1, col_btn2 = st.columns([2.5, 1, 1])
                 with col_i1:
@@ -1169,7 +1175,7 @@ if all_combined_scripts_list and st.session_state.active_script_id is None and n
                     st.caption(f"🏛️ Bối cảnh: {outline.get('setting_style')} | ⚡ Hook: *\"{outline.get('target_hook')}\"*")
                 with col_btn1:
                     if st.button("👁️ Xem lại chi tiết", key=f"btn_rev_v1_main_{sc_id}", use_container_width=True):
-                        st.session_state.active_script_id = int(sc_id)
+                        st.session_state.active_script_id = sc_id
                         st.session_state.scroll_to_top = True
                         st.session_state.global_toast = f"Đang xem chi tiết kịch bản #{sc_id}"
                         st.session_state.global_toast_icon = "👁️"
@@ -1187,7 +1193,7 @@ if all_combined_scripts_list and st.session_state.active_script_id is None and n
         st.success("🎉 Tuyệt vời! Tất cả các kịch bản trong danh sách đã được tạo chi tiết thành công.")
     else:
         for outline in pending_scripts:
-            sc_id = outline.get("id")
+            sc_id = int(outline.get("id", 0))
             with st.container(border=True):
                 col_i2, col_a2 = st.columns([3, 1.2])
                 with col_i2:
@@ -1274,12 +1280,17 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         </div>
         """, unsafe_allow_html=True)
         
-        completed_scripts_in_detail = [sc for sc in all_combined_scripts_list if int(sc.get("id")) in st.session_state.generated_details]
+        completed_scripts_in_detail = []
+        for sc in all_combined_scripts_list:
+            sc_id = int(sc.get("id", 0))
+            if sc_id in st.session_state.generated_details:
+                completed_scripts_in_detail.append(sc)
+                
         if not completed_scripts_in_detail:
             st.caption("Chưa có kịch bản nào khác được tạo.")
         else:
             for item in completed_scripts_in_detail:
-                it_id = item.get("id")
+                it_id = int(item.get("id", 0))
                 is_current = (it_id == st.session_state.active_script_id)
                 with st.container(border=True):
                     badge_curr = ' <span class="badge-ready">ĐANG XEM</span>' if is_current else ''
@@ -1289,7 +1300,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                     with c_rev:
                         if not is_current:
                             if st.button("👁️ Xem lại", key=f"dt_rev_detail_{it_id}", use_container_width=True):
-                                st.session_state.active_script_id = int(it_id)
+                                st.session_state.active_script_id = it_id
                                 st.session_state.scroll_to_top = True
                                 st.session_state.global_toast = f"Đang hiển thị kịch bản #{it_id}"
                                 st.session_state.global_toast_icon = "👁️"
@@ -1322,13 +1333,16 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         </div>
         """, unsafe_allow_html=True)
 
-        pending_scripts = [item for item in all_combined_scripts_list if int(item.get("id")) not in st.session_state.generated_details]
+        pending_scripts = []
+        for item in all_combined_scripts_list:
+            if int(item.get("id", 0)) not in st.session_state.generated_details:
+                pending_scripts.append(item)
 
         if not pending_scripts:
             st.success("🎉 Tuyệt vời! Tất cả các kịch bản trong danh sách đã được tạo chi tiết thành công.")
         else:
             for item in pending_scripts:
-                it_id = item.get("id")
+                it_id = int(item.get("id", 0))
                 with st.container(border=True):
                     st.markdown(f"**#{it_id}. {item.get('title')}** — <span class='badge-pending'>CHƯA TẠO</span>", unsafe_allow_html=True)
                     st.caption(f"🏛️ {item.get('setting_style')}")
