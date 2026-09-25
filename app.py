@@ -197,15 +197,24 @@ if st.session_state.global_toast:
     st.session_state.global_toast = ""
     st.session_state.global_toast_icon = "✅"
 
+# TỐI ƯU UX: Cuộn trang chủ động cường độ cao
 if st.session_state.scroll_to_top:
-    components.html(f"""
+    components.html("""
         <script>
-            setTimeout(function() {{
-                var parentDoc = window.parent.document;
-                var mainElements = parentDoc.querySelectorAll('.main, .block-container, [data-testid="stAppViewContainer"]');
-                mainElements.forEach(function(el) {{ el.scrollTo({{top: 0, behavior: 'smooth'}}); }});
-                window.parent.scrollTo({{top: 0, behavior: 'smooth'}});
-            }}, 300);
+            function forceScroll() {
+                var pDoc = window.parent.document;
+                pDoc.body.scrollTop = 0;
+                pDoc.documentElement.scrollTop = 0;
+                window.parent.scrollTo({top: 0, behavior: 'smooth'});
+                pDoc.querySelectorAll('.main, .block-container, [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"]').forEach(function(el) {
+                    el.scrollTop = 0;
+                    el.scrollTo({top: 0, behavior: 'smooth'});
+                });
+            }
+            forceScroll();
+            setTimeout(forceScroll, 100);
+            setTimeout(forceScroll, 300);
+            setTimeout(forceScroll, 600);
         </script>
     """, height=0)
     st.session_state.scroll_to_top = False
@@ -602,7 +611,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
     
     QUY ĐỊNH BẮT BUỘC CHO KỊCH BẢN MỚI:
     {extra_rules}
-    - Thêm key 'script_outfit_setup': Ghi rõ 1 câu miêu tả trang phục nhân vật (BẮT BUỘC CHỈ ĐỊNH RÕ MÀU SẮC, vd: Áo polo màu xanh navy...).
+    - Thêm key 'script_outfit_setup': Ghi rõ 1 câu miêu tả trang phục nhân vật (BẮT BUỘC CHỈ ĐỊNH RÕ MÀU SẮC).
     - TUYỆT ĐỐI KHÔNG DÙNG TỪ NGỮ CAM KẾT HOẶC Y TẾ (100%, tuyệt đối, dứt điểm). KHÔNG DÙNG CÁC TỪ ĐE DỌA NHƯ ĐỘC HẠI. KHÔNG DÙNG CON SỐ TỒN KHO ẢO.
     Xuất JSON chuẩn với key 'script_outlines'.
     LƯU Ý CỰC KỲ QUAN TRỌNG: TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP CHƯA ESCAPE (") HOẶC XUỐNG DÒNG BÊN TRONG CÁC GIÁ TRỊ JSON.
@@ -705,7 +714,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
           "duration": "6s", 
           "scene_setting": "Mô tả bối cảnh góc toàn cảnh...", 
           "transition_type": "Mở đầu", 
-          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc... (BẮT BUỘC GHI RÕ HÀNH ĐỘNG: Mở to mắt ngạc nhiên, vung tay dứt khoát)", 
+          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn (Hà Nội)... (BẮT BUỘC GHI RÕ HÀNH ĐỘNG: Mở to mắt ngạc nhiên, vung tay dứt khoát)", 
           "voiceover_vi": "Lời thoại Hook tò mò (TỐI ĐA 20 TỪ ĐÃ PHIÊN ÂM TỰ NHIÊN)", 
           "image_prompt": "Prompt Imagen 3 (tiếng Anh). ÉP LỆNH NHÂN VẬT: 'Character X... wearing {outfit_setup}...'. ÉP KÍCH THƯỚC: 'featuring the EXACT [Màu sắc/kiểu dáng] product which fits exactly in the palm...'. CẤM UI: 'Cinematic shot ONLY. ABSOLUTELY NO UI elements'", 
           "video_prompt": "Prompt Veo 3 (tiếng Anh). BẮT BUỘC KHÓA CHỐNG BIẾN DẠNG... BẮT BUỘC KHÓA ÂM THANH & ACTING: 'Audio: The exact same {fixed_gender} character speaking on-camera showing amazed facial expression and energetic hand gestures. {tone_en}. Strict standard Northern Vietnamese (Hanoi) accent... Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements. Reading: [voiceover_vi]'"
@@ -854,8 +863,8 @@ if st.session_state.action_trigger:
         with st.container(border=True):
             st.markdown(f"<div class='loading-pulse'>⏳ HỆ THỐNG ĐANG XỬ LÝ: Đang dựng chi tiết phân cảnh cho kịch bản #{param}. Quá trình này có thể mất 15-20 giây. Vui lòng đợi...</div>", unsafe_allow_html=True)
             try:
-                create_scene_details_for_id(param, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
-                st.session_state.active_script_id = param
+                create_scene_details_for_id(int(param), selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
+                st.session_state.active_script_id = int(param)
                 st.session_state.global_toast = f"Đã dựng thành công chi tiết kịch bản #{param}!"
                 st.session_state.global_toast_icon = "✅"
                 st.session_state.scroll_to_top = True
@@ -869,7 +878,7 @@ if st.session_state.action_trigger:
         with st.container(border=True):
             st.markdown(f"<div class='loading-pulse'>⏳ HỆ THỐNG ĐANG XỬ LÝ: Đang nhân bản 5 biến thể độc đáo từ kịch bản #{param}. Vui lòng đợi...</div>", unsafe_allow_html=True)
             try:
-                clone_script_id(param, selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
+                clone_script_id(int(param), selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
                 st.session_state.global_toast = f"Đã nhân bản thành công kịch bản #{param}!"
                 st.session_state.global_toast_icon = "🧬"
                 st.session_state.scroll_to_top = True
@@ -1106,7 +1115,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
             
             st.session_state.content_analysis = res.get("content_analysis")
             st.session_state.all_scripts = res.get("script_outlines", [])
-            st.session_state.cloned_scripts, st.session_state.expanded_scripts, st.session_state.generated_details, st.session_state.active_script_id = [], [], {}, None
+            st.session_state.cloned_scripts, st.session_state.expanded_scripts, st.session_state.generated_details, st.session_state.active_script_id = None, [], {}, None
             st.session_state.scroll_to_top = True
             
             st.session_state.global_toast = "Đã phân tích DNA và khởi tạo dự án thành công!"
@@ -1144,8 +1153,8 @@ all_combined_scripts_list = st.session_state.all_scripts + st.session_state.clon
 if all_combined_scripts_list and st.session_state.active_script_id is None and not st.session_state.action_trigger:
     st.divider()
     
-    completed_scripts = [sc for sc in all_combined_scripts_list if sc.get("id") in st.session_state.generated_details]
-    pending_scripts = [sc for sc in all_combined_scripts_list if sc.get("id") not in st.session_state.generated_details]
+    completed_scripts = [sc for sc in all_combined_scripts_list if int(sc.get("id")) in st.session_state.generated_details]
+    pending_scripts = [sc for sc in all_combined_scripts_list if int(sc.get("id")) not in st.session_state.generated_details]
 
     st.markdown("### 🎬 **1. Kịch Bản Đã Hoàn Thiện Chi Tiết (Sẵn Sàng Sản Xuất & Nhân Bản)**")
     if not completed_scripts:
@@ -1160,7 +1169,7 @@ if all_combined_scripts_list and st.session_state.active_script_id is None and n
                     st.caption(f"🏛️ Bối cảnh: {outline.get('setting_style')} | ⚡ Hook: *\"{outline.get('target_hook')}\"*")
                 with col_btn1:
                     if st.button("👁️ Xem lại chi tiết", key=f"btn_rev_v1_main_{sc_id}", use_container_width=True):
-                        st.session_state.active_script_id = sc_id
+                        st.session_state.active_script_id = int(sc_id)
                         st.session_state.scroll_to_top = True
                         st.session_state.global_toast = f"Đang xem chi tiết kịch bản #{sc_id}"
                         st.session_state.global_toast_icon = "👁️"
@@ -1265,7 +1274,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         </div>
         """, unsafe_allow_html=True)
         
-        completed_scripts_in_detail = [sc for sc in all_combined_scripts_list if sc.get("id") in st.session_state.generated_details]
+        completed_scripts_in_detail = [sc for sc in all_combined_scripts_list if int(sc.get("id")) in st.session_state.generated_details]
         if not completed_scripts_in_detail:
             st.caption("Chưa có kịch bản nào khác được tạo.")
         else:
@@ -1280,7 +1289,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                     with c_rev:
                         if not is_current:
                             if st.button("👁️ Xem lại", key=f"dt_rev_detail_{it_id}", use_container_width=True):
-                                st.session_state.active_script_id = it_id
+                                st.session_state.active_script_id = int(it_id)
                                 st.session_state.scroll_to_top = True
                                 st.session_state.global_toast = f"Đang hiển thị kịch bản #{it_id}"
                                 st.session_state.global_toast_icon = "👁️"
@@ -1313,7 +1322,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         </div>
         """, unsafe_allow_html=True)
 
-        pending_scripts = [item for item in all_combined_scripts_list if item.get("id") not in st.session_state.generated_details]
+        pending_scripts = [item for item in all_combined_scripts_list if int(item.get("id")) not in st.session_state.generated_details]
 
         if not pending_scripts:
             st.success("🎉 Tuyệt vời! Tất cả các kịch bản trong danh sách đã được tạo chi tiết thành công.")
