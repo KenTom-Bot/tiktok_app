@@ -138,6 +138,28 @@ def process_login(login_val):
     else:
         st.error("❌ Tài khoản chưa được cấp quyền!")
 
+def format_analysis_field(field_val) -> str:
+    if isinstance(field_val, dict):
+        return "<br>".join([f"• <b>{str(k).replace('_', ' ').title()}:</b> {str(v)}" for k, v in field_val.items()])
+    elif isinstance(field_val, list):
+        return "<br>".join([f"• {str(item)}" for item in field_val])
+    text = str(field_val).strip()
+    text = re.sub(r'<<\.?', '', text)
+    text = text.replace('<b>', '').replace('</b>', '')
+    text = re.sub(r'(?i)\bnỗi đau\b\s*[:\.-]?', '', text)
+    text = re.sub(r'(?i)(?:\b|^)(?:1[\.\)]\s*)?chức năng\s*[:\.-]?', '<br>• <b>Chức năng:</b>', text)
+    text = re.sub(r'(?i)(?:\b|^)(?:2[\.\)]\s*)?tài chính\s*[:\.-]?', '<br>• <b>Tài chính:</b>', text)
+    text = re.sub(r'(?i)(?:\b|^)(?:3[\.\)]\s*)?cảm xúc\s*[:\.-]?', '<br>• <b>Cảm xúc:</b>', text)
+    lines = [l.strip() for l in text.split('<br>') if l.strip()]
+    formatted_output = []
+    for line in lines:
+        if line:
+            if line.startswith('•'):
+                formatted_output.append(f"<div style='margin-top: 6px;'>{line}</div>")
+            else:
+                formatted_output.append(f"<div style='margin-left: 15px; margin-top: 4px;'>• {line}</div>")
+    return "".join(formatted_output) if formatted_output else text
+
 def clean_and_parse_json(text_content: str):
     cleaned = text_content.replace("```json", "").replace("```", "").strip()
     match = re.search(r'(\{.*\}|\[.*\])', cleaned, re.DOTALL)
