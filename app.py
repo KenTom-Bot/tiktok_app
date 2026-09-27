@@ -127,8 +127,15 @@ def format_analysis_field(field_val) -> str:
     return "".join(formatted_output) if formatted_output else text
 
 def clean_and_parse_json(text_content):
-    cleaned = re.sub(r'
-http://googleusercontent.com/immersive_entry_chip/0
+    # Dùng replace thay vì regex chứa 3 dấu nháy để tránh lỗi ngắt chuỗi khi copy
+    cleaned = text_content.replace("```json", "").replace("```", "").strip()
+    match = re.search(r'(\{.*\}|\[.*\])', cleaned, re.DOTALL)
+    if match: 
+        cleaned = match.group(0)
+    try: 
+        return json.loads(cleaned, strict=False)
+    except: 
+        return ast.literal_eval(cleaned.replace('true', 'True').replace('false', 'False').replace('null', 'None'))
 
 # ==============================================================================
 # PHẦN 3: LÕI PROMPT KỊCH BẢN & KẾT NỐI API GEMINI
