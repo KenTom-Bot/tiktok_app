@@ -286,9 +286,7 @@ def call_gemini_with_retry(payload, sys_inst):
     raise Exception("Lỗi kết nối Gemini API. Vui lòng thử lại sau.")
 
 def create_scene_details_for_id(target_id: int, current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float, current_strategy: str):
-    # Cài chốt chặn or [] để chống lỗi NoneType
     all_sources = (st.session_state.all_scripts or []) + (st.session_state.cloned_scripts or []) + (st.session_state.expanded_scripts or [])
-    # Ép kiểu int cho cả 2 vế để đảm bảo luôn khớp ID
     outline = next((sc for sc in all_sources if isinstance(sc, dict) and int(sc.get("id", 0)) == int(target_id)), None)
     if not outline: raise Exception(f"Không tìm thấy kịch bản #{target_id} trong bộ nhớ.")
     
@@ -304,72 +302,79 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         total_sec = int(target_duration_mins * 60)
         duration_str = f"{total_sec}s ({target_duration_mins} phút)"
 
-    v_profile = outline.get("voice_profile", {})
-    fixed_gender_vi = "Nữ"
-    if isinstance(v_profile, str): fixed_gender_vi = "Nữ" if "nữ" in v_profile.lower() else "Nam"
-    elif isinstance(v_profile, dict):
-        g_val = v_profile.get("gender", "Nữ")
-        fixed_gender_vi = "Nữ" if "nữ" in g_val.lower() else "Nam"
-        
-    gender_en = "female" if fixed_gender_vi == "Nữ" else "male"
-    outfit_setup = outline.get("script_outfit_setup", "casual everyday outfit").replace('"', "'")
-    
-    char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []), is_sales_mode)
+    # Lấy danh sách các hồ sơ nhân vật đã đăng ký (Hỗ trợ tối đa 8 diễn viên)
+    profiles = st.session_state.get("character_profiles", [])
+    profiles_desc = ""
+    if profiles:
+        profiles_desc = "DANH SÁCH DIỄN VIÊN ĐÃ ĐĂNG KÝ (GIỮ NGUYÊN IDENTITY TỪ ẢNH THAM CHIẾU):\n"
+        for p in profiles:
+            profiles_desc += f"- Diễn viên {p['id']}: Đóng vai '{p['role']}'. Lệnh bắt buộc trong prompt: 'Character {p['id']} ({p['role']}) featuring exact identity of reference image {p['id']}'.\n"
+    else:
+        profiles_desc = "DANH SÁCH DIỄN VIÊN: Kịch bản đa nhân vật linh hoạt theo bối cảnh."
+
     dna_data = st.session_state.get("content_analysis", {})
     target_audience = dna_data.get("primary_target_audience", "Người dùng")
     
     prompt_detail = f"""
     Ngữ cảnh: "{product_ctx}" | Đối tượng: {target_audience}
     Ý tưởng kịch bản: ID {target_id} - {safe_title} | Bối cảnh: {safe_setting}
-    TRANG PHỤC CỐ ĐỊNH: {outfit_setup} | GIỚI TÍNH ĐÃ CHỐT: {fixed_gender_vi} (English: {gender_en})
     CHIẾN LƯỢC: {current_strategy}
+    {profiles_desc}
     
-    QUY ĐỊNH ĐẠO DIỄN LÊN PROMPT (CRITICAL):
-    0. KHÓA ĐỒNG BỘ GIỚI TÍNH (POLICY LOCK): Trong `image_prompt` và `video_prompt`, BẮT BUỘC sử dụng chữ '{gender_en} character'. TUYỆT ĐỐI KHÔNG dùng từ khóa tên riêng (như 'Nam character') để tránh lỗi Deepfake Policy.
-    1. KỶ LUẬT THỜI LƯỢNG & SỐ TỪ: Cảnh 4s (12-14 từ); Cảnh 6s (18-21 từ); Cảnh 8s (24-28 từ).
-    2. NỐI LIỀN MẠCH (MATCH CUT): Nếu dùng Match Cut, `image_prompt` BẮT BUỘC chỉ được ghi ĐÚNG MỘT CÂU TIẾNG VIỆT này: "Dùng ảnh cuối của cảnh trước làm ảnh tham chiếu cho video" (để ẩn nút Copy trên app).
-    3. THOẠI SẠCH VÀ LIỀN MẠCH (CLEAN NARRATIVE): Lời thoại `voiceover_vi` PHẢI NỐI CHẶT CHẼ. LỖI TAI HẠI CẦN TRÁNH: TUYỆT ĐỐI KHÔNG chứa dấu ngoặc đơn (VD: (Cười), (Thở dài)) bên trong `voiceover_vi`. KHÔNG DÙNG GIÁ TIỀN BẰNG CON SỐ.
-    4. DIỄN XUẤT & ÂM THANH NỀN: Biểu cảm khuôn mặt và âm thanh (Cười, thở dài) miêu tả bằng tiếng Anh trong `video_prompt`. Hành động thực tế BẮT BUỘC có Background ambient sound (VD: "sizzling meat / clashing swords, volume strictly lower than voiceover").
-    5. KHÔNG CHE KHUẤT (NO OCCLUSION): image_prompt ép lệnh: "product is fully visible, strictly NO hands obscuring the main body". video_prompt ép lệnh: "product maintains rigid structural integrity, action ends with the product fully visible and unoccluded".
+    QUY ĐỊNH ĐẠO DIỄN NÂNG CAO CHO ĐA NHÂN VẬT & DRAMA (CRITICAL):
+    1. ĐỐI THOẠI ĐA NHÂN VẬT (MULTI-CHARACTER DIALOGUE): Phân cảnh bắt buộc phải có sự tương tác qua lại giữa các nhân vật (Tranh luận, mâu thuẫn, tung hứng hoặc đồng tình). Mỗi câu thoại phải gắn với nhân vật phát ngôn cụ thể trong mảng `dialogues`.
+    2. KỶ LUẬT SỐ TỪ THUYẾT MINH: Tổng số từ của tất cả nhân vật trong 1 cảnh phải chuẩn nhịp: Cảnh 4s (12-14 từ); Cảnh 6s (18-21 từ); Cảnh 8s (24-28 từ). TUYỆT ĐỐI KHÔNG chứa dấu ngoặc đơn (như (Cười), (Thở dài)) và KHÔNG dùng con số giá tiền cụ thể.
+    3. ĐẠO DIỄN GÓC MÁY ĐA NGƯỜI (MULTI-CHARACTER BLOCKING): 
+       - Tránh để tất cả nhân vật nói chuyện trong cùng 1 khung hình rộng tĩnh. 
+       - Dùng kỹ thuật Cắt cảnh luân phiên (Shot/Reverse Shot) hoặc Góc qua vai (Over-the-shoulder) khi nhân vật tranh cãi/đối thoại.
+       - Trong `image_prompt` và `video_prompt`, phải mô tả rõ nhân vật nào đang xuất hiện, mặc trang phục gì, trạng thái biểu cảm ra sao.
+    4. KHÔNG CHE KHUẤT SẢN PHẨM (NO OCCLUSION): Sản phẩm trung tâm phải luôn rõ ràng, không bị tay hoặc vật thể khác che khuất phần chính.
     
-    Xuất chuẩn 1 Dict JSON duy nhất (Mẫu cấu trúc TỐI THIỂU PHẢI CÓ TỪ 3 ĐẾN 4 SCENE, ĐƯỢC VIẾT ĐẦY ĐỦ 100% NỘI DUNG VÀO CÁC NGOẶC VUÔNG [...], TUYỆT ĐỐI KHÔNG DÙNG DẤU BA CHẤM):
+    Xuất chuẩn 1 Dict JSON duy nhất (Mẫu cấu trúc PHẢI CÓ TỪ 3 ĐẾN 4 SCENE, ĐƯỢC VIẾT ĐẦY ĐỦ 100% NỘI DUNG VÀO CÁC NGOẶC VUÔNG [...], TUYỆT ĐỐI KHÔNG DÙNG DẤU BA CHẤM):
     {{
       "id": {target_id}, 
       "title": "{safe_title}", 
       "setting_style": "{safe_setting}",
-      "script_outfit_setup": "{outfit_setup}",
-      "voice_profile": {{"gender": "{fixed_gender_vi}", "tone": "nhịp độ nhanh"}},
+      "script_outfit_setup": "Trang phục đồng bộ theo từng nhân vật trong hồ sơ",
+      "voice_profile": {{"gender": "Hỗn hợp Nam/Nữ", "tone": "Đa nhân vật biểu cảm chân thực"}},
       "total_estimated_duration": "{duration_str}",
       "scenes": [
         {{
           "scene_number": 1, 
           "duration": "8s", 
-          "scene_setting": "[Viết mô tả bối cảnh góc toàn cảnh thật chi tiết vào đây]", 
-          "transition_type": "Mở đầu", 
-          "voice_director_vn": "[Viết chỉ đạo cảm xúc, ví dụ: Ngạc nhiên, kèm SFX hít hà]", 
-          "voiceover_vi": "[Viết lời thoại sạch giới hạn đúng hai mươi sáu từ không chứa dấu ngoặc đơn không chứa con số giá tiền cụ thể]", 
-          "image_prompt": "A 9:16 vertical shot of a Vietnamese {gender_en} character wearing {outfit_setup}. Product is fully visible, strictly NO hands obscuring the main body. Cinematic shot ONLY. ABSOLUTELY NO UI elements.", 
-          "video_prompt": "Audio: The exact same {gender_en} character speaking on-camera showing amazed facial expression, punctuated by a sharp gasp. Background ambient sound: sizzling meat, volume strictly lower than voiceover. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements. Reading: [Viết lại nội dung lời thoại voiceover_vi vào đây]. Product maintains rigid structural integrity, action ends with the product fully visible and unoccluded."
+          "scene_setting": "[Mô tả chi tiết bối cảnh và vị trí đứng của các nhân vật tham gia cảnh này]", 
+          "transition_type": "Mở đầu tình huống", 
+          "voice_director_vn": "[Chỉ đạo diễn xuất, ví dụ: Không khí căng thẳng, dồn dập]", 
+          "dialogues": [
+            {{"speaker": "Nhân vật A (Vd: Mẹ chồng)", "dialogue": "[Câu thoại thứ nhất của nhân vật A, ngắn gọn, đúng số từ]"}},
+            {{"speaker": "Nhân vật B (Vd: Nàng dâu)", "dialogue": "[Câu thoại đáp trả của nhân vật B]"}}
+          ],
+          "image_prompt": "A 9:16 vertical cinematic shot showing Character X and Character Y in {safe_setting}. Product is fully visible. Cinematic shot ONLY. ABSOLUTELY NO UI elements.", 
+          "video_prompt": "Audio: Character X speaking on-camera with dramatic tone, followed by Character Y reacting. Background ambient sound: realistic room tone, volume strictly lower than voiceover. Visual: Cinematic multi-character shot. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity, action ends fully visible."
         }},
         {{
           "scene_number": 2, 
           "duration": "6s", 
-          "scene_setting": "[Viết mô tả góc máy cận cảnh tay cầm sản phẩm thật chi tiết vào đây]", 
+          "scene_setting": "[Mô tả góc máy cận cảnh phản ứng của nhân vật hoặc chi tiết sản phẩm]", 
           "transition_type": "Cắt cứng (Hard Cut)", 
-          "voice_director_vn": "[Viết chỉ đạo cảm xúc, ví dụ: Nhấn mạnh tự tin]", 
-          "voiceover_vi": "[Viết lời thoại sạch tiếp theo nối liền mạch và giới hạn đúng hai mươi từ không ngoặc đơn]", 
-          "image_prompt": "A 9:16 close-up shot of the product being held. Product is fully visible, strictly NO hands obscuring the main body. Cinematic shot ONLY. ABSOLUTELY NO UI elements.", 
-          "video_prompt": "Audio: The exact same {gender_en} character speaking on-camera showing confident smile. Background ambient sound: gentle ambient noise, volume strictly lower than voiceover. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements. Reading: [Viết lại nội dung lời thoại voiceover_vi vào đây]. Product maintains rigid structural integrity, action ends with the product fully visible and unoccluded."
+          "voice_director_vn": "[Chỉ đạo diễn xuất tiếp theo]", 
+          "dialogues": [
+            {{"speaker": "Nhân vật C hoặc nhân vật A", "dialogue": "[Lời thoại tiếp theo đẩy cao trào]"}}
+          ],
+          "image_prompt": "A 9:16 close-up shot of the interaction. Product is fully visible, strictly NO hands obscuring the main body. Cinematic shot ONLY. ABSOLUTELY NO UI elements.", 
+          "video_prompt": "Audio: Character speaking on-camera with emotional expression. Background ambient sound: subtle environment noise, volume strictly lower than voiceover. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity."
         }},
         {{
           "scene_number": 3, 
           "duration": "8s", 
-          "scene_setting": "[Viết mô tả trải nghiệm và Call-to-action thật chi tiết vào đây]", 
+          "scene_setting": "[Mô tả không gian kết luận hoặc bẻ lái chốt sale]", 
           "transition_type": "Nối liền mạch (Match Cut)", 
-          "voice_director_vn": "[Viết chỉ đạo cảm xúc, ví dụ: Chốt sale năng lượng cao]", 
-          "voiceover_vi": "[Viết lời thoại chốt sale khoảng hai mươi sáu từ không dùng giá tiền cụ thể không dùng ngoặc đơn]", 
+          "voice_director_vn": "[Chỉ đạo chốt sale năng lượng hoặc giải quyết mâu thuẫn hài hòa]", 
+          "dialogues": [
+            {{"speaker": "Nhân vật chính / KOC", "dialogue": "[Lời thoại chốt giải pháp hoặc chốt sale không dùng giá tiền số]"}}
+          ],
           "image_prompt": "Dùng ảnh cuối của cảnh trước làm ảnh tham chiếu cho video", 
-          "video_prompt": "Audio: The exact same {gender_en} character speaking on-camera with high energy sales tone. Background ambient sound: upbeat subtle noise, volume strictly lower than voiceover. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements. Reading: [Viết lại nội dung lời thoại voiceover_vi vào đây]. Product maintains rigid structural integrity, action ends with the product fully visible and unoccluded."
+          "video_prompt": "Audio: Character speaking on-camera with high conversion tone. Background ambient sound: upbeat subtle noise, volume strictly lower than voiceover. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity, action ends with the product fully visible and unoccluded."
         }}
       ]
     }}
@@ -1020,8 +1025,19 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         dur = scene.get("duration", "6s")
         st.markdown(f"#### **📍 Phân cảnh {idx} ({dur}) — [ {scene.get('transition_type', 'Cắt cứng')} ]**")
         st.markdown(f"🏛️ **Bối cảnh & Miêu tả:** *{scene.get('scene_setting')}*")
-        st.markdown(f"**🎙️ Đạo diễn ngữ điệu:** *{scene.get('voice_director_vn')}*")
-        st.markdown(f"**💬 Lời thuyết minh (Thoại sạch):** `\"{scene.get('voiceover_vi')}\"`")
+        st.markdown(f"**🎙️ Đạo diễn diễn xuất:** *{scene.get('voice_director_vn')}*")
+        
+        # Hỗ trợ hiển thị đa nhân vật thoại (dialogues) hoặc thoại đơn (voiceover_vi)
+        dialogues_data = scene.get("dialogues", [])
+        if dialogues_data and isinstance(dialogues_data, list):
+            st.markdown("**💬 Đối thoại đa nhân vật:**")
+            for d in dialogues_data:
+                speaker_name = d.get("speaker", "Nhân vật")
+                line = d.get("dialogue", "")
+                st.markdown(f"&nbsp;&nbsp;&nbsp;&nbsp;• 🗣️ <b>{speaker_name}:</b> `\"{line}\"`", unsafe_allow_html=True)
+        else:
+            legacy_voice = scene.get("voiceover_vi", "")
+            st.markdown(f"**💬 Lời thuyết minh:** `\"{legacy_voice}\"`")
         
         img_p = scene.get('image_prompt', '')
         if img_p:
