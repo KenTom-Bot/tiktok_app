@@ -302,7 +302,6 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         total_sec = int(target_duration_mins * 60)
         duration_str = f"{total_sec}s ({target_duration_mins} phút)"
 
-    # Lấy danh sách các hồ sơ nhân vật đã đăng ký (Hỗ trợ tối đa 8 diễn viên)
     profiles = st.session_state.get("character_profiles", [])
     profiles_desc = ""
     if profiles:
@@ -311,6 +310,9 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
             profiles_desc += f"- Diễn viên {p['id']}: Đóng vai '{p['role']}'. Lệnh bắt buộc trong prompt: 'Character {p['id']} ({p['role']}) featuring exact identity of reference image {p['id']}'.\n"
     else:
         profiles_desc = "DANH SÁCH DIỄN VIÊN: Kịch bản đa nhân vật linh hoạt theo bối cảnh."
+
+    # KHAI BÁO BIẾN char_rules_str ĐỂ SỬA TRIỆT ĐỂ LỖI NAMEERROR
+    char_rules_str = generate_char_rules_string(profiles, is_sales_mode)
 
     dna_data = st.session_state.get("content_analysis", {})
     target_audience = dna_data.get("primary_target_audience", "Người dùng")
