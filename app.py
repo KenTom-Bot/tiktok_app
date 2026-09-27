@@ -306,7 +306,6 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         total_sec = int(target_duration_mins * 60)
         duration_str = f"{total_sec}s ({target_duration_mins} phút)"
 
-    # XÂY DỰNG BỘ DNA CỐ ĐỊNH CHO TỪNG DIỄN VIÊN ĐỂ CHỐNG BIẾN ĐỔI
     profiles = st.session_state.get("character_profiles", [])
     profiles_desc = ""
     identity_lock_rules = ""
@@ -333,10 +332,10 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     CHIẾN LƯỢC: {current_strategy}
     {profiles_desc}
     
-    🛑 QUY ĐỊNH ĐẠO DIỄN CHỐNG BIẾN ĐỔI HÌNH THỂ & TRANG PHỤC (STRICT IDENTITY LOCK):
-    1. ĐỒNG BỘ 100% DIÊN MẠO VÀ TRANG PHỤC: Trong mọi `image_prompt` và `video_prompt`, các nhân vật tham gia bắt buộc phải được mô tả giữ nguyên hình thể, khuôn mặt, kiểu tóc và trang phục cố định thông qua chuỗi khóa: [{identity_lock_rules}]. TUYỆT ĐỐI KHÔNG được tự ý thay đổi quần áo, màu sắc hay kiểu tóc của bất kỳ nhân vật nào ở các cảnh khác nhau.
-    2. KHÓA MÀU SẮC SẢN PHẨM THỰC TẾ: Trích xuất chính xác màu sắc và chất liệu từ ảnh sản phẩm đính kèm ở đầu vào.
-    3. ĐỐI THOẠI ĐA NHÂN VẬT CÓ NHẤN NHÁ & VOICE TIẾNG VIỆT: Các câu thoại trong mảng `dialogues` có ngữ điệu tự nhiên. `video_prompt` bắt buộc chứa cú pháp: `Speaking in Vietnamese: "[Nội dung câu thoại]"`.
+    🛑 QUY ĐỊNH TỐI CAO VỀ THAM CHIẾU MÀU SẮC SẢN PHẨM THỰC TẾ (STRICT REFERENCE COLOR LOCK):
+    1. TUYỆT ĐỐI KHÔNG TỰ BỊA MÀU SẮC: Cấm AI tự ý suy diễn hoặc viết ra các tính từ chỉ màu sắc của sản phẩm trong `scene_setting`, `image_prompt` và `video_prompt` (ví dụ: cấm tự điền 'bếp màu đỏ', 'máy màu xám' nếu ảnh thực tế không phải vậy).
+    2. SỬ DỤNG THAM CHIẾU ẢNH GỐC 100%: Trong mọi câu lệnh `image_prompt` và `video_prompt`, phần miêu tả sản phẩm BẮT BUỘC phải dùng chung một định danh tham chiếu chuẩn xác: "the physical product matching the exact color, material, and branding from the uploaded product reference image". 
+    3. ĐỒNG BỘ DIỄN VIÊN & THOẠI CẢM XÚC: Giữ nguyên hình thể/trang phục qua chuỗi [{identity_lock_rules}]. Lời thoại có nhấn nhá, kèm cú pháp `Speaking in Vietnamese: "..."` trong `video_prompt`.
     
     Xuất chuẩn 1 Dict JSON duy nhất (Mẫu cấu trúc TỐI THIỂU 3 ĐẾN 4 SCENE, ĐIỀN ĐỦ VÀO CÁC NGOẶC VUÔNG [...], TUYỆT ĐỐI KHÔNG DÙNG DẤU BA CHẤM):
     {{
@@ -344,45 +343,45 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
       "title": "{safe_title}", 
       "setting_style": "{safe_setting}",
       "script_outfit_setup": "Trang phục cố định theo hồ sơ nhân vật",
-      "voice_profile": {{"gender": "Hỗน hợp Nam/Nữ", "tone": "Biểu cảm cao trào"}},
+      "voice_profile": {{"gender": "Hỗn hợp Nam/Nữ", "tone": "Biểu cảm cao trào"}},
       "total_estimated_duration": "{duration_str}",
       "scenes": [
         {{
           "scene_number": 1, 
           "duration": "8s", 
-          "scene_setting": "[Mô tả bối cảnh cảnh 1]", 
+          "scene_setting": "[Mô tả bối cảnh cảnh 1, tuyệt đối không tự đặt tên màu cho sản phẩm mà gọi là sản phẩm từ ảnh tham chiếu]", 
           "transition_type": "Mở đầu", 
           "voice_director_vn": "[Chỉ đạo diễn xuất]", 
           "dialogues": [
             {{"speaker": "Nhân vật A", "dialogue": "[Thoại tiếng Việt có cảm thán]"}},
             {{"speaker": "Nhân vật B", "dialogue": "[Thoại tiếng Việt đáp trả]"}}
           ],
-          "image_prompt": "A 9:16 vertical cinematic shot featuring {identity_lock_rules} in {safe_setting}. The product features exact colors from reference, fully visible, strictly NO hands obscuring. Cinematic shot ONLY. ABSOLUTELY NO UI elements.", 
-          "video_prompt": "Audio: Characters speaking on-camera in Vietnamese with expressive emotional tone. Background ambient sound: realistic room tone, volume strictly lower than voiceover. Visual: Cinematic multi-character shot showing {identity_lock_rules}. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity, action ends fully visible."
+          "image_prompt": "A 9:16 vertical cinematic shot featuring {identity_lock_rules} in {safe_setting}. The physical product matching the exact color, material, and branding from the uploaded product reference image is featured prominently, fully visible, strictly NO hands obscuring. Cinematic shot ONLY. ABSOLUTELY NO UI elements.", 
+          "video_prompt": "Audio: Characters speaking on-camera in Vietnamese with expressive emotional tone. Background ambient sound: realistic room tone, volume strictly lower than voiceover. Visual: Cinematic multi-character shot showing {identity_lock_rules} interacting with the physical product matching the exact color, material, and branding from the uploaded product reference image. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity, action ends fully visible."
         }},
         {{
           "scene_number": 2, 
           "duration": "6s", 
-          "scene_setting": "[Mô tả bối cảnh cảnh 2]", 
+          "scene_setting": "[Mô tả bối cảnh cận cảnh sản phẩm]", 
           "transition_type": "Cắt cứng (Hard Cut)", 
           "voice_director_vn": "[Chỉ đạo diễn xuất]", 
           "dialogues": [
             {{"speaker": "Nhân vật A", "dialogue": "[Thoại tiếp theo]"}}
           ],
-          "image_prompt": "A 9:16 close-up shot featuring {identity_lock_rules}. Product is fully visible, strictly NO hands obscuring the main body. Cinematic shot ONLY. ABSOLUTELY NO UI elements.", 
-          "video_prompt": "Audio: Character speaking on-camera in Vietnamese with expressive tone. Background ambient sound: subtle environment noise, volume strictly lower than voiceover. Visual: Cinematic shot featuring {identity_lock_rules}. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity."
+          "image_prompt": "A 9:16 close-up shot featuring {identity_lock_rules} and the physical product matching the exact color, material, and branding from the uploaded product reference image. Product is fully visible, strictly NO hands obscuring the main body. Cinematic shot ONLY. ABSOLUTELY NO UI elements.", 
+          "video_prompt": "Audio: Character speaking on-camera in Vietnamese with expressive tone. Background ambient sound: subtle environment noise, volume strictly lower than voiceover. Visual: Cinematic shot featuring {identity_lock_rules} and the physical product matching the exact color, material, and branding from the uploaded product reference image. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity."
         }},
         {{
           "scene_number": 3, 
           "duration": "8s", 
-          "scene_setting": "[Mô tả bối cảnh cảnh 3]", 
+          "scene_setting": "[Mô tả bối cảnh kết luận]", 
           "transition_type": "Nối liền mạch (Match Cut)", 
           "voice_director_vn": "[Chỉ đạo chốt]", 
           "dialogues": [
             {{"speaker": "Nhân vật chính", "dialogue": "[Thoại chốt sale bằng tiếng Việt]"}}
           ],
           "image_prompt": "Dùng ảnh cuối của cảnh trước làm ảnh tham chiếu cho video", 
-          "video_prompt": "Audio: Character speaking on-camera in Vietnamese with high conversion tone. Background ambient sound: upbeat subtle noise, volume strictly lower than voiceover. Visual: Cinematic shot featuring {identity_lock_rules}. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity, action ends fully visible."
+          "video_prompt": "Audio: Character speaking on-camera in Vietnamese with high conversion tone. Background ambient sound: upbeat subtle noise, volume strictly lower than voiceover. Visual: Cinematic shot featuring {identity_lock_rules} and the physical product matching the exact color, material, and branding from the uploaded product reference image. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity, action ends fully visible."
         }}
       ]
     }}
