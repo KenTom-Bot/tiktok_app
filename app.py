@@ -897,7 +897,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
             
             st.session_state.content_analysis = res.get("content_analysis")
             st.session_state.all_scripts = res.get("script_outlines", [])
-            st.session_state.cloned_scripts, st.session_state.expanded_scripts, st.session_state.generated_details, st.session_state.active_script_id = None, None, {}, None
+            st.session_state.cloned_scripts, st.session_state.expanded_scripts, st.session_state.generated_details, st.session_state.active_script_id = [], [], {}, None
             st.session_state.scroll_to_top = True
             st.session_state.global_toast, st.session_state.global_toast_icon = "Đã phân tích DNA thành công!", "✅"
             time.sleep(0.1); st.rerun()
@@ -921,7 +921,7 @@ if st.session_state.content_analysis and not st.session_state.action_trigger:
     st.markdown("**📌 Chuỗi khóa thị giác (Visual DNA Lock):**")
     st.code(str(ca.get('prompt_dna_lock', 'N/A')).replace('<br>', ' ').replace('<b>', '').replace('</b>', ''), language="text")
 
-all_combined_scripts_list = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
+all_combined_scripts_list = (st.session_state.all_scripts or []) + (st.session_state.cloned_scripts or []) + (st.session_state.expanded_scripts or [])
 
 # --- GIAI ĐOẠN 1: MÀN HÌNH DANH SÁCH TỔNG QUAN ---
 if all_combined_scripts_list and st.session_state.active_script_id is None and not st.session_state.action_trigger:
