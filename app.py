@@ -231,6 +231,10 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
        - TUYỆT ĐỐI KHÔNG DÙNG: "100%", "tuyệt đối", "cam kết", "chắc chắn", "vĩnh viễn", "trị dứt điểm".
        - CẤM TUYÊN BỐ Y TẾ, ĐIỀU TRỊ SAI LỆCH VÀ GIEO RẮC SỢ HÃI: Không dùng "độc hại", "ung thư", "chống cận thị tuyệt đối". THAY BẰNG: "hỗ trợ bảo vệ", "kém an toàn".
        - CẤM TỪ KHÓA ĐIỀU HƯỚNG: "livestream", "phiên live", "inbox riêng", "zalo".
+    9. QUY CHUẨN ĐẠO DIỄN CẮT CẢNH LUÂN PHIÊN (SHOT/REVERSE SHOT CHO DRAMA):
+       - Trong các cảnh đối thoại đa nhân vật, TUYỆT ĐỐI KHÔNG để tất cả cùng nói một lúc. 
+       - Phân chia: Cảnh 1 tập trung vào Nhân vật A nói (Cận cảnh mặt A). Cảnh tiếp theo chuyển góc sang Nhân vật B phản hồi (Cận cảnh mặt B hoặc góc qua vai).
+       - Việc này giúp mô hình AI tạo video tập trung xử lý một khuôn mặt độc lập, loại bỏ hoàn toàn lỗi biến dạng (morphing) và lệch khẩu hình tiếng Việt.
     """
 
     base = f"""
@@ -1050,6 +1054,20 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         st.code(vid_p, language="text")
         safe_copy_button(vid_p, f"📋 Sao Chép Prompt Video Cảnh {idx}")
         st.markdown("---")
+
+        # Thêm nút bấm hỗ trợ xuất nhanh lời thoại từng cảnh
+        dialogues_data = scene.get("dialogues", [])
+        if dialogues_data and isinstance(dialogues_data, list):
+            st.markdown("**💬 Đối thoại đa nhân vật:**")
+            full_scene_voice = ""
+            for d in dialogues_data:
+                speaker_name = d.get("speaker", "Nhân vật")
+                line = d.get("dialogue", "")
+                st.markdown(f"&nbsp;&nbsp;&nbsp;&nbsp;• 🗣️ <b>{speaker_name}:</b> `\"{line}\"`", unsafe_allow_html=True)
+                full_scene_voice += f"{speaker_name}: {line} "
+            
+            # Nút copy nhanh toàn bộ đoạn hội thoại của cảnh này để làm lồng tiếng / voiceover
+            safe_copy_button(full_scene_voice.strip(), f"📋 Copy Toàn Bộ Thoại Cảnh {idx}")
 
     # CHIA CỘT HIỂN THỊ DANH SÁCH BÊN DƯỚI ĐỂ ĐIỀU HƯỚNG NHANH
     col_left, col_right = st.columns([1.1, 0.9])
