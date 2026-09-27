@@ -197,6 +197,7 @@ if st.session_state.global_toast:
     st.session_state.global_toast = ""
     st.session_state.global_toast_icon = "✅"
 
+# TỐI ƯU UX: Cuộn trang chủ động
 if st.session_state.scroll_to_top:
     components.html("""
         <script>
@@ -427,7 +428,11 @@ with st.sidebar:
     <div class="support-box">
         <b style="color: #166534; font-size: 0.95rem;">💬 Cần Hỗ Trợ / Mua Gói?</b><br>
         <p style="font-size: 0.85rem; color: #15803d; margin: 6px 0 8px 0;">Kết nối ngay với chúng tôi:</p>
-        <a href="https://zalo.me/0968484369" target="_blank" style="display: inline-block; background: #0068ff; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 11px; margin: 2px;">📱 Zalo Chat</a>
+        <div style="display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
+            <a href="https://zalo.me/0968484369" target="_blank" style="background: #0068ff; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 11px;">📱 Zalo</a>
+            <a href="https://facebook.com/your_facebook" target="_blank" style="background: #0866ff; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 11px;">📘 Facebook</a>
+            <a href="https://tiktok.com/@your_tiktok" target="_blank" style="background: #000000; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 11px;">🎵 TikTok</a>
+        </div>
         <div style="font-weight: 700; color: #166534; font-size: 12px; margin-top: 8px;">📞 Hotline: 096 8484 369</div>
     </div>
     """, unsafe_allow_html=True)
@@ -512,7 +517,7 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
        - CẤM DÙNG GIỌNG THUYẾT MINH PHIM TÀI LIỆU (NO NARRATOR VOICE): Giọng nói phải là CỦA CÙNG MỘT NGƯỜI (KOC/Diễn viên). 
        - ÂM THANH NỀN (AMBIENT/FOLEY SOUND): Nếu cảnh quay có hành động thực tế (như nấu ăn, gõ phím, tiếng gió), BẮT BUỘC thêm mô tả âm thanh nền vào video_prompt bằng tiếng Anh (VD: "Background ambient sound: sizzling meat / wind blowing, volume strictly lower than voiceover").
        - ĐỒNG NHẤT GIỌNG MIỀN BẮC CHUẨN (HÀ NỘI): Bắt buộc chèn lệnh "strict standard Northern Vietnamese (Hanoi) accent, strongly suppress any Southern or Saigon accents" vào MỌI video_prompt.
-       - PHIÊN ÂM TIẾNG VIỆT CHUẨN KHI ĐỌC (TTS PRONUNCIATION): Viết rõ cách đọc tiếng Việt bồi. Ví dụ: '10.000mAh' -> 'mười nghìn mi li am pe giờ', 'inox 304' -> 'i nốc ba linh tư'. TUYỆT ĐỐI KHÔNG ĐƯA GIÁ TIỀN CỤ THỂ VÀO THOẠI.
+       - PHIÊN ÂM TIẾNG VIỆT CHUẨN KHI ĐỌC (TTS PRONUNCIATION): Viết rõ cách đọc tiếng Việt bồi. Ví dụ: 'Bluetooth' -> 'Bờ lu tút', 'inox 304' -> 'i nốc ba linh tư'. TUYỆT ĐỐI KHÔNG ĐƯA GIÁ TIỀN CỤ THỂ VÀO THOẠI.
     8. BỘ LỌC CHÍNH SÁCH ĐA NỀN TẢNG (TIKTOK SHOP, FB, YOUTUBE COMPLIANCE):
        - TUYỆT ĐỐI KHÔNG DÙNG TỪ NGỮ CỰC ĐOAN: Cấm dùng "100%", "tuyệt đối", "cam kết", "chắc chắn", "vĩnh viễn", "trị dứt điểm".
        - CẤM TUYÊN BỐ Y TẾ, ĐIỀU TRỊ SAI LỆCH VÀ GIEO RẮC SỢ HÃI: Không dùng từ "độc hại", "ung thư", "bệnh tật". Cấm nói "chống cận thị tuyệt đối". PHẢI THAY BẰNG: "hỗ trợ bảo vệ mắt", "kém an toàn".
@@ -613,7 +618,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
     QUY ĐỊNH BẮT BUỘC CHO KỊCH BẢN MỚI:
     {extra_rules}
     - Thêm key 'script_outfit_setup': Ghi rõ 1 câu miêu tả trang phục nhân vật (BẮT BUỘC CHỈ ĐỊNH RÕ MÀU SẮC).
-    - TUYỆT ĐỐI KHÔNG DÙNG TỪ NGỮ CAM KẾT HOẶC Y TẾ. KHÔNG DÙNG CON SỐ TỒN KHO ẢO. KHÔNG DÙNG MỨC GIÁ CỤ THỂ.
+    - TUYỆT ĐỐI KHÔNG DÙNG TỪ NGỮ CAM KẾT HOẶC Y TẾ. KHÔNG DÙNG CON SỐ TỒN KHO ẢO. KHÔNG DÙNG MỨC GIÁ CỤ THỂ BẰNG CON SỐ.
     Xuất JSON chuẩn với key 'script_outlines'.
     LƯU Ý CỰC KỲ QUAN TRỌNG: TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP CHƯA ESCAPE (") HOẶC XUỐNG DÒNG BÊN TRONG CÁC GIÁ TRỊ JSON.
     """
@@ -660,7 +665,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         tone_vn = "truyền cảm, nhấn nhá theo mạch cảm xúc"
     elif is_corporate:
         tone_en = "confident, professional, authoritative tone, steady pacing"
-        tone_vn = "đĩnh đạc, tự tin, chuyên nghiệp"
+        tone_vn = "đĩnh đạc, tự tự, chuyên nghiệp"
     else:
         tone_en = "natural, engaging, dynamic pacing"
         tone_vn = "tự nhiên, gần gũi, lôi cuốn"
@@ -695,7 +700,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     QUY ĐỊNH ĐẠO DIỄN LÊN PROMPT (BẮT BUỘC):
     1. KỶ LUẬT THỜI LƯỢNG VÀ TỐI ƯU CREDIT: Cảnh 4s <= 14 từ; Cảnh 6s <= 20 từ; Cảnh 8s <= 26 từ. {duration_rule_scene}
     2. CHUYỂN CẢNH ĐỘNG: Luân phiên [Cắt cứng (Hard Cut)] để chuyển góc máy và [Nối liền mạch (Match Cut)] để giữ hành động.
-       ĐẶC BIỆT LƯU Ý: Nếu là [Nối liền mạch (Match Cut)], phần `image_prompt` BẮT BUỘC chỉ được ghi đúng một câu tiếng Việt này (để app ẩn nút copy đi): "Dùng ảnh cuối của cảnh trước làm ảnh tham chiếu cho video"
+       ĐẶC BIỆT LƯU Ý: Nếu là [Nối liền mạch (Match Cut)], phần `image_prompt` BẮT BUỘC chỉ được ghi đúng câu này: "Dùng ảnh cuối của cảnh trước làm ảnh tham chiếu cho video"
     3. MẠCH THOẠI LIỀN MẠCH (SEAMLESS NARRATIVE): Lời thoại `voiceover_vi` giữa các phân cảnh PHẢI ĐƯỢC KẾT NỐI CHẶT CHẼ bằng các từ nối tạo sự tò mò, dồn dập (VD: "Thế nhưng...", "Chưa hết đâu!", "Cái đỉnh nhất là...", "Nghe kỹ này!"). Tuyệt đối không đưa mức giá cụ thể bằng con số (như 199k, 50k) vào thoại, chỉ dùng "deal hời", "giá cực rẻ".
     4. DIỄN XUẤT, SFX & ÂM THANH NỀN (AMBIENT SOUND): 
        - BẮT BUỘC chèn thêm các thẻ âm thanh phi ngôn ngữ như (Cười khẩy), (Thở dài), (Hít hà), (Tặc lưỡi) vào `voiceover_vi`. 
@@ -704,7 +709,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     5. CHỐNG BIẾN DẠNG (ANTI-MORPHING): ĐỂ SẢN PHẨM KHÔNG MÓP MÉO, BẮT BUỘC CHÈN LỆNH: "product maintains rigid structural integrity, zero shape morphing, strictly identical to reference, consistent solid geometry, no extra details spawned" vào MỌI video_prompt.
     6. TỶ LỆ KÍCH THƯỚC: Trong `image_prompt`, BẮT BUỘC thiết lập hệ quy chiếu vật lý (VD: 'product fits entirely within the palm of one hand').
     7. PHIÊN ÂM TỰ NHIÊN: "inox 304" -> "i nốc ba linh tư", "Bluetooth" -> "Bờ lu tút".
-    8. CHÍNH SÁCH TIKTOK: KHÔNG dùng từ đe dọa (độc hại). KHÔNG cam kết 100%. KHÔNG số lượng tồn kho ảo. CẤM UI ICON. TUYỆT ĐỐI KHÔNG BỊA RA GIÁ TIỀN.
+    8. CHÍNH SÁCH TIKTOK: KHÔNG dùng từ đe dọa (độc hại). KHÔNG cam kết 100%. KHÔNG số lượng tồn kho ảo. CẤM UI ICON. TUYỆT ĐỐI KHÔNG BỊA RA GIÁ TIỀN CON SỐ.
     9. KHÓA GIỌNG HÀ NỘI VÀ BIỂU CẢM: MỌI video_prompt BẮT BUỘC có lệnh "Audio: The exact same {fixed_gender} character speaking on-camera showing [BIỂU CẢM/HÀNH ĐỘNG]. {tone_en}. Strict standard Northern Vietnamese (Hanoi) accent. Strongly suppress Southern/Saigon accent."
     
     Xuất chuẩn 1 Dict JSON duy nhất:
@@ -746,7 +751,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
           "image_prompt": "Dùng ảnh cuối của cảnh trước làm ảnh tham chiếu cho video", 
           "video_prompt": "Prompt Video ĐẦY ĐỦ..."
         }}
-        // BẠN BẮT BUỘC CHỈ ĐƯỢC SINH RA ĐÚNG 3 HOẶC 4 CẢNH (TÙY TÌNH HUỐNG LÀ 3 HAY 4 ĐỂ ĐẠT THỜI GIAN NHANH GỌN NHẤT MÀ VẪN CHUYỂN ĐỔI CAO). THOẠI PHẢI LIỀN MẠCH, CUỐN HÚT CÓ CẢM XÚC VÀ ÂM THANH NỀN. ĐỐI VỚI CẢNH NỐI MẠCH, TRONG IMAGE_PROMPT CHỈ ĐƯỢC DÙNG TIẾNG VIỆT ĐÃ YÊU CẦU ĐỂ ẨN NÚT COPY.
+        // BẠN BẮT BUỘC CHỈ ĐƯỢC SINH RA ĐÚNG 3 HOẶC 4 CẢNH (TÙY TÌNH HUỐNG LÀ 3 HAY 4 ĐỂ ĐẠT THỜI GIAN NHANH GỌN NHẤT MÀ VẪN CHUYỂN ĐỔI CAO). THOẠI PHẢI LIỀN MẠCH, CUỐN HÚT CÓ CẢM XÚC VÀ ÂM THANH NỀN. ĐỐI VỚI CẢNH NỐI MẠCH, TRONG IMAGE_PROMPT CHỈ ĐƯỢC DÙNG ĐÚNG TIẾNG VIỆT ĐÃ YÊU CẦU.
       ]
     }}
     LƯU Ý CỰC KỲ QUAN TRỌNG: TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP HOẶC DẤU XUỐNG DÒNG (\\n) BÊN TRONG CÁC GIÁ TRỊ STRING CỦA JSON.
@@ -1023,7 +1028,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
                 1. NỘI DUNG VIRAL: Hook cực mạnh ở 3 giây đầu, bắt trend, tự nhiên và gần gũi.
                 2. ĐỊNH VỊ TỆP KHÁCH HÀNG: Bắt buộc kịch bản phải xoay quanh tệp khách hàng có NHU CẦU CAO NHẤT.
                 3. KỶ LUẬT THÔNG SỐ SẢN PHẨM: KHÔNG tự bịa ra màu sắc và thông số kỹ thuật.
-                4. BỘ LỌC CHÍNH SÁCH NGHIÊM NGẶT: Cấm tuyệt đối các từ ngữ đe dọa và cam kết y tế phi lý.
+                4. BỘ LỌC CHÍNH SÁCH NGHIÊM NGẶT: Cấm tuyệt đối các từ ngữ đe dọa (độc hại, ung thư) và cam kết y tế/làm đẹp phi lý (100%, tuyệt đối, dứt điểm).
                 """
 
             script_outlines_json = f"""
@@ -1034,7 +1039,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
                   "setting_style": "Mô tả bối cảnh",
                   "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật PHÙ HỢP THỰC TẾ với bối cảnh (BẮT BUỘC CHỈ ĐỊNH RÕ MÀU SẮC, VD: áo polo màu xanh navy)",
                   "angle": "Góc tiếp cận",
-                  "target_hook": "Câu mở đầu mạnh mẽ, thu hút",
+                  "target_hook": "Câu mở đầu mạnh mẽ, thu hút (cấm nhắc livestream, cấm cam kết y tế phi lý, cấm từ đe dọa)",
                   "recommended_scenes_count": "Tự động phân bổ linh hoạt",
                   "voice_profile": {{"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "{tone_suggestion}"}}
                 }},
