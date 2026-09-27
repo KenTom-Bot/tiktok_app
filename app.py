@@ -286,9 +286,11 @@ def call_gemini_with_retry(payload, sys_inst):
     raise Exception("Lỗi kết nối Gemini API. Vui lòng thử lại sau.")
 
 def create_scene_details_for_id(target_id: int, current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float, current_strategy: str):
-    all_sources = st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts
-    outline = next((sc for sc in all_sources if isinstance(sc, dict) and sc.get("id") == target_id), None)
-    if not outline: raise Exception(f"Không tìm thấy kịch bản #{target_id}")
+    # Cài chốt chặn or [] để chống lỗi NoneType
+    all_sources = (st.session_state.all_scripts or []) + (st.session_state.cloned_scripts or []) + (st.session_state.expanded_scripts or [])
+    # Ép kiểu int cho cả 2 vế để đảm bảo luôn khớp ID
+    outline = next((sc for sc in all_sources if isinstance(sc, dict) and int(sc.get("id", 0)) == int(target_id)), None)
+    if not outline: raise Exception(f"Không tìm thấy kịch bản #{target_id} trong bộ nhớ.")
     
     product_ctx = st.session_state.get("current_input_context", "Dự án hiện tại").replace('"', "'")
     safe_title = outline.get('title', '').replace('"', "'").replace('\n', ' ')
@@ -773,9 +775,11 @@ if st.session_state.action_trigger:
                 st.session_state.active_script_id = int(param)
                 st.session_state.global_toast, st.session_state.global_toast_icon = f"Đã dựng thành công kịch bản #{param}!", "✅"
                 st.session_state.scroll_to_top = True
-            except Exception as e: st.error(f"❌ Lỗi: {e}")
-            time.sleep(0.2); st.rerun() 
-            
+                time.sleep(0.2); st.rerun() # Chỉ rerun khi THÀNH CÔNG
+            except Exception as e: 
+                st.error(f"❌ Lỗi: {e}")
+                if st.button("🔄 Quay lại"): st.rerun()
+                
     elif action == "clone_script":
         st.toast(f"⏳ Đang nhân bản biến thể cho kịch bản #{param}...", icon="🧬")
         with st.container(border=True):
@@ -784,9 +788,11 @@ if st.session_state.action_trigger:
                 clone_script_id(int(param), selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins, selected_strategy)
                 st.session_state.global_toast, st.session_state.global_toast_icon = f"Đã nhân bản kịch bản #{param}!", "🧬"
                 st.session_state.scroll_to_top = True
-            except Exception as e: st.error(f"❌ Lỗi: {e}")
-            time.sleep(0.2); st.rerun()
-            
+                time.sleep(0.2); st.rerun()
+            except Exception as e: 
+                st.error(f"❌ Lỗi: {e}")
+                if st.button("🔄 Quay lại"): st.rerun()
+                
     elif action == "generate_more":
         st.toast("⏳ Đang sáng tạo kịch bản mới...", icon="🧠")
         with st.container(border=True):
@@ -796,8 +802,10 @@ if st.session_state.action_trigger:
                 add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins, strat_to_use)
                 st.session_state.global_toast, st.session_state.global_toast_icon = "Đã bổ sung kịch bản mới!", "🧠"
                 st.session_state.scroll_to_top = True
-            except Exception as e: st.error(f"❌ Lỗi: {e}")
-            time.sleep(0.2); st.rerun()
+                time.sleep(0.2); st.rerun()
+            except Exception as e: 
+                st.error(f"❌ Lỗi: {e}")
+                if st.button("🔄 Quay lại"): st.rerun()
     st.stop()
 
 # ==============================================================================
