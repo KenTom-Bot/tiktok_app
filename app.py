@@ -197,7 +197,7 @@ if st.session_state.global_toast:
     st.session_state.global_toast = ""
     st.session_state.global_toast_icon = "✅"
 
-# TỐI ƯU UX: Cuộn trang chủ động
+# TỐI ƯU UX: Cuộn trang chủ động cường độ cao
 if st.session_state.scroll_to_top:
     components.html("""
         <script>
@@ -540,8 +540,8 @@ MỤC TIÊU CHIẾN DỊCH: {goal}
 2. QUY TẮC QUỐC TỊCH: Nếu có con người chung chung, BẮT BUỘC chèn "Vietnamese".
 {char_rules}
 4. CẤM HIỂN THỊ UI/GIỎ HÀNG KHI KÊU GỌI HÀNH ĐỘNG (CRITICAL): Mọi `image_prompt` và `video_prompt` phải ép lệnh "Cinematic shot ONLY. ABSOLUTELY NO UI elements, NO shopping cart icons, NO on-screen text or social media overlays".
-5. CHỐNG BIẾN DẠNG TỐI ĐA & KHÔNG CHE KHUẤT (NO OCCLUSION & ANTI-MORPHING): Bắt buộc miêu tả chính xác màu sắc và kiểu dáng từ bức ảnh gốc. ĐẶC BIỆT QUAN TRỌNG: Để AI không tự bịa chi tiết, sản phẩm phải hiển thị TOÀN VẸN. BẮT BUỘC chèn lệnh vào image_prompt: "product is fully visible, held gently by the edges, strictly NO hands or objects obscuring the main body/details". Trong video_prompt chèn lệnh: "product maintains rigid structural integrity, zero shape morphing, strictly identical to reference, action ends with the product fully visible and unoccluded".
-6. ĐỊNH VỊ TỆP KHÁCH HÀNG: Bắt buộc kịch bản phải xoay quanh tệp khách hàng có NHU CẦU CAO NHẤT dựa vào công năng sản phẩm. KHÔNG rập khuôn bối cảnh.
+5. ĐỊNH VỊ TỆP KHÁCH HÀNG: Bắt buộc kịch bản phải xoay quanh tệp khách hàng có NHU CẦU CAO NHẤT dựa vào công năng sản phẩm. KHÔNG rập khuôn bối cảnh.
+6. CHỐNG BIẾN DẠNG SẢN PHẨM & KHÓA MÀU (ANTI-MORPHING & COLOR LOCK): Bắt buộc miêu tả chính xác màu sắc và kiểu dáng từ bức ảnh gốc vào mọi image_prompt. BẮT BUỘC CHÈN LỆNH: "product maintains rigid structural integrity, zero shape morphing, strictly identical to reference, consistent solid geometry, no extra details spawned" vào MỌI video_prompt.
 7. 100% CÓ MẶT NHÂN VẬT (ALWAYS ON-SCREEN): Bắt buộc mọi phân cảnh (kể cả review sản phẩm) đều phải có nhân vật.
 8. CHUYỂN CẢNH THÔNG MINH (DYNAMIC TRANSITIONS): Bắt buộc LUÂN PHIÊN linh hoạt: (1) Cắt cứng (Hard Cut) để đổi góc máy, tạo nhịp điệu dồn dập (yêu cầu viết Prompt ảnh mới). (2) Nối liền mạch (Match Cut) CHỈ KHI một hành động quá dài cần cắt đôi.
 9. GIỚI HẠN TỪ VỰNG THUYẾT MINH (VOICE PACING LIMIT): Kịch bản giọng đọc 'voiceover_vi' PHẢI NGẮN GỌN để nhân vật có khoảng lùi hít thở. TUYỆT ĐỐI TUÂN THỦ: Cảnh 4s (tối đa 14 từ); Cảnh 6s (tối đa 20 từ); Cảnh 8s (tối đa 26 từ). Nếu viết dài quá, âm thanh sẽ bị cắt nghẽn.
@@ -655,32 +655,19 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         duration_str = f"{total_sec}s ({target_duration_mins} phút)"
         duration_rule_scene = f"TỔNG CỘNG ĐỘ DÀI CÁC CẢNH PHẢI ĐÚNG CHÍNH XÁC {total_sec} GIÂY. Chia nhỏ kịch bản thành các cảnh 4s, 6s hoặc 8s."
 
-    if is_sales_mode:
-        tone_en = "fast-paced, high-energy, enthusiastic sales tone"
-        tone_vn = "nhịp độ nhanh, năng lượng cao, chốt sale"
-    elif is_knowledge:
-        tone_en = "fast-paced, engaging, sharp, professional tone, absolutely NO slow or overly emotional voice"
-        tone_vn = "nhịp độ nhanh, dứt khoát, lôi cuốn, chuyên nghiệp"
-    elif is_story:
-        tone_en = "expressive, emotional storytelling tone, adaptive pacing"
-        tone_vn = "truyền cảm, nhấn nhá theo mạch cảm xúc"
-    elif is_corporate:
-        tone_en = "confident, professional, authoritative tone, steady pacing"
-        tone_vn = "đĩnh đạc, tự tự, chuyên nghiệp"
-    else:
-        tone_en = "natural, engaging, dynamic pacing"
-        tone_vn = "tự nhiên, gần gũi, lôi cuốn"
-
     v_profile = outline.get("voice_profile", {})
     if isinstance(v_profile, str):
-        fixed_gender = "Nữ" if "nữ" in v_profile.lower() else "Nam"
+        fixed_gender_vi = "Nữ" if "nữ" in v_profile.lower() else "Nam"
     elif isinstance(v_profile, dict):
-        fixed_gender = v_profile.get("gender", "Nữ")
-        if "hay Nữ" in fixed_gender or "/" in fixed_gender or "xác định" in fixed_gender.lower() or not fixed_gender.strip():
-            fixed_gender = "Nữ" 
+        gender_val = v_profile.get("gender", "Nữ")
+        if "hay Nữ" in gender_val or "/" in gender_val or "xác định" in gender_val.lower() or not gender_val.strip():
+            fixed_gender_vi = "Nữ" 
+        else:
+            fixed_gender_vi = "Nữ" if "nữ" in gender_val.lower() else "Nam"
     else:
-        fixed_gender = "Nữ"
+        fixed_gender_vi = "Nữ"
         
+    gender_en = "male" if fixed_gender_vi.lower() == "nam" else "female"
     outfit_setup = outline.get("script_outfit_setup", "casual everyday outfit").replace('"', "'")
     char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []), is_sales_mode)
     realtime_ctx = get_realtime_context()
@@ -697,23 +684,25 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     Ý tưởng kịch bản: ID {target_id} - {safe_title}
     Bối cảnh định hướng: {safe_setting} | Góc tiếp cận: {safe_angle} | Hook: {safe_hook}
     TRANG PHỤC CỐ ĐỊNH CHO KỊCH BẢN NÀY: {outfit_setup}
-    GIỚI TÍNH ĐÃ CHỐT: {fixed_gender}
+    GIỚI TÍNH ĐÃ CHỐT: {fixed_gender_vi} (English mapping: {gender_en})
     
     QUY ĐỊNH ĐẠO DIỄN LÊN PROMPT (BẮT BUỘC):
-    0. KHÓA ĐỒNG BỘ GIỚI TÍNH (CRITICAL): Nhân vật trong `image_prompt` và `video_prompt` phải là {fixed_gender}, khớp 100% với giọng đọc và trang phục.
+    0. KHÓA ĐỒNG BỘ GIỚI TÍNH VÀ POLICY (CRITICAL): Trong `image_prompt` và `video_prompt`, BẮT BUỘC sử dụng chữ '{gender_en} character' thay vì 'Nam character' để tránh bị AI (Veo 3) quét nhầm là từ khóa giả mạo nhân vật có thật tên là "Nam".
     1. KỶ LUẬT THỜI LƯỢNG & NHỊP ĐỘ (VOICE PACING): Để giọng đọc có nhịp độ nhanh, năng lượng cao dồn dập, SỐ TỪ trong `voiceover_vi` KHÔNG ĐƯỢC QUÁ NGẮN HOẶC QUÁ DÀI. Áp dụng khoảng số từ BẮT BUỘC SAU: Cảnh 4s (từ 12 đến 14 từ); Cảnh 6s (từ 18 đến 21 từ); Cảnh 8s (từ 24 đến 28 từ). {duration_rule_scene}
     2. CHUYỂN CẢNH ĐỘNG: Luân phiên [Cắt cứng (Hard Cut)] để chuyển góc máy và [Nối liền mạch (Match Cut)] để giữ hành động.
        ĐẶC BIỆT LƯU Ý: Nếu là [Nối liền mạch (Match Cut)], phần `image_prompt` BẮT BUỘC chỉ được ghi đúng câu này: "Dùng ảnh cuối của cảnh trước làm ảnh tham chiếu cho video"
-    3. MẠCH THOẠI LIỀN MẠCH (SEAMLESS NARRATIVE): Lời thoại `voiceover_vi` giữa các phân cảnh PHẢI ĐƯỢC KẾT NỐI CHẶT CHẼ bằng các từ nối tạo sự tò mò, dồn dập (VD: "Thế nhưng...", "Chưa hết đâu!", "Cái đỉnh nhất là...", "Nghe kỹ này!"). Tuyệt đối không đưa mức giá cụ thể bằng con số (như 199k, 50k) vào thoại, chỉ dùng "deal hời", "giá cực rẻ".
+    3. MẠCH THOẠI SẠCH VÀ LIỀN MẠCH (CLEAN NARRATIVE): 
+       - Lời thoại `voiceover_vi` giữa các phân cảnh PHẢI ĐƯỢC KẾT NỐI CHẶT CHẼ bằng các từ nối tạo sự tò mò (VD: "Thế nhưng...", "Chưa hết đâu!"). 
+       - TUYỆT ĐỐI KHÔNG đưa mức giá cụ thể bằng con số (như 199k, 50k) vào thoại.
+       - LỖI TAI HẠI CẦN TRÁNH: TUYỆT ĐỐI KHÔNG chứa bất kỳ dấu ngoặc đơn nào (như `(Cười)`, `(Thở dài)`) bên trong `voiceover_vi`, vì công cụ Text-to-Speech sẽ đọc nhầm thành chữ.
     4. DIỄN XUẤT, SFX & ÂM THANH NỀN (AMBIENT SOUND): 
-       - BẮT BUỘC chèn thêm các thẻ âm thanh phi ngôn ngữ như (Cười khẩy), (Thở dài), (Hít hà), (Tặc lưỡi) vào `voiceover_vi`. 
-       - Đồng thời trong `video_prompt`, phải miêu tả rõ biểu cảm và âm thanh này (VD: "Audio: ...punctuated by a soft laugh...").
-       - NẾU CẢNH CÓ HÀNH ĐỘNG THỰC TẾ (Nấu ăn, rót nước, gió thổi...): BẮT BUỘC chèn lệnh âm thanh nền vào `video_prompt` bằng tiếng Anh với yêu cầu âm lượng nhỏ hơn giọng nói (VD: "Background ambient sound: sizzling meat, volume strictly lower than voiceover").
-    5. CHỐNG BIẾN DẠNG & KHÔNG CHE KHUẤT (NO OCCLUSION): ĐỂ SẢN PHẨM KHÔNG MÓP MÉO, BẮT BUỘC CHÈN LỆNH: "product is fully visible, strictly NO hands obscuring the main body" vào image_prompt. Trong video_prompt chèn: "product maintains rigid structural integrity, zero shape morphing, action ends with the product fully visible and unoccluded".
+       - Biểu cảm khuôn mặt và âm thanh phi ngôn ngữ CHỈ ĐƯỢC miêu tả bằng tiếng Anh trong `video_prompt` (VD: "Audio: ...punctuated by a soft laugh / a heavy sigh..."). 
+       - NẾU CẢNH CÓ HÀNH ĐỘNG THỰC TẾ (Nấu ăn, rót nước, gió thổi...): BẮT BUỘC chèn lệnh âm thanh nền vào `video_prompt` bằng tiếng Anh với yêu cầu âm lượng nhỏ hơn giọng nói (VD: "Background ambient sound: sizzling meat / wind blowing, volume strictly lower than voiceover").
+    5. CHỐNG BIẾN DẠNG & KHÔNG CHE KHUẤT (NO OCCLUSION): ĐỂ SẢN PHẨM KHÔNG MÓP MÉO, BẮT BUỘC CHÈN LỆNH: "product is fully visible, strictly NO hands or objects obscuring the main body" vào image_prompt. Trong video_prompt chèn: "product maintains rigid structural integrity, zero shape morphing, action ends with the product fully visible and unoccluded".
     6. TỶ LỆ KÍCH THƯỚC: Trong `image_prompt`, BẮT BUỘC thiết lập hệ quy chiếu vật lý (VD: 'product fits entirely within the palm of one hand').
     7. PHIÊN ÂM TỰ NHIÊN: "inox 304" -> "i nốc ba linh tư", "Bluetooth" -> "Bờ lu tút".
     8. CHÍNH SÁCH TIKTOK: KHÔNG dùng từ đe dọa (độc hại). KHÔNG cam kết 100%. KHÔNG số lượng tồn kho ảo. CẤM UI ICON. TUYỆT ĐỐI KHÔNG BỊA RA GIÁ TIỀN CON SỐ.
-    9. KHÓA GIỌNG HÀ NỘI VÀ BIỂU CẢM: MỌI video_prompt BẮT BUỘC có lệnh "Audio: The exact same {fixed_gender} character speaking on-camera showing [BIỂU CẢM/HÀNH ĐỘNG]. {tone_en}. Strict standard Northern Vietnamese (Hanoi) accent. Strongly suppress Southern/Saigon accent."
+    9. KHÓA GIỌNG HÀ NỘI VÀ BIỂU CẢM: MỌI video_prompt BẮT BUỘC có lệnh "Audio: The exact same {gender_en} character speaking on-camera showing [BIỂU CẢM/HÀNH ĐỘNG]. fast-paced, high-energy, enthusiastic sales tone. Strict standard Northern Vietnamese (Hanoi) accent. Strongly suppress Southern/Saigon accent."
     
     Xuất chuẩn 1 Dict JSON duy nhất:
     {{
@@ -721,7 +710,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
       "title": "{safe_title}", 
       "setting_style": "{safe_setting}",
       "script_outfit_setup": "{outfit_setup}",
-      "voice_profile": {{"gender": "{fixed_gender}", "tone": "{tone_vn}"}},
+      "voice_profile": {{"gender": "{fixed_gender_vi}", "tone": "nhịp độ nhanh, dồn dập"}},
       "total_estimated_duration": "{duration_str}",
       "scenes": [
         {{
@@ -729,18 +718,18 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
           "duration": "8s", 
           "scene_setting": "Mô tả bối cảnh góc toàn cảnh...", 
           "transition_type": "Mở đầu", 
-          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn (Hà Nội)... (BẮT BUỘC GHI RÕ HÀNH ĐỘNG: Mở to mắt ngạc nhiên, vung tay dứt khoát)", 
-          "voiceover_vi": "(Hít hà) U là trời lời thoại Hook tò mò kèm nỗi đau viết sao cho đủ hai mươi sáu từ không được viết quá ngắn để giữ đúng nhịp độ dồn dập.", 
-          "image_prompt": "Prompt Imagen 3 (tiếng Anh). ÉP LỆNH NHÂN VẬT: '{fixed_gender} character... wearing {outfit_setup}...'. ÉP KÍCH THƯỚC: 'featuring the EXACT [Màu sắc/kiểu dáng] product which fits exactly in the palm, fully visible, strictly NO hands obscuring the main body'. CẤM UI: 'Cinematic shot ONLY. ABSOLUTELY NO UI elements'", 
-          "video_prompt": "Prompt Veo 3 (tiếng Anh). BẮT BUỘC KHÓA CHỐNG BIẾN DẠNG... BẮT BUỘC KHÓA ÂM THANH & ACTING: 'Audio: The exact same {fixed_gender} character speaking on-camera showing amazed facial expression, punctuated by a sharp gasp. {tone_en}. Strict standard Northern Vietnamese (Hanoi) accent. Background ambient sound: [Tiếng động môi trường nếu có], volume strictly lower than voiceover. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements. Reading: [voiceover_vi]. Action ends with the product fully visible and unoccluded.'"
+          "voice_director_vn": "Giọng {fixed_gender_vi} Miền Bắc chuẩn (Hà Nội)... (BẮT BUỘC GHI RÕ HÀNH ĐỘNG: Mở to mắt ngạc nhiên, vung tay dứt khoát)", 
+          "voiceover_vi": "U là trời lời thoại Hook tò mò kèm nỗi đau viết sao cho đủ hai mươi sáu từ không được viết quá ngắn để giữ đúng nhịp độ dồn dập.", 
+          "image_prompt": "Prompt Imagen 3 (tiếng Anh). ÉP LỆNH NHÂN VẬT: '{gender_en} character... wearing {outfit_setup}...'. ÉP KÍCH THƯỚC: 'featuring the EXACT [Màu sắc/kiểu dáng] product which fits exactly in the palm, fully visible, strictly NO hands obscuring the main body'. CẤM UI: 'Cinematic shot ONLY. ABSOLUTELY NO UI elements'", 
+          "video_prompt": "Prompt Veo 3 (tiếng Anh). BẮT BUỘC KHÓA CHỐNG BIẾN DẠNG... BẮT BUỘC KHÓA ÂM THANH & ACTING: 'Audio: The exact same {gender_en} character speaking on-camera showing amazed facial expression, punctuated by a sharp gasp. fast-paced, high-energy, enthusiastic sales tone. Strict standard Northern Vietnamese (Hanoi) accent. Background ambient sound: [Tiếng động môi trường nếu có], volume strictly lower than voiceover. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements. Reading: [voiceover_vi]. Action ends with the product fully visible and unoccluded.'"
         }},
         {{
           "scene_number": 2, 
           "duration": "6s", 
           "scene_setting": "Mô tả góc máy cận cảnh tay cầm sản phẩm...", 
           "transition_type": "Cắt cứng (Hard Cut)", 
-          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc... (Cười đắc ý, gõ tay vào sản phẩm)", 
-          "voiceover_vi": "(Cười nhẹ) Nhưng đừng lo vì hôm nay mình đã mang đến giải pháp đỉnh cao giải quyết triệt để nỗi lo của bạn rồi đây.", 
+          "voice_director_vn": "Giọng {fixed_gender_vi} Miền Bắc... (Cười đắc ý, gõ tay vào sản phẩm)", 
+          "voiceover_vi": "Nhưng đừng lo vì hôm nay mình đã mang đến giải pháp đỉnh cao giải quyết triệt để nỗi lo của bạn rồi đây.", 
           "image_prompt": "Viết PROMPT ẢNH HOÀN TOÀN MỚI để tạo góc quay cận cảnh mới. Giữ đúng màu sắc, tỷ lệ sản phẩm với cơ thể và không che khuất.", 
           "video_prompt": "Prompt Video ĐẦY ĐỦ BAO GỒM CẢ ACTING (Cười đắc ý) VÀ LỆNH CHỐNG BIẾN DẠNG SẢN PHẨM KHÔNG BỊ CHE KHUẤT. Nếu cảnh có nấu ăn/rót nước nhớ thêm Background ambient sound..."
         }},
@@ -749,12 +738,12 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
           "duration": "8s", 
           "scene_setting": "Mô tả trải nghiệm và Call-to-action...", 
           "transition_type": "Nối liền mạch (Match Cut)", 
-          "voice_director_vn": "Giọng {fixed_gender} Miền Bắc... (Gật đầu nhấn mạnh)", 
-          "voiceover_vi": "(Thở dài) Mà cái hay nhất là sản phẩm này đang có deal cực hời nên mọi người hãy nhanh tay chốt đơn ngay kẻo lỡ mất cơ hội ngàn vàng nhé.", 
+          "voice_director_vn": "Giọng {fixed_gender_vi} Miền Bắc... (Gật đầu nhấn mạnh)", 
+          "voiceover_vi": "Mà cái hay nhất là sản phẩm này đang có deal cực hời nên mọi người hãy nhanh tay chốt đơn ngay kẻo lỡ mất cơ hội ngàn vàng nhé.", 
           "image_prompt": "Dùng ảnh cuối của cảnh trước làm ảnh tham chiếu cho video", 
           "video_prompt": "Prompt Video ĐẦY ĐỦ..."
         }}
-        // BẠN BẮT BUỘC CHỈ ĐƯỢC SINH RA ĐÚNG 3 HOẶC 4 CẢNH (TÙY TÌNH HUỐNG LÀ 3 HAY 4 ĐỂ ĐẠT THỜI GIAN NHANH GỌN NHẤT MÀ VẪN CHUYỂN ĐỔI CAO). THOẠI SẠCH KHÔNG CHỨA NGOẶC ĐƠN, LIỀN MẠCH, CUỐN HÚT, ĐÚNG SỐ TỪ.
+        // BẠN BẮT BUỘC CHỈ ĐƯỢC SINH RA ĐÚNG 3 HOẶC 4 CẢNH (TÙY TÌNH HUỐNG LÀ 3 HAY 4 ĐỂ ĐẠT THỜI GIAN NHANH GỌN NHẤT MÀ VẪN CHUYỂN ĐỔI CAO). THOẠI SẠCH TUYỆT ĐỐI KHÔNG CHỨA NGOẶC ĐƠN, LIỀN MẠCH, CUỐN HÚT, ĐÚNG SỐ TỪ.
       ]
     }}
     LƯU Ý CỰC KỲ QUAN TRỌNG: TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP HOẶC DẤU XUỐNG DÒNG (\\n) BÊN TRONG CÁC GIÁ TRỊ STRING CỦA JSON.
@@ -908,7 +897,7 @@ if st.session_state.action_trigger:
             st.markdown("<div class='loading-pulse'>⏳ HỆ THỐNG ĐANG XỬ LÝ: Đang phân tích DNA để sáng tạo thêm 5 kịch bản mới. Vui lòng đợi...</div>", unsafe_allow_html=True)
             try:
                 add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins)
-                st.session_state.global_toast = "Đã phân tích DNA và bổ Hành thêm kịch bản mới!"
+                st.session_state.global_toast = "Đã phân tích DNA và bổ sung thêm kịch bản mới!"
                 st.session_state.global_toast_icon = "🧠"
                 st.session_state.scroll_to_top = True
             except Exception as e:
@@ -944,7 +933,7 @@ with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp '
     """, unsafe_allow_html=True)
 
 if is_sales:
-    st.info("💡 **Chế độ Bán Hàng Shoppertainment:** Đã bổ sung quy tắc Cấm Che Khuất Vật Thể (No Occlusion) vào Prompt ảnh và video để chống biến dạng hoàn hảo.")
+    st.info("💡 **Chế độ Bán Hàng Shoppertainment:** Đã loại bỏ thẻ cảm xúc khỏi voiceover để TTS đọc mượt. Khắc phục triệt để lỗi 'Vi phạm chính sách'. Tối ưu UI/UX mượt mà.")
 else:
     st.info(f"⏱️ **Thời lượng mong muốn:** {target_duration_mins} phút")
 
