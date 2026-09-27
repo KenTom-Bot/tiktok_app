@@ -592,7 +592,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
     if is_corporate:
         extra_rules = "- Bối cảnh không gian văn phòng, nhà xưởng quy mô, dự án thực tế hoặc cộng đồng.\n- Không thúc ép mua hàng."
     elif is_sales_mode:
-        extra_rules = "- BẮT BUỘC CHUYỂN ĐỔI GÓC TIẾP CẬN: Hãy tạo 5 kịch bản mới tập trung vào: Review tính năng chi tiết, Đập hộp (Unboxing), Trải nghiệm thực tế (Lifestyle), Feedback khách hàng, Hướng dẫn sử dụng. KHÔNG làm xả kho/kho hàng nữa.\n- TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ.\n- TUYỆT ĐỐI CẤM SỬ DỤNG TỪ 'LIVESTREAM', 'PHIÊN LIVE'. Dùng 'video này'."
+        extra_rules = "- BẮT BUỘC ĐA DẠNG HÓA GÓC TIẾP CẬN: Kết hợp giữa Bán hàng trực tiếp (Review, Đập hộp) VÀ Kịch bản tình huống đời sống (Drama/Hài hước ngắn lồng ghép sản phẩm ở cuối).\n- TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ.\n- TUYỆT ĐỐI CẤM SỬ DỤNG TỪ 'LIVESTREAM', 'PHIÊN LIVE'. Dùng 'video này'."
     elif is_knowledge:
         extra_rules = "- VÀO THẲNG VẤN ĐỀ: Bỏ qua hoàn toàn các đoạn chào hỏi, dạo đầu dài dòng. Tập trung 100% vào việc chia sẻ kiến thức hoặc review chuyên sâu."
     else:
@@ -929,7 +929,7 @@ with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp '
     """, unsafe_allow_html=True)
 
 if is_sales:
-    st.info("💡 **Chế độ Bán Hàng:** Chuẩn chính sách (Chống vi phạm y tế, cấm nói 100%, cấm khan hiếm giả), khóa tỷ lệ và khóa màu vật lý.")
+    st.info("💡 **Chế độ Bán Hàng Shoppertainment:** Kết hợp Review trực diện và Tình huống/Drama ngắn chốt sale. Khóa diễn xuất, khóa từ nối liền mạch.")
 else:
     st.info(f"⏱️ **Thời lượng mong muốn:** {target_duration_mins} phút")
 
@@ -980,8 +980,8 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
                 tone_suggestion = "Năng lượng cao, chốt sale"
                 specific_rules = """
                 1. Về Giá cả: TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ. Chỉ sử dụng: "giá tận xưởng", "deal hời giới hạn".
-                2. BẮT BUỘC TẠO 5 KỊCH BẢN ĐẦU TIÊN: Xoay quanh: Xả kho, Giảm giá, Deal hời, Siêu sale.
-                3. BỐI CẢNH BẮT BUỘC: Kho hàng, Xưởng sản xuất, hoặc Showroom trưng bày. Không làm bối cảnh lifestyle.
+                2. CHIẾN LƯỢC KỊCH BẢN (SHOPPERTAINMENT): Phân bổ 5 kịch bản theo 2 hướng. Hướng 1: Trực diện (Xả kho, Deal hời). Hướng 2: Tình huống đời sống/Drama ngắn thu hút sự chú ý, sau đó lồng ghép sản phẩm vào cuối (Twist) để giải quyết vấn đề một cách duyên dáng.
+                3. BỐI CẢNH LINH HOẠT: Kho hàng, Xưởng (cho Hướng 1) hoặc Nhà ở, Văn phòng, Đường phố (cho Hướng 2).
                 4. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Dựa vào ảnh KOC, điền CHÍNH XÁC 'Nam' hoặc 'Nữ' vào mục 'gender'.
                 5. KỶ LUẬT THÔNG SỐ VÀ MÀU SẮC SẢN PHẨM (CRITICAL): Bắt buộc miêu tả chính xác màu sắc từ ảnh (vd: màu xám). TUYỆT ĐỐI KHÔNG tự bịa ra thông số kỹ thuật (như dung tích 2L, công suất 1000W) nếu không nhìn thấy rõ trên ảnh hoặc người dùng không cung cấp. Mô tả kèm theo tỷ lệ tương đối với cơ thể người.
                 6. BỘ LỌC CHÍNH SÁCH TUYỆT ĐỐI: TUYỆT ĐỐI KHÔNG dùng từ ngữ cam kết tuyệt đối (100%, tuyệt đối, dứt điểm, số 1). KHÔNG tuyên bố y tế sai lệch (VD: không nói "chống cận thị tuyệt đối", chỉ nói "hỗ trợ bảo vệ mắt"). Cấm từ "độc hại", "ung thư", "livestream". CẤM số lượng cụ thể ("100 chiếc", "50 đơn"). Sử dụng ngôn ngữ an toàn, khách quan.
