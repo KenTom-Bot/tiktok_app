@@ -306,14 +306,22 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         total_sec = int(target_duration_mins * 60)
         duration_str = f"{total_sec}s ({target_duration_mins} phút)"
 
+    # XÂY DỰNG BỘ DNA CỐ ĐỊNH CHO TỪNG DIỄN VIÊN ĐỂ CHỐNG BIẾN ĐỔI
     profiles = st.session_state.get("character_profiles", [])
     profiles_desc = ""
+    identity_lock_rules = ""
     if profiles:
-        profiles_desc = "DANH SÁCH DIỄN VIÊN ĐÃ ĐĂNG KÝ (GIỮ NGUYÊN IDENTITY TỪ ẢNH THAM CHIẾU):\n"
+        profiles_desc = "DANH SÁCH HỒ SƠ DIỄN VIÊN CỐ ĐỊNH (BẮT BUỘC TUÂN THỦ XUYÊN SUỐT):\n"
+        lock_items = []
         for p in profiles:
-            profiles_desc += f"- Diễn viên {p['id']}: Đóng vai '{p['role']}'. Lệnh bắt buộc trong prompt: 'Character {p['id']} ({p['role']}) featuring exact identity of reference image {p['id']}'.\n"
+            p_id = p['id']
+            p_role = p['role']
+            profiles_desc += f"- Diễn viên {p_id}: Vai trò '{p_role}'.\n"
+            lock_items.append(f"Character {p_id} ({p_role}) with identical facial structure, hairstyle, body type, and exact outfit from reference image {p_id}")
+        identity_lock_rules = " AND ".join(lock_items)
     else:
-        profiles_desc = "DANH SÁCH DIỄN VIÊN: Kịch bản đa nhân vật linh hoạt theo bối cảnh."
+        profiles_desc = "DANH SÁCH DIỄN VIÊN: Kịch bản đa nhân vật linh hoạt."
+        identity_lock_rules = "Consistent characters with fixed outfits and facial features"
 
     char_rules_str = generate_char_rules_string(profiles, is_sales_mode)
     dna_data = st.session_state.get("content_analysis", {})
@@ -325,57 +333,56 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     CHIẾN LƯỢC: {current_strategy}
     {profiles_desc}
     
-    🛑 QUY ĐỊNH ĐẠO DIỄN TỐI CAO (BẮT BUỘC TUÂN THỦ):
-    1. KHÓA MÀU SẮC SẢN PHẨM THỰC TẾ (COLOR & MATERIAL LOCK): Bắt buộc trích xuất chính xác màu sắc, chất liệu và đặc điểm hình khối từ ảnh sản phẩm thực tế được đính kèm ở đầu vào để đưa vào `image_prompt` và `video_prompt` (Ví dụ: màu xanh rêu đậm, mặt đá hoa cương đen chấm bi...). Cấm tự ý đổi màu sắc sản phẩm.
-    2. ĐỐI THOẠI ĐA NHÂN VẬT CÓ NHẤN NHÁ (EXPRESSIVE DIALOGUES): Các câu thoại trong mảng `dialogues` phải có ngữ điệu, sự ngắt quãng (dùng dấu `...`, `!`, từ cảm thán như *Trời ơi, Thật á, Ôi...*) thể hiện đúng mâu thuẫn hoặc cảm xúc cao trào của Drama.
-    3. TÍCH HỢP VOICE TIẾNG VIỆT TRONG VIDEO PROMPT: Trong `video_prompt`, BẮT BUỘC trích dẫn lại chính xác câu thoại tiếng Việt bằng cú pháp: `Speaking in Vietnamese: "[Nội dung câu thoại có dấu cảm thán]"` để Veo 3 đồng bộ khẩu hình và âm thanh.
-    4. KỶ LUẬT SỐ TỪ & KHÔNG CHE KHUẤT (NO OCCLUSION): Tổng số từ mỗi cảnh chuẩn nhịp (4s: 12-14 từ; 6s: 18-21 từ; 8s: 24-28 từ). Sản phẩm trung tâm phải luôn hiển thị rõ ràng, không bị tay người che khuất phần chính.
+    🛑 QUY ĐỊNH ĐẠO DIỄN CHỐNG BIẾN ĐỔI HÌNH THỂ & TRANG PHỤC (STRICT IDENTITY LOCK):
+    1. ĐỒNG BỘ 100% DIÊN MẠO VÀ TRANG PHỤC: Trong mọi `image_prompt` và `video_prompt`, các nhân vật tham gia bắt buộc phải được mô tả giữ nguyên hình thể, khuôn mặt, kiểu tóc và trang phục cố định thông qua chuỗi khóa: [{identity_lock_rules}]. TUYỆT ĐỐI KHÔNG được tự ý thay đổi quần áo, màu sắc hay kiểu tóc của bất kỳ nhân vật nào ở các cảnh khác nhau.
+    2. KHÓA MÀU SẮC SẢN PHẨM THỰC TẾ: Trích xuất chính xác màu sắc và chất liệu từ ảnh sản phẩm đính kèm ở đầu vào.
+    3. ĐỐI THOẠI ĐA NHÂN VẬT CÓ NHẤN NHÁ & VOICE TIẾNG VIỆT: Các câu thoại trong mảng `dialogues` có ngữ điệu tự nhiên. `video_prompt` bắt buộc chứa cú pháp: `Speaking in Vietnamese: "[Nội dung câu thoại]"`.
     
     Xuất chuẩn 1 Dict JSON duy nhất (Mẫu cấu trúc TỐI THIỂU 3 ĐẾN 4 SCENE, ĐIỀN ĐỦ VÀO CÁC NGOẶC VUÔNG [...], TUYỆT ĐỐI KHÔNG DÙNG DẤU BA CHẤM):
     {{
       "id": {target_id}, 
       "title": "{safe_title}", 
       "setting_style": "{safe_setting}",
-      "script_outfit_setup": "Trang phục đồng bộ theo từng nhân vật",
-      "voice_profile": {{"gender": "Hỗn hợp Nam/Nữ", "tone": "Đa nhân vật biểu cảm cao trào"}},
+      "script_outfit_setup": "Trang phục cố định theo hồ sơ nhân vật",
+      "voice_profile": {{"gender": "Hỗน hợp Nam/Nữ", "tone": "Biểu cảm cao trào"}},
       "total_estimated_duration": "{duration_str}",
       "scenes": [
         {{
           "scene_number": 1, 
           "duration": "8s", 
-          "scene_setting": "[Mô tả chi tiết bối cảnh và vị trí nhân vật]", 
-          "transition_type": "Mở đầu mâu thuẫn", 
-          "voice_director_vn": "[Chỉ đạo diễn xuất căng thẳng, có nhấn mạnh]", 
+          "scene_setting": "[Mô tả bối cảnh cảnh 1]", 
+          "transition_type": "Mở đầu", 
+          "voice_director_vn": "[Chỉ đạo diễn xuất]", 
           "dialogues": [
-            {{"speaker": "Nhân vật A", "dialogue": "[Câu thoại mở đầu có từ cảm thán và dấu ngắt quãng bằng tiếng Việt]"}},
-            {{"speaker": "Nhân vật B", "dialogue": "[Câu thoại đáp trả sắc sảo bằng tiếng Việt]"}}
+            {{"speaker": "Nhân vật A", "dialogue": "[Thoại tiếng Việt có cảm thán]"}},
+            {{"speaker": "Nhân vật B", "dialogue": "[Thoại tiếng Việt đáp trả]"}}
           ],
-          "image_prompt": "A 9:16 vertical cinematic shot showing Character A and Character B in {safe_setting}. The product features [Điền chính xác màu sắc và chất liệu thực tế của sản phẩm từ ảnh tham chiếu], fully visible, strictly NO hands obscuring. Cinematic shot ONLY. ABSOLUTELY NO UI elements.", 
-          "video_prompt": "Audio: Characters speaking on-camera in Vietnamese with expressive emotional tone. Character A says: '[Điền câu thoại của A]'. Character B replies: '[Điền câu thoại của B]'. Background ambient sound: realistic room tone, volume strictly lower than voiceover. Visual: Cinematic multi-character shot. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity, action ends fully visible."
+          "image_prompt": "A 9:16 vertical cinematic shot featuring {identity_lock_rules} in {safe_setting}. The product features exact colors from reference, fully visible, strictly NO hands obscuring. Cinematic shot ONLY. ABSOLUTELY NO UI elements.", 
+          "video_prompt": "Audio: Characters speaking on-camera in Vietnamese with expressive emotional tone. Background ambient sound: realistic room tone, volume strictly lower than voiceover. Visual: Cinematic multi-character shot showing {identity_lock_rules}. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity, action ends fully visible."
         }},
         {{
           "scene_number": 2, 
           "duration": "6s", 
-          "scene_setting": "[Mô tả góc máy cận cảnh sản phẩm với màu sắc chuẩn thực tế]", 
+          "scene_setting": "[Mô tả bối cảnh cảnh 2]", 
           "transition_type": "Cắt cứng (Hard Cut)", 
-          "voice_director_vn": "[Chỉ đạo diễn xuất tiếp theo]", 
+          "voice_director_vn": "[Chỉ đạo diễn xuất]", 
           "dialogues": [
-            {{"speaker": "Nhân vật A", "dialogue": "[Lời thoại phản biện tiếp theo có nhấn nhá]"}}
+            {{"speaker": "Nhân vật A", "dialogue": "[Thoại tiếp theo]"}}
           ],
-          "image_prompt": "A 9:16 close-up shot of the product with [Điền chính xác màu sắc và chất liệu thực tế của sản phẩm]. Product is fully visible, strictly NO hands obscuring the main body. Cinematic shot ONLY. ABSOLUTELY NO UI elements.", 
-          "video_prompt": "Audio: Character speaking on-camera in Vietnamese with expressive tone, saying: '[Điền câu thoại]'. Background ambient sound: subtle environment noise, volume strictly lower than voiceover. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity."
+          "image_prompt": "A 9:16 close-up shot featuring {identity_lock_rules}. Product is fully visible, strictly NO hands obscuring the main body. Cinematic shot ONLY. ABSOLUTELY NO UI elements.", 
+          "video_prompt": "Audio: Character speaking on-camera in Vietnamese with expressive tone. Background ambient sound: subtle environment noise, volume strictly lower than voiceover. Visual: Cinematic shot featuring {identity_lock_rules}. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity."
         }},
         {{
           "scene_number": 3, 
           "duration": "8s", 
-          "scene_setting": "[Mô tả không gian giải quyết vấn đề hoặc chốt sale]", 
+          "scene_setting": "[Mô tả bối cảnh cảnh 3]", 
           "transition_type": "Nối liền mạch (Match Cut)", 
-          "voice_director_vn": "[Chỉ đạo chuyển biến cảm xúc tích cực, thuyết phục]", 
+          "voice_director_vn": "[Chỉ đạo chốt]", 
           "dialogues": [
-            {{"speaker": "Nhân vật chính", "dialogue": "[Lời thoại chốt giải pháp năng lượng cao bằng tiếng Việt]"}}
+            {{"speaker": "Nhân vật chính", "dialogue": "[Thoại chốt sale bằng tiếng Việt]"}}
           ],
           "image_prompt": "Dùng ảnh cuối của cảnh trước làm ảnh tham chiếu cho video", 
-          "video_prompt": "Audio: Character speaking on-camera in Vietnamese with high conversion tone, saying: '[Điền câu thoại chốt]'. Background ambient sound: upbeat subtle noise, volume strictly lower than voiceover. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity, action ends with the product fully visible and unoccluded."
+          "video_prompt": "Audio: Character speaking on-camera in Vietnamese with high conversion tone. Background ambient sound: upbeat subtle noise, volume strictly lower than voiceover. Visual: Cinematic shot featuring {identity_lock_rules}. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity, action ends fully visible."
         }}
       ]
     }}
