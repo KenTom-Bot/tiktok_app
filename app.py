@@ -311,9 +311,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     else:
         profiles_desc = "DANH SÁCH DIỄN VIÊN: Kịch bản đa nhân vật linh hoạt theo bối cảnh."
 
-    # KHAI BÁO BIẾN char_rules_str ĐỂ SỬA TRIỆT ĐỂ LỖI NAMEERROR
     char_rules_str = generate_char_rules_string(profiles, is_sales_mode)
-
     dna_data = st.session_state.get("content_analysis", {})
     target_audience = dna_data.get("primary_target_audience", "Người dùng")
     
@@ -323,14 +321,11 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     CHIẾN LƯỢC: {current_strategy}
     {profiles_desc}
     
-    QUY ĐỊNH ĐẠO DIỄN NÂNG CAO CHO ĐA NHÂN VẬT & DRAMA (CRITICAL):
-    1. ĐỐI THOẠI ĐA NHÂN VẬT (MULTI-CHARACTER DIALOGUE): Phân cảnh bắt buộc phải có sự tương tác qua lại giữa các nhân vật (Tranh luận, mâu thuẫn, tung hứng hoặc đồng tình). Mỗi câu thoại phải gắn với nhân vật phát ngôn cụ thể trong mảng `dialogues`.
-    2. KỶ LUẬT SỐ TỪ THUYẾT MINH: Tổng số từ của tất cả nhân vật trong 1 cảnh phải chuẩn nhịp: Cảnh 4s (12-14 từ); Cảnh 6s (18-21 từ); Cảnh 8s (24-28 từ). TUYỆT ĐỐI KHÔNG chứa dấu ngoặc đơn (như (Cười), (Thở dài)) và KHÔNG dùng con số giá tiền cụ thể.
-    3. ĐẠO DIỄN GÓC MÁY ĐA NGƯỜI (MULTI-CHARACTER BLOCKING): 
-       - Tránh để tất cả nhân vật nói chuyện trong cùng 1 khung hình rộng tĩnh. 
-       - Dùng kỹ thuật Cắt cảnh luân phiên (Shot/Reverse Shot) hoặc Góc qua vai (Over-the-shoulder) khi nhân vật tranh cãi/đối thoại.
-       - Trong `image_prompt` và `video_prompt`, phải mô tả rõ nhân vật nào đang xuất hiện, mặc trang phục gì, trạng thái biểu cảm ra sao.
-    4. KHÔNG CHE KHUẤT SẢN PHẨM (NO OCCLUSION): Sản phẩm trung tâm phải luôn rõ ràng, không bị tay hoặc vật thể khác che khuất phần chính.
+    QUY ĐỊNH ĐẠO DIỄN NÂNG CAO CHO ĐA NHÂN VẬT & VOICE TIẾNG VIỆT (CRITICAL):
+    1. ĐỐI THOẠI ĐA NHÂN VẬT (MULTI-CHARACTER DIALOGUE): Phân cảnh bắt buộc có sự tương tác qua lại giữa các nhân vật. Mỗi câu thoại trong mảng `dialogues` phải gắn với tên nhân vật phát ngôn.
+    2. TÍCH HỢP VOICE TIẾNG VIỆT TRONG VIDEO PROMPT: Trong `video_prompt`, BẮT BUỘC phải trích dẫn lại chính xác nội dung câu thoại tiếng Việt bằng cú pháp: `Speaking in Vietnamese: "[Nội dung câu thoại]"`, giúp Veo 3 tạo âm thanh và khẩu hình chuẩn xác.
+    3. KỶ LUẬT SỐ TỪ THUYẾT MINH: Tổng số từ của tất cả nhân vật trong 1 cảnh chuẩn nhịp: Cảnh 4s (12-14 từ); Cảnh 6s (18-21 từ); Cảnh 8s (24-28 từ). TUYỆT ĐỐI KHÔNG chứa dấu ngoặc đơn và KHÔNG dùng con số giá tiền cụ thể.
+    4. ĐẠO DIỄN GÓC MÁY & KHÔNG CHE KHUẤT (NO OCCLUSION): Dùng kỹ thuật Cắt cảnh luân phiên (Shot/Reverse Shot). Sản phẩm trung tâm phải luôn rõ ràng, không bị tay che khuất.
     
     Xuất chuẩn 1 Dict JSON duy nhất (Mẫu cấu trúc PHẢI CÓ TỪ 3 ĐẾN 4 SCENE, ĐƯỢC VIẾT ĐẦY ĐỦ 100% NỘI DUNG VÀO CÁC NGOẶC VUÔNG [...], TUYỆT ĐỐI KHÔNG DÙNG DẤU BA CHẤM):
     {{
@@ -348,11 +343,11 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
           "transition_type": "Mở đầu tình huống", 
           "voice_director_vn": "[Chỉ đạo diễn xuất, ví dụ: Không khí căng thẳng, dồn dập]", 
           "dialogues": [
-            {{"speaker": "Nhân vật A (Vd: Mẹ chồng)", "dialogue": "[Câu thoại thứ nhất của nhân vật A, ngắn gọn, đúng số từ]"}},
-            {{"speaker": "Nhân vật B (Vd: Nàng dâu)", "dialogue": "[Câu thoại đáp trả của nhân vật B]"}}
+            {{"speaker": "Nhân vật A", "dialogue": "[Câu thoại thứ nhất của nhân vật A bằng tiếng Việt]"}},
+            {{"speaker": "Nhân vật B", "dialogue": "[Câu thoại đáp trả của nhân vật B bằng tiếng Việt]"}}
           ],
-          "image_prompt": "A 9:16 vertical cinematic shot showing Character X and Character Y in {safe_setting}. Product is fully visible. Cinematic shot ONLY. ABSOLUTELY NO UI elements.", 
-          "video_prompt": "Audio: Character X speaking on-camera with dramatic tone, followed by Character Y reacting. Background ambient sound: realistic room tone, volume strictly lower than voiceover. Visual: Cinematic multi-character shot. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity, action ends fully visible."
+          "image_prompt": "A 9:16 vertical cinematic shot showing Character A and Character B in {safe_setting}. Product is fully visible. Cinematic shot ONLY. ABSOLUTELY NO UI elements.", 
+          "video_prompt": "Audio: Characters speaking on-camera in Vietnamese. Character A says: '[Điền câu thoại của Nhân vật A vào đây]'. Character B replies: '[Điền câu thoại của Nhân vật B vào đây]'. Background ambient sound: realistic room tone, volume strictly lower than voiceover. Visual: Cinematic multi-character shot. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity, action ends fully visible."
         }},
         {{
           "scene_number": 2, 
@@ -361,22 +356,22 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
           "transition_type": "Cắt cứng (Hard Cut)", 
           "voice_director_vn": "[Chỉ đạo diễn xuất tiếp theo]", 
           "dialogues": [
-            {{"speaker": "Nhân vật C hoặc nhân vật A", "dialogue": "[Lời thoại tiếp theo đẩy cao trào]"}}
+            {{"speaker": "Nhân vật A", "dialogue": "[Lời thoại tiếp theo bằng tiếng Việt]"}}
           ],
           "image_prompt": "A 9:16 close-up shot of the interaction. Product is fully visible, strictly NO hands obscuring the main body. Cinematic shot ONLY. ABSOLUTELY NO UI elements.", 
-          "video_prompt": "Audio: Character speaking on-camera with emotional expression. Background ambient sound: subtle environment noise, volume strictly lower than voiceover. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity."
+          "video_prompt": "Audio: Character speaking on-camera in Vietnamese, saying: '[Điền câu thoại của nhân vật vào đây]'. Background ambient sound: subtle environment noise, volume strictly lower than voiceover. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity."
         }},
         {{
           "scene_number": 3, 
           "duration": "8s", 
           "scene_setting": "[Mô tả không gian kết luận hoặc bẻ lái chốt sale]", 
           "transition_type": "Nối liền mạch (Match Cut)", 
-          "voice_director_vn": "[Chỉ đạo chốt sale năng lượng hoặc giải quyết mâu thuẫn hài hòa]", 
+          "voice_director_vn": "[Chỉ đạo chốt sale năng lượng]", 
           "dialogues": [
-            {{"speaker": "Nhân vật chính / KOC", "dialogue": "[Lời thoại chốt giải pháp hoặc chốt sale không dùng giá tiền số]"}}
+            {{"speaker": "Nhân vật chính", "dialogue": "[Lời thoại chốt sale bằng tiếng Việt không dùng giá tiền số]"}}
           ],
           "image_prompt": "Dùng ảnh cuối của cảnh trước làm ảnh tham chiếu cho video", 
-          "video_prompt": "Audio: Character speaking on-camera with high conversion tone. Background ambient sound: upbeat subtle noise, volume strictly lower than voiceover. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity, action ends with the product fully visible and unoccluded."
+          "video_prompt": "Audio: Character speaking on-camera in Vietnamese with high conversion tone, saying: '[Điền câu thoại chốt sale vào đây]'. Background ambient sound: upbeat subtle noise, volume strictly lower than voiceover. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements. Product maintains rigid structural integrity, action ends with the product fully visible and unoccluded."
         }}
       ]
     }}
