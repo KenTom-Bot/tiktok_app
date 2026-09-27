@@ -197,7 +197,6 @@ if st.session_state.global_toast:
     st.session_state.global_toast = ""
     st.session_state.global_toast_icon = "✅"
 
-# TỐI ƯU UX: Cuộn trang chủ động
 if st.session_state.scroll_to_top:
     components.html("""
         <script>
@@ -618,6 +617,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
     QUY ĐỊNH BẮT BUỘC CHO KỊCH BẢN MỚI:
     {extra_rules}
     - Thêm key 'script_outfit_setup': Ghi rõ 1 câu miêu tả trang phục nhân vật (BẮT BUỘC CHỈ ĐỊNH RÕ MÀU SẮC).
+    - ĐỒNG BỘ GIỚI TÍNH 100% (CRITICAL): Giới tính của nhân vật trong `script_outfit_setup` (Nam/Nữ) BẮT BUỘC PHẢI KHỚP TUYỆT ĐỐI với `gender` ('Nam' hoặc 'Nữ') trong `voice_profile`. Không được để trang phục Nam nhưng giọng Nữ.
     - TUYỆT ĐỐI KHÔNG DÙNG TỪ NGỮ CAM KẾT HOẶC Y TẾ. KHÔNG DÙNG CON SỐ TỒN KHO ẢO. KHÔNG DÙNG MỨC GIÁ CỤ THỂ BẰNG CON SỐ.
     Xuất JSON chuẩn với key 'script_outlines'.
     LƯU Ý CỰC KỲ QUAN TRỌNG: TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP CHƯA ESCAPE (") HOẶC XUỐNG DÒNG BÊN TRONG CÁC GIÁ TRỊ JSON.
@@ -665,14 +665,14 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         tone_vn = "truyền cảm, nhấn nhá theo mạch cảm xúc"
     elif is_corporate:
         tone_en = "confident, professional, authoritative tone, steady pacing"
-        tone_vn = "đĩnh đạc, tự tự, chuyên nghiệp"
+        tone_vn = "đĩnh đạc, tự tin, chuyên nghiệp"
     else:
         tone_en = "natural, engaging, dynamic pacing"
         tone_vn = "tự nhiên, gần gũi, lôi cuốn"
 
     v_profile = outline.get("voice_profile", {})
     if isinstance(v_profile, str):
-        fixed_gender = "Nữ"
+        fixed_gender = "Nữ" if "nữ" in v_profile.lower() else "Nam"
     elif isinstance(v_profile, dict):
         fixed_gender = v_profile.get("gender", "Nữ")
         if "hay Nữ" in fixed_gender or "/" in fixed_gender or "xác định" in fixed_gender.lower() or not fixed_gender.strip():
@@ -695,9 +695,11 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     {realtime_ctx}
     Ý tưởng kịch bản: ID {target_id} - {safe_title}
     Bối cảnh định hướng: {safe_setting} | Góc tiếp cận: {safe_angle} | Hook: {safe_hook}
-    TRANG PHỤC CỐ ĐỊNH CHO KỊCH BẢN NÀY: {outfit_setup} (Lưu ý: GIỮ ĐÚNG MÀU SẮC).
+    TRANG PHỤC CỐ ĐỊNH CHO KỊCH BẢN NÀY: {outfit_setup}
+    GIỚI TÍNH ĐÃ CHỐT: {fixed_gender}
     
     QUY ĐỊNH ĐẠO DIỄN LÊN PROMPT (BẮT BUỘC):
+    0. KHÓA ĐỒNG BỘ GIỚI TÍNH (CRITICAL): Nhân vật trong `image_prompt` và `video_prompt` phải là {fixed_gender}, khớp 100% với giọng đọc và trang phục.
     1. KỶ LUẬT THỜI LƯỢNG VÀ TỐI ƯU CREDIT: Cảnh 4s <= 14 từ; Cảnh 6s <= 20 từ; Cảnh 8s <= 26 từ. {duration_rule_scene}
     2. CHUYỂN CẢNH ĐỘNG: Luân phiên [Cắt cứng (Hard Cut)] để chuyển góc máy và [Nối liền mạch (Match Cut)] để giữ hành động.
        ĐẶC BIỆT LƯU Ý: Nếu là [Nối liền mạch (Match Cut)], phần `image_prompt` BẮT BUỘC chỉ được ghi đúng câu này: "Dùng ảnh cuối của cảnh trước làm ảnh tham chiếu cho video"
@@ -728,7 +730,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
           "transition_type": "Mở đầu", 
           "voice_director_vn": "Giọng {fixed_gender} Miền Bắc chuẩn (Hà Nội)... (BẮT BUỘC GHI RÕ HÀNH ĐỘNG: Mở to mắt ngạc nhiên, vung tay dứt khoát)", 
           "voiceover_vi": "(Hít hà) U là trời! Lời thoại Hook tò mò kèm nỗi đau... (TỐI ĐA 26 TỪ, KHÔNG CÓ GIÁ TIỀN CỤ THỂ)", 
-          "image_prompt": "Prompt Imagen 3 (tiếng Anh). ÉP LỆNH NHÂN VẬT: 'Character X... wearing {outfit_setup}...'. ÉP KÍCH THƯỚC: 'featuring the EXACT [Màu sắc/kiểu dáng] product which fits exactly in the palm...'. CẤM UI: 'Cinematic shot ONLY. ABSOLUTELY NO UI elements'", 
+          "image_prompt": "Prompt Imagen 3 (tiếng Anh). ÉP LỆNH NHÂN VẬT: '{fixed_gender} character... wearing {outfit_setup}...'. ÉP KÍCH THƯỚC: 'featuring the EXACT [Màu sắc/kiểu dáng] product which fits exactly in the palm...'. CẤM UI: 'Cinematic shot ONLY. ABSOLUTELY NO UI elements'", 
           "video_prompt": "Prompt Veo 3 (tiếng Anh). BẮT BUỘC KHÓA CHỐNG BIẾN DẠNG... BẮT BUỘC KHÓA ÂM THANH & ACTING: 'Audio: The exact same {fixed_gender} character speaking on-camera showing amazed facial expression, punctuated by a sharp gasp. {tone_en}. Strict standard Northern Vietnamese (Hanoi) accent. Background ambient sound: [Tiếng động môi trường nếu có], volume strictly lower than voiceover. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements. Reading: [voiceover_vi]'"
         }},
         {{
@@ -751,7 +753,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
           "image_prompt": "Dùng ảnh cuối của cảnh trước làm ảnh tham chiếu cho video", 
           "video_prompt": "Prompt Video ĐẦY ĐỦ..."
         }}
-        // BẠN BẮT BUỘC CHỈ ĐƯỢC SINH RA ĐÚNG 3 HOẶC 4 CẢNH (TÙY TÌNH HUỐNG LÀ 3 HAY 4 ĐỂ ĐẠT THỜI GIAN NHANH GỌN NHẤT MÀ VẪN CHUYỂN ĐỔI CAO). THOẠI PHẢI LIỀN MẠCH, CUỐN HÚT CÓ CẢM XÚC VÀ ÂM THANH NỀN. ĐỐI VỚI CẢNH NỐI MẠCH, TRONG IMAGE_PROMPT CHỈ ĐƯỢC DÙNG ĐÚNG TIẾNG VIỆT ĐÃ YÊU CẦU.
+        // BẠN BẮT BUỘC CHỈ ĐƯỢC SINH RA ĐÚNG 3 HOẶC 4 CẢNH (TÙY TÌNH HUỐNG LÀ 3 HAY 4 ĐỂ ĐẠT THỜI GIAN NHANH GỌN NHẤT MÀ VẪN CHUYỂN ĐỔI CAO). THOẠI PHẢI LIỀN MẠCH, CUỐN HÚT CÓ CẢM XÚC VÀ ÂM THANH NỀN. ĐỐI VỚI CẢNH NỐI MẠCH, TRONG IMAGE_PROMPT CHỈ ĐƯỢC DÙNG ĐÚNG CÂU TIẾNG VIỆT YÊU CẦU.
       ]
     }}
     LƯU Ý CỰC KỲ QUAN TRỌNG: TUYỆT ĐỐI KHÔNG DÙNG DẤU NGOẶC KÉP HOẶC DẤU XUỐNG DÒNG (\\n) BÊN TRONG CÁC GIÁ TRỊ STRING CỦA JSON.
@@ -941,7 +943,7 @@ with st.expander("💡 Bấm vào đây để xem Bảng Gợi Ý Phối Hợp '
     """, unsafe_allow_html=True)
 
 if is_sales:
-    st.info("💡 **Chế độ Bán Hàng Shoppertainment:** Đã loại bỏ mọi ví dụ giá ảo. Tích hợp âm thanh nền và ẩn nút copy ở cảnh nối mạch.")
+    st.info("💡 **Chế độ Bán Hàng Shoppertainment:** Đã khóa đồng bộ 100% giới tính (trang phục - giọng đọc). Tự động chèn Foley (âm thanh nền) và SFX Cảm xúc.")
 else:
     st.info(f"⏱️ **Thời lượng mong muốn:** {target_duration_mins} phút")
 
@@ -994,9 +996,8 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
                 1. Về Giá cả: TUYỆT ĐỐI KHÔNG ĐƯA MỨC GIÁ CỤ THỂ BẰNG CON SỐ. Chỉ sử dụng: "giá tận xưởng", "deal hời giới hạn".
                 2. CHIẾN LƯỢC KỊCH BẢN (SHOPPERTAINMENT): Phân bổ 5 kịch bản theo 2 hướng. Hướng 1: Trực diện (Xả kho, Deal hời). Hướng 2: Tình huống đời sống/Drama ngắn thu hút sự chú ý, sau đó lồng ghép sản phẩm vào cuối (Twist) để giải quyết vấn đề một cách duyên dáng.
                 3. ĐỊNH VỊ TỆP KHÁCH HÀNG: Bắt buộc kịch bản phải xoay quanh tệp khách hàng có NHU CẦU CAO NHẤT (ví dụ: mẹ bỉm, dân văn phòng, thợ máy). KHÔNG rập khuôn bối cảnh sinh viên cho mọi sản phẩm.
-                4. TỰ ĐỘNG NHẬN DIỆN GIỚI TÍNH: Dựa vào ảnh KOC, điền CHÍNH XÁC 'Nam' hoặc 'Nữ' vào mục 'gender'.
-                5. KỶ LUẬT THÔNG SỐ VÀ MÀU SẮC SẢN PHẨM (CRITICAL): Bắt buộc miêu tả chính xác màu sắc từ ảnh (vd: màu xám). TUYỆT ĐỐI KHÔNG tự bịa ra thông số kỹ thuật (như dung tích 2L, công suất 1000W) nếu không nhìn thấy rõ trên ảnh hoặc người dùng không cung cấp. Mô tả kèm theo tỷ lệ tương đối với cơ thể người.
-                6. BỘ LỌC CHÍNH SÁCH TUYỆT ĐỐI: TUYỆT ĐỐI KHÔNG dùng từ ngữ cam kết tuyệt đối (100%, tuyệt đối, dứt điểm, số 1). KHÔNG tuyên bố y tế sai lệch (VD: không nói "chống cận thị tuyệt đối", chỉ nói "hỗ trợ bảo vệ mắt"). Cấm từ "độc hại", "ung thư", "livestream", "phiên live". CẤM số lượng cụ thể ("100 chiếc", "50 đơn"). Sử dụng ngôn ngữ an toàn, khách quan.
+                4. KỶ LUẬT THÔNG SỐ VÀ MÀU SẮC SẢN PHẨM (CRITICAL): Bắt buộc miêu tả chính xác màu sắc từ ảnh (vd: màu xám). TUYỆT ĐỐI KHÔNG tự bịa ra thông số kỹ thuật (như dung tích 2L, công suất 1000W) nếu không nhìn thấy rõ trên ảnh hoặc người dùng không cung cấp. Mô tả kèm theo tỷ lệ tương đối với cơ thể người.
+                5. BỘ LỌC CHÍNH SÁCH TUYỆT ĐỐI: TUYỆT ĐỐI KHÔNG dùng từ ngữ cam kết tuyệt đối (100%, tuyệt đối, dứt điểm, số 1). KHÔNG tuyên bố y tế sai lệch (VD: không nói "chống cận thị tuyệt đối", chỉ nói "hỗ trợ bảo vệ mắt"). Cấm từ "độc hại", "ung thư", "livestream", "phiên live". CẤM số lượng cụ thể ("100 chiếc", "50 đơn"). Sử dụng ngôn ngữ an toàn, khách quan.
                 """
             elif is_knowledge:
                 tone_suggestion = "Nhanh, dứt khoát, lôi cuốn, chuyên nghiệp"
@@ -1028,7 +1029,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
                 1. NỘI DUNG VIRAL: Hook cực mạnh ở 3 giây đầu, bắt trend, tự nhiên và gần gũi.
                 2. ĐỊNH VỊ TỆP KHÁCH HÀNG: Bắt buộc kịch bản phải xoay quanh tệp khách hàng có NHU CẦU CAO NHẤT.
                 3. KỶ LUẬT THÔNG SỐ SẢN PHẨM: KHÔNG tự bịa ra màu sắc và thông số kỹ thuật.
-                4. BỘ LỌC CHÍNH SÁCH NGHIÊM NGẶT: Cấm tuyệt đối các từ ngữ đe dọa (độc hại, ung thư) và cam kết y tế/làm đẹp phi lý (100%, tuyệt đối, dứt điểm).
+                4. BỘ LỌC CHÍNH SÁCH NGHIÊM NGẶT: Cấm tuyệt đối các từ ngữ đe dọa và cam kết y tế phi lý.
                 """
 
             script_outlines_json = f"""
@@ -1039,7 +1040,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
                   "setting_style": "Mô tả bối cảnh",
                   "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật PHÙ HỢP THỰC TẾ với bối cảnh (BẮT BUỘC CHỈ ĐỊNH RÕ MÀU SẮC, VD: áo polo màu xanh navy)",
                   "angle": "Góc tiếp cận",
-                  "target_hook": "Câu mở đầu mạnh mẽ, thu hút (cấm nhắc livestream, cấm cam kết y tế phi lý, cấm từ đe dọa)",
+                  "target_hook": "Câu mở đầu mạnh mẽ, thu hút",
                   "recommended_scenes_count": "Tự động phân bổ linh hoạt",
                   "voice_profile": {{"gender": "[Chỉ điền 'Nam' hoặc 'Nữ']", "age_range": "25-35", "tone": "{tone_suggestion}"}}
                 }},
@@ -1093,6 +1094,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
 
             QUY ĐỊNH ĐỘNG VỀ NHẬN DIỆN (RẤT QUAN TRỌNG):
             {specific_rules}
+            - ĐỒNG BỘ GIỚI TÍNH 100% (CRITICAL): Giới tính của nhân vật trong `script_outfit_setup` (VD: KOC Nam/Nữ) BẮT BUỘC PHẢI KHỚP TUYỆT ĐỐI với giá trị `gender` ('Nam' hoặc 'Nữ') trong `voice_profile`.
 
             BẮT BUỘC TRẢ VỀ ĐỊNH DẠNG JSON CHUẨN GỒM CÁC KEY SAU:
             {{
