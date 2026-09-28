@@ -1138,7 +1138,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
             
             payload.append(prompt_text)
             
-            sys_inst = get_system_instructions(selected_mode, selected_style, aspect_ratio, content_goal, target_duration_mins, char_rules_str, st.session_state.narrator_mode)
+            sys_inst = get_system_instructions(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins, char_rules_str, st.session_state.narrator_mode)
             res = call_gemini_api(payload, sys_inst)
             
             st.session_state.content_analysis = res.get("content_analysis")
