@@ -460,15 +460,23 @@ else:
     strat_options = ["Viral / Bắt trend giải trí", "Chia sẻ kiến thức", "Kể chuyện cảm xúc (Storytelling)"]
 
 with col_style:
-    selected_style_vn = st.selectbox("🎨 Phong Cách Hình Ảnh:", options=["Điện Ảnh Chân Thực (Cinematic Realism)", "Hoạt Hình 3D", "Studio Tối Giản"])
-    selected_style = "Cinematic Realism"
-    # Gợi ý Đạo diễn Phong cách hình ảnh
+    # ĐÃ KHÔI PHỤC ĐẦY ĐỦ CÁC PHONG CÁCH VÀ FIX LỖI HARDCODE
+    style_mapping = {
+        "Điện Ảnh Chân Thực (Cinematic Realism)": "Cinematic Realism",
+        "Hoạt Hình 3D (3D Animation)": "3D Animation",
+        "Studio Tối Giản (Minimalist)": "Minimalist Studio",
+        "Phóng Sự Tài Liệu (Documentary)": "Documentary style",
+        "Góc Nhìn KOC (POV/UGC)": "POV UGC style"
+    }
+    selected_style_vn = st.selectbox("🎨 Phong Cách Hình Ảnh:", options=list(style_mapping.keys()))
+    selected_style = style_mapping[selected_style_vn] # Trả về đúng prompt tiếng Anh cho AI
+
     st.markdown("""
     <div style="font-size: 0.85rem; color: #64748b; padding-top: 4px;">
     <b>💡 Mẹo Đạo Diễn:</b><br>
-    - <b>Cinematic:</b> Tốt nhất cho TikTok Shop, Review, TVC, Du lịch.<br>
-    - <b>Hoạt Hình 3D:</b> Tốt nhất cho Mẹ & Bé, Kể chuyện cổ tích.<br>
-    - <b>Studio:</b> Tốt nhất cho Podcast, Kiến thức, Giới thiệu sản phẩm tĩnh.
+    - <b>Cinematic:</b> TVC, Du lịch, Review cao cấp.<br>
+    - <b>Góc Nhìn KOC:</b> Đập hộp, TikTok Shop thực chiến.<br>
+    - <b>Hoạt Hình 3D:</b> Mẹ & Bé, Kể chuyện.
     </div>
     """, unsafe_allow_html=True)
 
@@ -478,7 +486,12 @@ with col_strat:
 with col_ratio: 
     selected_aspect = "9:16" if "9:16" in st.selectbox("Tỷ lệ khung hình:", ["9:16 (Dọc TikTok/Reels)", "16:9 (Ngang YouTube)"]) else "16:9"
 with col_time: 
-    target_duration_mins = st.number_input("⏱️ Thời lượng (Phút):", min_value=0.5, max_value=30.0, value=1.0, step=0.5)
+    # ĐÃ SỬA LOGIC THỜI LƯỢNG CHO TIKTOK SHOP
+    if "Bán Hàng" in selected_mode or "Mẹ & Bé" in selected_mode:
+        st.markdown("<div style='margin-top: 28px; font-weight: bold; color: #d97706;'>⏱️ Tối ưu: 3-5 cảnh (15-30s)</div>", unsafe_allow_html=True)
+        target_duration_mins = 0.5 # Tự động ép AI chạy cấu trúc 3-5 cảnh
+    else:
+        target_duration_mins = st.number_input("⏱️ Thời lượng (Phút):", min_value=0.5, max_value=30.0, value=1.0, step=0.5)
 with col_audio: 
     selected_audio_mode = st.selectbox("🎙️ Chế độ Âm thanh:", ["Nhân vật thoại trực tiếp", "Lồng tiếng sau (Voiceover)"])
 content_goal = "Sales & Conversion"
