@@ -20,11 +20,11 @@ ALL_MODULES = [
     "🛒 TikTok Shop & Bán Hàng", "👶 Mẹ & Bé & Cùng Con Học", "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp",
     "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan", "🌿 Du Lịch & Phong Cảnh Đất Nước", "🚗 Xe Cộ & Trải Nghiệm Lái",
     "🍲 Ẩm Thực & Đời Sống", "📖 Đời Sống & Giáo Dục", "🏛️ Lịch Sử & Tín Ngưỡng Di Sản",
-    "🧘 Chữa Lành & Phong Cách Sống", "📢 Phóng Sự & Thông Điệp Xã Hội", "🏢 Giới Thiệu Doanh Nghiệp"
+    "🏢 Giới Thiệu Doanh Nghiệp"
 ]
 
 # ==============================================================================
-# 2. KHỞI TẠO SESSION STATE CHUẨN
+# 2. KHỞI TẠO SESSION STATE
 # ==============================================================================
 if "is_logged_in" not in st.session_state:
     st.session_state.update({
@@ -33,9 +33,8 @@ if "is_logged_in" not in st.session_state:
         "projects_library": {}, "content_analysis": None,
         "all_scripts": [], "cloned_scripts": [], "expanded_scripts": [],
         "generated_details": {}, "active_script_id": None,
-        "active_project_title": "Chiến dịch mới",
-        "character_profiles": [], "file_uploader_key": 0,
-        "action_trigger": None, "action_param": None,
+        "active_project_title": "Chiến dịch mới", "character_profiles": [],
+        "file_uploader_key": 0, "action_trigger": None, "action_param": None,
         "scroll_to_top": False, "last_loaded_file_id": None
     })
 
@@ -52,14 +51,13 @@ st.markdown("""
     .main-title { font-size: 2rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin: 0; background: linear-gradient(to right, #60a5fa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .sub-title { font-size: 1rem; font-weight: 500; color: #94a3b8; margin-top: 5px; }
     .badge-ready { background-color: #16a34a; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-    .badge-pending { background-color: #f59e0b; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
     .loading-pulse { animation: pulse 1.5s infinite; color: #2563eb; font-weight: bold; text-align: center; padding: 10px; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 </style>
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 4. HÀM TIỆN ÍCH & XỬ LÝ JSON CHỐNG LỖI (BẢN NÂNG CẤP)
+# 4. HÀM TIỆN ÍCH & XỬ LÝ JSON CHỐNG LỖI
 # ==============================================================================
 def process_login(login_val):
     login_val = login_val.strip()
@@ -78,18 +76,13 @@ def format_analysis_field(field_val) -> str:
     lines = [l.strip() for l in text.split('<br>') if l.strip()]
     return "".join([f"<div style='margin-top: 6px;'>{l}</div>" if l.startswith('•') else f"<div style='margin-left: 15px; margin-top: 4px;'>• {l}</div>" for l in lines]) if lines else text
 
-# Hàm lấy xuất JSON cực mạnh (Chống lỗi dính text rác hoặc link)
 def clean_and_parse_json(text_content: str):
     text = text_content.strip()
-    # Tìm vị trí bắt đầu và kết thúc của object/array JSON
     start_idx = max(text.find('{'), text.find('['))
     end_idx = max(text.rfind('}'), text.rfind(']'))
-    
     if start_idx != -1 and end_idx != -1 and end_idx >= start_idx:
         text = text[start_idx:end_idx+1]
-        
-    try:
-        return json.loads(text)
+    try: return json.loads(text)
     except json.JSONDecodeError:
         text = text.replace('\n', ' ').replace('\r', '')
         text = re.sub(r',\s*}', '}', text)
@@ -101,7 +94,7 @@ def safe_copy_button(text_to_copy, label):
     st.code(text_to_copy, language="text")
 
 # ==============================================================================
-# 5. HỆ THỐNG PROMPT ĐIỀU HƯỚNG LÕI (AI ENGINE RULES)
+# 5. HỆ THỐNG PROMPT LÕI (AI ENGINE RULES)
 # ==============================================================================
 def get_strategy_rules(mode: str, strategy: str, target_audience: str) -> str:
     rules = f"- ĐỐI TƯỢNG: Nhắm vào tệp {target_audience}.\n"
@@ -112,11 +105,18 @@ def get_strategy_rules(mode: str, strategy: str, target_audience: str) -> str:
     else: rules += f"- CHIẾN LƯỢC: {strategy}. Tạo kịch bản cuốn hút.\n"
     return rules
 
-def get_system_instructions(mode, style, aspect_ratio, goal, target_duration_mins, char_rules, strategy, audience):
+def get_system_instructions(mode, style, aspect_ratio, goal, target_duration_mins, char_rules, strategy, audience, audio_mode):
     fmt = "9:16 vertical cinematic format" if aspect_ratio == "9:16" else "16:9 widescreen format"
     dur = "THỜI LƯỢNG: 3-5 phân cảnh linh hoạt." if target_duration_mins <= 0.5 else f"THỜI LƯỢNG: {int(target_duration_mins * 60)} GIÂY chia phân cảnh linh hoạt."
     strategy_instructions = get_strategy_rules(mode, strategy, audience)
     
+    # LUẬT ÂM THANH DỰA TRÊN LỰA CHỌN CỦA NGƯỜI DÙNG
+    audio_rule = ""
+    if audio_mode == "Nhân vật thoại trực tiếp":
+        audio_rule = '8. ÂM THANH TRỰC TIẾP (LIP-SYNC): Trong `video_prompt`, BẮT BUỘC trích dẫn lại nguyên văn thoại tiếng Việt bằng cú pháp: `Character speaking in Vietnamese: "[Nội dung thoại]"` để công cụ AI khớp khẩu hình.'
+    else:
+        audio_rule = '8. LỒNG TIẾNG SAU (VOICEOVER): Trong `video_prompt`, TUYỆT ĐỐI KHÔNG ghi lại thoại tiếng Việt. Chỉ miêu tả biểu cảm và hành động mấp máy môi.'
+
     return f"""
 BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL ĐA NĂNG.
 PHONG CÁCH: {style.upper()} | KHUNG HÌNH: {fmt} | MỤC TIÊU: {goal}
@@ -127,9 +127,10 @@ PHONG CÁCH: {style.upper()} | KHUNG HÌNH: {fmt} | MỤC TIÊU: {goal}
 2. LUÔN CHÈN "Vietnamese" cho nhân vật.
 {char_rules}
 4. CẤM HIỂN THỊ UI: Ép lệnh "Cinematic shot ONLY. ABSOLUTELY NO UI elements".
-5. BẢO TOÀN SẢN PHẨM KHỐI LƯỢNG NHỎ (MACRO LOCK): Đối với sản phẩm kích thước nhỏ/kỹ thuật, BẮT BUỘC phải dùng góc máy MACRO SHOT hoặc EXTREME CLOSE-UP. Kèm lệnh "strictly NO hands obscuring" để giữ hình khối không bị méo.
+5. BẢO TOÀN SẢN PHẨM KHỐI LƯỢNG NHỎ (MACRO LOCK): Đối với sản phẩm kích thước nhỏ/kỹ thuật, BẮT BUỘC phải dùng góc máy MACRO SHOT hoặc EXTREME CLOSE-UP. Kèm lệnh "strictly NO hands obscuring" để giữ hình khối.
 6. {strategy_instructions}
 7. BỘ LỌC TỪ KHÓA: Cấm giá tiền cụ thể. Không bịa mùa vụ. Dùng "mùa cao điểm".
+{audio_rule}
 """
 
 def generate_char_rules_string(profiles, is_sales_mode=False):
@@ -155,7 +156,7 @@ def call_gemini_with_retry(payload, sys_inst):
             else: time.sleep(4)
     raise Exception("Lỗi kết nối Gemini API.")
 
-def create_scene_details_for_id(target_id: int, current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float, current_strategy: str):
+def create_scene_details_for_id(target_id: int, current_mode: str, current_style: str, aspect_ratio: str, goal: str, target_duration_mins: float, current_strategy: str, audio_mode: str):
     all_sources = (st.session_state.all_scripts or []) + (st.session_state.cloned_scripts or []) + (st.session_state.expanded_scripts or [])
     outline = next((sc for sc in all_sources if isinstance(sc, dict) and int(sc.get("id", 0)) == int(target_id)), None)
     if not outline: raise Exception(f"Không tìm thấy kịch bản #{target_id}.")
@@ -163,7 +164,6 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     product_ctx = st.session_state.get("current_input_context", "").replace('"', "'")
     safe_title = outline.get('title', '').replace('"', "'").replace('\n', ' ')
     safe_setting = outline.get('setting_style', '').replace('"', "'").replace('\n', ' ')
-    
     duration_str = "16s - 32s (Tối ưu Credit)" if target_duration_mins <= 0.5 else f"{int(target_duration_mins * 60)}s"
 
     profiles = st.session_state.get("character_profiles", [])
@@ -177,15 +177,14 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     prompt_detail = f"""
     Ngữ cảnh: "{product_ctx}" | Khách hàng: {target_audience}
     Kịch bản: ID {target_id} - {safe_title} | Bối cảnh gốc: {safe_setting}
-    CHIẾN LƯỢC: {current_strategy}
+    CHIẾN LƯỢC: {current_strategy} | CHẾ ĐỘ ÂM THANH: {audio_mode}
     {profiles_desc}
     
     🛑 QUY ĐỊNH TỐI CAO ĐỂ TẠO VIDEO TRIỆU VIEW:
     1. ĐỒNG BỘ TUYỆT ĐỐI BỐI CẢNH: Mọi phân cảnh PHẢI GIỮ NGUYÊN BỐI CẢNH ({safe_setting}). Nhân vật giữ nguyên diện mạo qua khóa: [{identity_lock_rules}].
     2. KHÓA GÓC MÁY THEO LOẠI: Cảnh test tính năng sản phẩm bắt buộc phải chuyển sang MACRO SHOT hoặc EXTREME CLOSE-UP để mô hình AI vẽ sắc nét sản phẩm.
-    3. TỐI ƯU AUDIO FIRST: KHÔNG lặp lại lời thoại trong `video_prompt`. Chỉ cần: `Speaking in Vietnamese with expressive emotion` kết hợp khẩu hình, ambient sound.
-    4. KHÓA MÀU SẮC THỰC TẾ: Sản phẩm khớp chính xác màu/hình khối từ ảnh tham chiếu gốc (`matching the exact geometric shape, color, and material from the uploaded product reference image`).
-    5. Cấu trúc linh hoạt 3 đến 5 cảnh.
+    3. QUY TẮC ÂM THANH: Tuân thủ tuyệt đối quy tắc ghi prompt âm thanh theo lựa chọn `{audio_mode}` đã quy định ở System Instruction.
+    4. KHÓA MÀU SẮC THỰC TẾ: Sản phẩm khớp chính xác màu/hình khối từ ảnh tham chiếu gốc.
     
     Xuất 1 Dict JSON (KHÔNG DÙNG DẤU BA CHẤM):
     {{
@@ -200,8 +199,8 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
           "transition_type": "Mở đầu (Hook)", 
           "voice_director_vn": "[Giọng bức xúc, thực tế]", 
           "dialogues": [ {{"speaker": "Nhân vật A", "dialogue": "[Thoại mở đầu phản ánh nỗi đau]"}} ],
-          "image_prompt": "A 9:16 [Điền: Medium Shot / Wide Shot] featuring {identity_lock_rules} inside the exact same consistent environment ({safe_setting}). The physical product matching the exact reference is featured. Cinematic shot ONLY. ABSOLUTELY NO UI elements.", 
-          "video_prompt": "Audio: Characters speaking on-camera in Vietnamese with expressive emotional tone. Background ambient sound: realistic room tone. Visual: Cinematic shot showing {identity_lock_rules} maintaining identical outfits within the consistent environment ({safe_setting}). Product maintains rigid structural integrity."
+          "image_prompt": "A 9:16 [Điền: Medium Shot / Wide Shot] featuring {identity_lock_rules} inside the exact same consistent environment ({safe_setting}). The physical product matching the exact reference is featured. Cinematic ONLY. NO UI.", 
+          "video_prompt": "[Viết Video Prompt tuân thủ nghiêm ngặt Luật Chế độ Âm thanh (Nhân vật thoại trực tiếp hoặc Lồng tiếng sau)]"
         }},
         {{
           "scene_number": 2, "duration": "6s", 
@@ -209,18 +208,18 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
           "transition_type": "Cắt cứng (Hard Cut)", 
           "voice_director_vn": "[Giọng phân tích, tự tin]", 
           "dialogues": [ {{"speaker": "Nhân vật B", "dialogue": "[Thoại đưa ra giải pháp]"}} ],
-          "image_prompt": "A 9:16 [Điền: Extreme Close-up / Macro Shot] featuring the physical product matching the exact reference in ({safe_setting}). Product fully visible, strictly NO hands obscuring. Cinematic shot ONLY. NO UI elements.", 
-          "video_prompt": "Audio: Character speaking on-camera in Vietnamese with confident tone. Visual: [Điền góc máy cận cảnh] focusing purely on the product's details in the same room setup ({safe_setting}). NO UI elements. Product maintains absolute rigid structural integrity without morphing."
+          "image_prompt": "A 9:16 [Điền: Extreme Close-up / Macro Shot] featuring the physical product matching the exact reference in ({safe_setting}). Product fully visible, strictly NO hands obscuring. Cinematic ONLY. NO UI.", 
+          "video_prompt": "[Viết Video Prompt tuân thủ nghiêm ngặt Luật Chế độ Âm thanh]"
         }}
       ]
     }}
     LƯU Ý: TẠO 3-5 SCENE TÙY Ý TƯỞNG. ĐIỀN ĐẦY ĐỦ CÁC NGOẶC VUÔNG [...].
     """
-    sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str, current_strategy, target_audience)
+    sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str, current_strategy, target_audience, audio_mode)
     res = call_gemini_with_retry([prompt_detail], sys_inst)
     st.session_state.generated_details[target_id] = res[0] if isinstance(res, list) else res
 
-def add_five_scripts_continuation(current_mode, current_style, aspect_ratio, goal, target_duration_mins, current_strategy):
+def add_five_scripts_continuation(current_mode, current_style, aspect_ratio, goal, target_duration_mins, current_strategy, audio_mode):
     all_sources = (st.session_state.all_scripts or []) + (st.session_state.cloned_scripts or []) + (st.session_state.expanded_scripts or [])
     cur_len = len(all_sources)
     product_ctx = st.session_state.get("current_input_context", "").replace('"', "'")
@@ -230,7 +229,6 @@ def add_five_scripts_continuation(current_mode, current_style, aspect_ratio, goa
     prompt_more = f"""
     DỮ LIỆU SẢN PHẨM GỐC: {json.dumps(dna_data, ensure_ascii=False)} | Ghi chú: "{product_ctx}"
     Hãy tạo thêm ĐÚNG 5 kịch bản mới (id từ {cur_len + 1} đến {cur_len + 5}) theo CHIẾN LƯỢC: {current_strategy}.
-    - Không dùng giá tiền con số.
     
     Xuất JSON chuẩn với key 'script_outlines' chứa 5 OBJECT:
     {{
@@ -239,25 +237,25 @@ def add_five_scripts_continuation(current_mode, current_style, aspect_ratio, goa
       ]
     }}
     """
-    sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str, current_strategy, "")
+    sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str, current_strategy, "", audio_mode)
     res = call_gemini_with_retry([prompt_more], sys_inst)
     new_scripts = res.get("script_outlines", [])
     for i, sc in enumerate(new_scripts): sc["id"] = cur_len + i + 1
     st.session_state.expanded_scripts.extend(new_scripts)
 
-def clone_script_id(target_id, current_mode, current_style, aspect_ratio, goal, target_duration_mins, current_strategy):
+def clone_script_id(target_id, current_mode, current_style, aspect_ratio, goal, target_duration_mins, current_strategy, audio_mode):
     target_script = st.session_state.generated_details[target_id]
     cur_len = len((st.session_state.all_scripts or []) + (st.session_state.cloned_scripts or []) + (st.session_state.expanded_scripts or []))
     char_rules_str = generate_char_rules_string(st.session_state.get("character_profiles", []), "Bán Hàng" in current_mode)
     prompt = f"Dựa trên kịch bản gốc: {json.dumps(target_script, ensure_ascii=False)}. Tạo ĐÚNG 5 biến thể mới (id từ {cur_len+1} đến {cur_len+5}). Xuất JSON key 'cloned_outlines'."
-    sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str, current_strategy, "")
+    sys_inst = get_system_instructions(current_mode, current_style, aspect_ratio, goal, target_duration_mins, char_rules_str, current_strategy, "", audio_mode)
     res_c = call_gemini_with_retry([prompt], sys_inst)
     cloned_list = res_c.get("cloned_outlines", [])
     for idx_c, cl in enumerate(cloned_list): cl["id"] = cur_len + idx_c + 1
     st.session_state.cloned_scripts.extend(cloned_list)
 
 # ==============================================================================
-# 7. THANH BÊN (SIDEBAR UI) - ĐÃ KHÔI PHỤC FULL CHỨC NĂNG ADMIN & LIÊN HỆ
+# 7. THANH BÊN (SIDEBAR UI)
 # ==============================================================================
 with st.sidebar:
     if not st.session_state.is_logged_in:
@@ -269,54 +267,29 @@ with st.sidebar:
     if st.session_state.is_logged_in:
         st.markdown("### 🗂️ **Quản Lý Dự Án**")
         if st.button("➕ Tạo Dự Án Mới", type="primary", use_container_width=True):
-            st.session_state.content_analysis = None
-            st.session_state.all_scripts, st.session_state.cloned_scripts, st.session_state.expanded_scripts = [], [], []
-            st.session_state.generated_details, st.session_state.character_profiles = {}, []
-            st.session_state.active_script_id = None
-            st.session_state.active_project_title = "Chiến dịch mới"
-            st.session_state.file_uploader_key += 1 
-            st.session_state.scroll_to_top = True
-            st.rerun()
+            st.session_state.update({"content_analysis": None, "all_scripts": [], "cloned_scripts": [], "expanded_scripts": [], "generated_details": {}, "character_profiles": [], "active_script_id": None, "active_project_title": "Chiến dịch mới"})
+            st.session_state.file_uploader_key += 1; st.session_state.scroll_to_top = True; st.rerun()
 
         project_title_input = st.text_input("Tên dự án hiện tại:", value=st.session_state.get("active_project_title", "Chiến dịch mới"))
         col_p1, col_p2 = st.columns(2)
         with col_p1:
             if st.button("💾 Lưu Dự Án", use_container_width=True):
-                p_id = f"proj_{int(time.time())}"
-                st.session_state.projects_library[p_id] = {
-                    "title": project_title_input, "mode": st.session_state.get("selected_mode", ""),
-                    "content_analysis": st.session_state.content_analysis,
+                st.session_state.projects_library[f"proj_{int(time.time())}"] = {
+                    "title": project_title_input, "mode": st.session_state.get("selected_mode", ""), "content_analysis": st.session_state.content_analysis,
                     "all_scripts": st.session_state.all_scripts, "cloned_scripts": st.session_state.cloned_scripts,
                     "expanded_scripts": st.session_state.expanded_scripts, "generated_details": st.session_state.generated_details,
                     "character_profiles": st.session_state.character_profiles
                 }
                 st.success("✅ Đã lưu!")
-
         with col_p2:
-            export_data = {
-                "title": project_title_input, "content_analysis": st.session_state.content_analysis,
-                "all_scripts": st.session_state.all_scripts, "cloned_scripts": st.session_state.cloned_scripts,
-                "expanded_scripts": st.session_state.expanded_scripts, "generated_details": st.session_state.generated_details,
-                "character_profiles": st.session_state.character_profiles
-            }
-            json_str = json.dumps(export_data, ensure_ascii=False, indent=2)
-            st.download_button("📥 Tải JSON", data=json_str, file_name=f"{project_title_input.replace(' ', '_')}.json", mime="application/json", use_container_width=True)
+            export_data = {"title": project_title_input, "content_analysis": st.session_state.content_analysis, "all_scripts": st.session_state.all_scripts, "cloned_scripts": st.session_state.cloned_scripts, "expanded_scripts": st.session_state.expanded_scripts, "generated_details": st.session_state.generated_details, "character_profiles": st.session_state.character_profiles}
+            st.download_button("📥 Tải JSON", data=json.dumps(export_data, ensure_ascii=False, indent=2), file_name=f"{project_title_input.replace(' ', '_')}.json", mime="application/json", use_container_width=True)
 
         if st.session_state.projects_library:
-            proj_keys = list(st.session_state.projects_library.keys())
-            selected_load_id = st.selectbox("📂 Chọn dự án đã lưu:", options=proj_keys, format_func=lambda x: st.session_state.projects_library[x]["title"])
+            selected_load_id = st.selectbox("📂 Chọn dự án đã lưu:", options=list(st.session_state.projects_library.keys()), format_func=lambda x: st.session_state.projects_library[x]["title"])
             if st.button("📂 Mở Dự Án Này", use_container_width=True):
                 p_data = st.session_state.projects_library[selected_load_id]
-                st.session_state.active_project_title = p_data.get("title", "Dự án tải lên")
-                st.session_state.content_analysis = p_data.get("content_analysis")
-                st.session_state.all_scripts = p_data.get("all_scripts", [])
-                st.session_state.cloned_scripts = p_data.get("cloned_scripts", [])
-                st.session_state.expanded_scripts = p_data.get("expanded_scripts", [])
-                st.session_state.generated_details = p_data.get("generated_details", {})
-                st.session_state.character_profiles = p_data.get("character_profiles", [])
-                st.session_state.active_script_id = None
-                st.session_state.scroll_to_top = True
-                st.rerun()
+                st.session_state.update({"active_project_title": p_data.get("title", "Dự án tải lên"), "content_analysis": p_data.get("content_analysis"), "all_scripts": p_data.get("all_scripts", []), "cloned_scripts": p_data.get("cloned_scripts", []), "expanded_scripts": p_data.get("expanded_scripts", []), "generated_details": p_data.get("generated_details", {}), "character_profiles": p_data.get("character_profiles", []), "active_script_id": None, "scroll_to_top": True}); st.rerun()
 
         st.markdown("<div style='font-size: 0.85rem; color: #64748b; margin-top: 8px;'>Hoặc tải file dự án (.json):</div>", unsafe_allow_html=True)
         uploaded_project_file = st.file_uploader("📤 Tải file kịch bản", type=["json"], label_visibility="collapsed", key=f"project_uploader_{st.session_state.file_uploader_key}")
@@ -325,17 +298,7 @@ with st.sidebar:
             if st.session_state.get("last_loaded_file_id") != file_identifier:
                 try:
                     loaded_proj = json.loads(uploaded_project_file.getvalue().decode("utf-8"))
-                    st.session_state.active_project_title = loaded_proj.get("title", "Dự án tải lên")
-                    st.session_state.content_analysis = loaded_proj.get("content_analysis", None)
-                    st.session_state.all_scripts = loaded_proj.get("all_scripts", [])
-                    st.session_state.expanded_scripts = loaded_proj.get("expanded_scripts", [])
-                    st.session_state.cloned_scripts = loaded_proj.get("cloned_scripts", [])
-                    st.session_state.generated_details = {int(k): v for k, v in loaded_proj.get("generated_details", {}).items()}
-                    st.session_state.character_profiles = loaded_proj.get("character_profiles", [])
-                    st.session_state.active_script_id = None
-                    st.session_state.last_loaded_file_id = file_identifier
-                    st.session_state.scroll_to_top = True
-                    st.rerun()
+                    st.session_state.update({"active_project_title": loaded_proj.get("title", "Dự án tải lên"), "content_analysis": loaded_proj.get("content_analysis", None), "all_scripts": loaded_proj.get("all_scripts", []), "expanded_scripts": loaded_proj.get("expanded_scripts", []), "cloned_scripts": loaded_proj.get("cloned_scripts", []), "generated_details": {int(k): v for k, v in loaded_proj.get("generated_details", {}).items()}, "character_profiles": loaded_proj.get("character_profiles", []), "active_script_id": None, "last_loaded_file_id": file_identifier, "scroll_to_top": True}); st.rerun()
                 except Exception as e: st.error(f"❌ Lỗi đọc file JSON: {e}")
 
         # KHU VỰC QUẢN TRỊ ADMIN (Khôi phục toàn bộ chức năng chọn quyền và hạn dùng)
@@ -344,9 +307,7 @@ with st.sidebar:
             st.markdown("### ⚙️ **Quản Lý Tài Khoản (Admin)**")
             with st.form("add_license_form"):
                 new_account_id = st.text_input("Email / SĐT khách hàng mới:")
-                # Thêm quyền cho từng thể loại
                 selected_roles = st.multiselect("Cấp quyền Thể loại:", ["Tất cả thể loại"] + ALL_MODULES, default=["Tất cả thể loại"])
-                # Thêm thời gian sử dụng
                 days_active = st.number_input("Số ngày sử dụng:", min_value=1, value=30)
                 
                 if st.form_submit_button("➕ Cấp Quyền Dùng Thử", use_container_width=True):
@@ -403,14 +364,15 @@ with col_style:
     selected_style_vn = st.selectbox("🎨 Phong Cách Hình Ảnh:", options=["Điện Ảnh Chân Thực (Cinematic Realism)", "Hoạt Hình 3D", "Studio Tối Giản"])
     selected_style = "Cinematic Realism"
 
-col_strat, col_ratio, col_time = st.columns([1.5, 1, 1])
+col_strat, col_ratio, col_time, col_audio = st.columns([1.5, 1, 1, 1])
 with col_strat: selected_strategy = st.selectbox("🧠 Chiến lược Kịch bản:", options=strat_options)
 with col_ratio: selected_aspect = "9:16" if "9:16" in st.selectbox("Tỷ lệ khung hình:", ["9:16 (Dọc TikTok/Reels)", "16:9 (Ngang YouTube)"]) else "16:9"
 with col_time: target_duration_mins = st.number_input("⏱️ Thời lượng (Phút):", min_value=0.5, max_value=30.0, value=1.0, step=0.5)
+with col_audio: selected_audio_mode = st.selectbox("🎙️ Chế độ Âm thanh:", ["Nhân vật thoại trực tiếp", "Lồng tiếng sau (Voiceover)"])
 content_goal = "Sales & Conversion"
 
 # ==============================================================================
-# 9. XỬ LÝ TRIGGER (ĐÃ FIX LỖI MÀN HÌNH TRẮNG BẰNG CÁCH CHUYỂN VIEW_DETAIL RA NGOÀI)
+# 9. XỬ LÝ TRIGGER
 # ==============================================================================
 if st.session_state.action_trigger in ["create_detail", "clone_script", "generate_more"]:
     action = st.session_state.action_trigger
@@ -422,12 +384,12 @@ if st.session_state.action_trigger in ["create_detail", "clone_script", "generat
         st.markdown(f"<div class='loading-pulse'>⏳ HỆ THỐNG ĐANG XỬ LÝ AI... VUI LÒNG ĐỢI!</div>", unsafe_allow_html=True)
         try:
             if action == "create_detail":
-                create_scene_details_for_id(int(param), selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins, selected_strategy)
+                create_scene_details_for_id(int(param), selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins, selected_strategy, selected_audio_mode)
                 st.session_state.active_script_id = int(param)
             elif action == "clone_script":
-                clone_script_id(int(param), selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins, selected_strategy)
+                clone_script_id(int(param), selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins, selected_strategy, selected_audio_mode)
             elif action == "generate_more":
-                add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins, param or selected_strategy)
+                add_five_scripts_continuation(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins, param or selected_strategy, selected_audio_mode)
             
             st.session_state.scroll_to_top = True; time.sleep(0.2); st.rerun()
         except Exception as e:
@@ -463,12 +425,12 @@ if st.button("🚀 Phân Tích DNA & Lên Ý Tưởng", type="primary", use_cont
             for c in char_inputs: payload.extend([f"ẢNH NHÂN VẬT {c['id']} ({c['role']}):", types.Part.from_bytes(data=c['file'].getvalue(), mime_type=c['file'].type or "image/jpeg")])
             payload.append(f"Phân tích '{selected_mode}' - {selected_strategy}. Mô tả: '{st.session_state.current_input_context}'. KHÔNG dùng giá tiền cụ thể. Xuất JSON content_analysis và script_outlines (5 object).")
             
-            res = call_gemini_with_retry(payload, get_system_instructions(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins, char_rules_str, selected_strategy, "Người tiêu dùng"))
+            res = call_gemini_with_retry(payload, get_system_instructions(selected_mode, selected_style, selected_aspect, content_goal, target_duration_mins, char_rules_str, selected_strategy, "Người tiêu dùng", selected_audio_mode))
             st.session_state.update({"content_analysis": res.get("content_analysis"), "all_scripts": res.get("script_outlines", []), "cloned_scripts": [], "expanded_scripts": [], "generated_details": {}, "active_script_id": None, "scroll_to_top": True}); st.rerun()
         except Exception as e: st.error(f"❌ Lỗi: {e}")
 
 # ==============================================================================
-# 11. KHU VỰC HIỂN THỊ KẾT QUẢ ĐẦU RA (TÁCH NHANH CHUẨN XÁC)
+# 11. KHU VỰC HIỂN THỊ KẾT QUẢ ĐẦU RA
 # ==============================================================================
 if st.session_state.content_analysis and not st.session_state.action_trigger:
     st.divider()
@@ -496,7 +458,6 @@ if st.session_state.content_analysis and not st.session_state.action_trigger:
             with st.container(border=True):
                 c1, c2, c3 = st.columns([2.5, 1, 1])
                 c1.markdown(f"**#{sc['id']}. {sc.get('title')}** — <span class='badge-ready'>SẴN SÀNG</span>", unsafe_allow_html=True)
-                # Sửa lỗi màn hình trắng ở nút Xem Chi Tiết
                 if c2.button("👁️ Xem chi tiết", key=f"btn_v1_{sc['id']}", use_container_width=True): 
                     st.session_state.update({"active_script_id": sc['id'], "scroll_to_top": True}); st.rerun()
                 if c3.button("🚀 Nhân bản", key=f"btn_c1_{sc['id']}", use_container_width=True): 
@@ -520,7 +481,7 @@ if st.session_state.content_analysis and not st.session_state.action_trigger:
         else:
             if st.button("➕ Gọi Thêm 5 Kịch Bản Mới", use_container_width=True): st.session_state.update({"action_trigger": "generate_more", "action_param": selected_strategy}); st.rerun()
 
-    # GIAI ĐOẠN 2: TRANG LÀM VIỆC CHÍNH ĐÃ KHÔI PHỤC CHỨC NĂNG TÁCH NHANH
+    # GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN ĐÃ CHỌN
     if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details:
         if st.button("⬅️ Quay lại danh sách tổng", use_container_width=False): st.session_state.update({"active_script_id": None, "scroll_to_top": True}); st.rerun()
 
@@ -537,7 +498,7 @@ if st.session_state.content_analysis and not st.session_state.action_trigger:
             dialogues = scene.get("dialogues", [])
             full_voice = ""
             if dialogues:
-                st.markdown("**💬 Lời Thoại (Thu âm Voice-over):**")
+                st.markdown("**💬 Lời Thoại (Dùng để thu âm hoặc Lip-sync):**")
                 for d in dialogues:
                     spk, line = d.get("speaker", ""), d.get("dialogue", "")
                     st.markdown(f"&nbsp;&nbsp;&nbsp;&nbsp;• 🗣️ <b>{spk}:</b> `\"{line}\"`", unsafe_allow_html=True)
