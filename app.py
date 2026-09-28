@@ -517,32 +517,26 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
     
     if is_offscreen_narrator:
         voiceover_instruction = f"""
-        6.1. ĐỒNG NHẤT BỐI CẢNH 100% (SCENE ENVIRONMENT LOCK): 
-             - Nếu kịch bản diễn ra tại một không gian cố định (như bàn ăn lẩu, phòng khách, văn phòng), MỌI `image_prompt` và `video_prompt` của tất cả các cảnh TRONG CÙNG MỘT KỊCH BẢN BẮT BUỘC phải giữ nguyên cấu trúc mô tả không gian gốc (Master Setting). 
-             - TUYỆT ĐỐI CẤM tự ý đổi bối cảnh, đổi màu sắc đèn hoặc kiểu nội thất giữa các cảnh nếu câu chuyện không yêu cầu chuyển địa điểm.
         7. QUY CHUẨN THUYẾT MINH NGOÀI (OFF-SCREEN NARRATOR):
             - {goal_directive}
             - SỬ DỤNG GIỌNG ĐỌC LỒNG TIẾNG NGOÀI (OFF-SCREEN NARRATOR): Giọng đọc là người dẫn chuyện không xuất hiện nói trước ống kính. Visual tập trung 100% vào bối cảnh, con người và hành động thực tế (B-roll footage/Documentary style).
-            - NGẮT NHỊP & CẢM XÚC THUYẾT MINH (PAUSE & RHYTHM): Trong câu thoại `voiceover_vi`, BẮT BUỘC phải khéo léo chèn các dấu phẩy (,), dấu chấm lửng (...) hoặc dấu gạch ngang (-) tại các nhịp nghỉ hợp lý để TTS tự ngắt nghỉ có cảm xúc, giúp người nghe dễ thấm.
-            - PHIÊN ÂM TIẾNG VIỆT CHUẨN KHI ĐỌC (TTS PRONUNCIATION): Viết rõ cách đọc tiếng Việt bồi. VD: 'Bluetooth' -> 'Bờ lu tút'. TUYỆT ĐỐI KHÔNG ĐƯA GIÁ TIỀN CỤ THỂ VÀO THOẠI.
-        8. BỘ LỌC CHÍNH SÁCH ĐA NỀN TẢNG (TIKTOK SHOP, FB, YOUTUBE COMPLIANCE):
+            - NGẮT NHỊP & CẢM XÚC THUYẾT MINH (PAUSE & RHYTHM): Trong câu thoại `voiceover_vi`, BẮT BUỘC phải khéo léo chèn các dấu phẩy (,), dấu chấm lửng (...) hoặc dấu gạch ngang (-) tại các nhịp nghỉ hợp lý để TTS tự ngắt nghỉ có cảm xúc.
+            - PHIÊN ÂM TIẾNG VIỆT CHUẨN KHI ĐỌC: Viết rõ cách đọc tiếng Việt bồi. VD: 'Bluetooth' -> 'Bờ lu tút'. TUYỆT ĐỐI KHÔNG ĐƯA GIÁ TIỀN CỤ THỂ VÀO THOẠI.
+        8. BỘ LỌC CHÍNH SÁCH ĐA NỀN TẢNG:
             - TUYỆT ĐỐI KHÔNG DÙNG TỪ NGỮ CỰC ĐOAN: Cấm dùng "100%", "tuyệt đối", "cam kết", "chắc chắn", "vĩnh viễn".
             - CẤM TUYÊN BỐ Y TẾ SAI LỆCH VÀ GIEO RẮC SỢ HÃI: Không dùng từ "độc hại", "ung thư". Thay bằng: "hỗ trợ bảo vệ", "kém an toàn".
             - CẤM KHAN HIẾM GIẢ & ĐIỀU HƯỚNG: Không dùng số lượng tồn kho ảo. Cấm tuyệt đối: "livestream", "phiên live", "inbox riêng", "zalo".
         """
     else:
         voiceover_instruction = f"""
-        6.1. ĐỒNG NHẤT BỐI CẢNH 100% (SCENE ENVIRONMENT LOCK): 
-            - Nếu kịch bản diễn ra tại một không gian cố định (như bàn ăn lẩu, phòng khách, văn phòng), MỌI `image_prompt` và `video_prompt` của tất cả các cảnh TRONG CÙNG MỘT KỊCH BẢN BẮT BUỘC phải giữ nguyên cấu trúc mô tả không gian gốc (Master Setting). 
-            - TUYỆT ĐỐI CẤM tự ý đổi bối cảnh, đổi màu sắc đèn hoặc kiểu nội thất giữa các cảnh nếu câu chuyện không yêu cầu chuyển địa điểm.
         7. QUY CHUẨN THUYẾT MINH, ĐỒNG BỘ & ÂM THANH NỀN:
             - {goal_directive}
             - CẤM DÙNG GIỌNG THUYẾT MINH PHIM TÀI LIỆU: Giọng nói phải là CỦA CÙNG MỘT NGƯỜI (KOC/Diễn viên) xuất hiện trực tiếp trước ống kính. 
-            - NGẮT NHỊP & CẢM XÚC THUYẾT MINH (PAUSE & RHYTHM): Trong câu thoại `voiceover_vi`, BẮT BUỘC chủ động chèn các dấu phẩy (,), dấu chấm lửng (...) hoặc dấu gạch ngang (-) để tạo quãng nghỉ lấy hơi, giúp nhân vật đọc có ngữ điệu cuốn hút, tự nhiên và không bị hụt hơi.
+            - NGẮT NHỊP & CẢM XÚC THUYẾT MINH (PAUSE & RHYTHM): Trong câu thoại `voiceover_vi`, BẮT BUỘC chủ động chèn các dấu phẩy (,), dấu chấm lửng (...) hoặc dấu gạch ngang (-) để tạo quãng nghỉ lấy hơi, giúp nhân vật đọc có ngữ điệu cuốn hút, tự nhiên và có cảm xúc hơn.
             - ÂM THANH NỀN (AMBIENT/FOLEY SOUND): Nếu cảnh quay có hành động thực tế, thêm mô tả âm thanh nền vào video_prompt bằng tiếng Anh (VD: "Background ambient sound: sizzling meat, volume strictly lower than voiceover").
             - ĐỒNG NHẤT GIỌNG MIỀN BẮC CHUẨN (HÀ NỘI): Chèn lệnh "strict standard Northern Vietnamese (Hanoi) accent".
             - PHIÊN ÂM TIẾNG VIỆT CHUẨN KHI ĐỌC: VD: 'Bluetooth' -> 'Bờ lu tút'. TUYỆT ĐỐI KHÔNG ĐƯA GIÁ TIỀN CỤ THỂ VÀO THOẠI.
-        8. BỘ LỌC CHÍNH SÁCH ĐA NỀN TẢNG (TIKTOK SHOP, FB, YOUTUBE COMPLIANCE):
+        8. BỘ LỌC CHÍNH SÁCH ĐA NỀN TẢNG:
             - TUYỆT ĐỐI KHÔNG DÙNG TỪ NGỮ CỰC ĐOAN: Cấm dùng "100%", "tuyệt đối", "cam kết", "chắc chắn", "vĩnh viễn".
             - CẤM TUYÊN BỐ Y TẾ SAI LỆCH VÀ GIEO RẮC SỢ HÃI: Không dùng từ "độc hại", "ung thư".
             - CẤM KHAN HIẾM GIẢ & ĐIỀU HƯỚNG: Không dùng số lượng tồn kho ảo. Cấm tuyệt đối: "livestream", "phiên live", "inbox riêng", "zalo".
@@ -565,8 +559,10 @@ MỤC TIÊU CHIẾN DỊCH: {goal}
 4. CẤM HIỂN THỊ UI/GIỎ HÀNG KHI KÊU GỌI HÀNH ĐỘNG (CRITICAL): Mọi `image_prompt` và `video_prompt` phải ép lệnh "Cinematic shot ONLY. ABSOLUTELY NO UI elements, NO shopping cart icons, NO on-screen text or social media overlays".
 5. ĐỊNH VỊ TỆP KHÁCH HÀNG: Bắt buộc kịch bản phải xoay quanh tệp khách hàng có NHU CẦU CAO NHẤT.
 6. CHỐNG BIẾN DẠNG SẢN PHẨM & KHÓA MÀU (ANTI-MORPHING & COLOR LOCK): Miêu tả chính xác màu sắc từ ảnh gốc. Ép lệnh "product maintains rigid structural integrity, zero shape morphing, strictly identical to reference" vào video_prompt.
+6.1. ĐỒNG NHẤT BỐI CẢNH 100% (MASTER ENVIRONMENT LOCK - RẤT QUAN TRỌNG CHO NHIỀU NHÂN VẬT): 
+    - Nếu kịch bản diễn ra tại một không gian cố định (như bàn ăn lẩu, phòng khách, phòng ngủ), MỌI `image_prompt` và `video_prompt` của TẤT CẢ các cảnh trong cùng một kịch bản BẮT BUỘC phải giữ nguyên chuỗi mô tả không gian gốc (Master Setting) để tuyệt đối không bị trôi cảnh, đổi quán hay đổi phòng.
 7. CƠ CHẾ NHÂN VẬT: {"Cho phép cảnh quay phong cách tài liệu/B-roll (Off-screen narrator)." if is_offscreen_narrator else "Bắt buộc mọi phân cảnh đều có sự hiện diện và tương tác của nhân vật."}
-8. CHUYỂN CẢNH ĐỘNG: Luân phiên [Cắt cứng (Hard Cut)] và [Nối liền mạch (Match Cut)].
+8. CHUYỂN CẢNH ĐỘNG & NEO KHUNG HÌNH: Luân phiên [Cắt cứng (Hard Cut)] và [Nối liền mạch (Match Cut)]. Cảnh đầu tiên phải là cảnh tổng quan quy tụ đủ các nhân vật làm mỏ neo, các cảnh sau dùng ảnh tham chiếu cuối cảnh trước để đồng nhất tuyệt đối.
 9. GIỚI HẠN TỪ VỰNG THUYẾT MINH (VOICE PACING LIMIT): Kịch bản giọng đọc 'voiceover_vi' PHẢI NGẮN GỌN, CÓ DẤU NGẮT NGHỈ CẢM XÚC. Tuân thủ: Cảnh 4s (tối đa 14 từ); Cảnh 6s (tối đa 20 từ); Cảnh 8s (tối đa 26 từ).
 {voiceover_instruction}
 """
@@ -617,7 +613,7 @@ def add_five_scripts_continuation(current_mode: str, current_style: str, aspect_
     is_knowledge = "Chia sẻ kiến thức" in goal or "Review" in goal
     
     angle_direction_rule = f"ĐỊNH HƯỚNG CHIẾN LƯỢC CHO 5 KỊCH BẢN GỌI THÊM: Tập trung hoàn toàn theo thể loại: '{custom_angle_type}'." if custom_angle_type else ""
-    char_count_rule = f"SỐ LƯỢNG NHÂN VẬT THAM GIA TRONG KỊCH BẢN GỌI THÊM: Bắt buộc mỗi kịch bản phải có sự tham gia tương tác của đúng {extra_num_chars} nhân vật (lấy từ danh sách nhân vật đã casting)." if extra_num_chars > 1 else "Kịch bản tập trung vào 1 nhân vật chính xuyên suốt."
+    char_count_rule = f"SỐ LƯỢNG NHÂN VẬT THAM GIA TRONG KỊCH BẢN GỌI THÊM: Bắt buộc mỗi kịch bản phải có sự tham gia tương tác của đúng {extra_num_chars} nhân vật (lấy từ danh sách nhân vật đã casting) cùng xuất hiện chung trong bối cảnh cố định." if extra_num_chars > 1 else "Kịch bản tập trung vào 1 nhân vật chính xuyên suốt."
 
     if is_corporate:
         extra_rules = "- Bối cảnh không gian văn phòng, nhà xưởng quy mô hoặc dự án thực tế.\n- Không thúc ép mua hàng."
@@ -672,7 +668,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     if target_duration_mins <= 0.5:
         total_sec = 30
         duration_str = "16s - 32s (Tối ưu Credit Veo 3)"
-        duration_rule_scene = f"ĐỂ TỐI ƯU THỜI GIAN LÀM VIDEO VÀ TỐI ƯU CREDIT VEO 3: Bạn BẮT BUỘC CHỈ ĐƯỢC TẠO TỪ 3 ĐẾN 4 PHÂN CẢNH. Mỗi cảnh chọn mốc 4s, 6s, 8s. Cấu trúc gom ý thông minh: Cảnh 1 (Hook Nỗi đau/Vấn đề), Cảnh 2 (Demo/Giải pháp), Cảnh 3/4 (Trải nghiệm + CTA chốt đơn)."
+        duration_rule_scene = f"ĐỂ TỐI ƯU THỜI GIAN LÀM VIDEO VÀ TỐI ƯU CREDIT VEO 3: Bạn BẮT BUỘC CHỈ ĐƯỢC TẠO TỪ 3 ĐẾN 4 PHÂN CẢNH. Mỗi cảnh chọn mốc 4s, 6s, 8s. Cấu trúc gom ý thông minh: Cảnh 1 (Hook Nỗi đau/Vấn đề quy tụ đủ nhân vật bối cảnh cố định), Cảnh 2 (Demo/Giải pháp), Cảnh 3/4 (Trải nghiệm + CTA chốt đơn)."
     else:
         total_sec = int(target_duration_mins * 60)
         duration_str = f"{total_sec}s ({target_duration_mins} phút)"
@@ -701,20 +697,13 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     is_offscreen_narrator = ("Lồng tiếng ngoài" in st.session_state.narrator_mode)
 
     if is_offscreen_narrator:
-        video_audio_prompt_rule = f"Prompt Video Veo 3 (tiếng Anh) - LỒNG TIẾNG NGOÀI: 'Audio: Cinematic background ambient sound matching the scene. Visual: Cinematic B-roll footage showing {outfit_setup}... product maintains rigid structural integrity, zero shape morphing, action ends with the product fully visible and unoccluded. Cinematic shot ONLY. ABSOLUTELY NO UI elements.'"
+        video_audio_prompt_rule = f"Prompt Video Veo 3 (tiếng Anh) - LỒNG TIẾNG NGOÀI: 'Audio: Cinematic background ambient sound matching the scene. Visual: Cinematic B-roll footage showing {{Master Environment Key}} and {outfit_setup}... product maintains rigid structural integrity, zero shape morphing, action ends with the product fully visible and unoccluded. Cinematic shot ONLY. ABSOLUTELY NO UI elements.'"
         voice_director_rule = f"Giọng đọc ngoài (Off-screen narrator) Miền Bắc chuẩn (Hà Nội)... (Truyền cảm, chuyên nghiệp)"
     else:
-        video_audio_prompt_rule = f"Prompt Video Veo 3 (tiếng Anh) - TRỰC TIẾP TRƯỚC ỐNG KÍNH: 'Audio: The exact same {gender_en} character speaking on-camera showing [BIỂU CẢM], punctuated by sharp expression. fast-paced, high-energy, enthusiastic sales tone. Strict standard Northern Vietnamese (Hanoi) accent. Background ambient sound: [Tiếng động môi trường nếu có]. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements. Reading: [voiceover_vi]. Product maintains rigid structural integrity, zero shape morphing, action ends with the product fully visible and unoccluded.'"
+        video_audio_prompt_rule = f"Prompt Video Veo 3 (tiếng Anh) - TRỰC TIẾP TRƯỚC ỐNG KÍNH: 'Audio: The exact same {gender_en} character speaking on-camera showing [BIỂU CẢM], punctuated by sharp expression. fast-paced, high-energy, enthusiastic sales tone. Strict standard Northern Vietnamese (Hanoi) accent. Background ambient sound: [Tiếng động môi trường nếu có]. Visual: Cinematic shot ONLY. ABSOLUTELY NO UI elements. Reading: [voiceover_vi]. Scene maintains the exact same {{Master Environment Key}}. Product maintains rigid structural integrity, zero shape morphing, action ends with the product fully visible and unoccluded.'"
         voice_director_rule = f"Giọng {fixed_gender_vi} Miền Bắc chuẩn (Hà Nội)... (BẮT BUỘC GHI RÕ HÀNH ĐỘNG KHUÔN MẶT)"
 
     prompt_detail = f"""
-    Bối cảnh định hướng: {safe_setting} | Góc tiếp cận: {safe_angle} | Hook: {safe_hook}
-    TRANG PHỤC CỐ ĐỊNH CHO KỊCH BẢN NÀY: {outfit_setup}
-    GIỚI TÍNH ĐÃ CHỐT: {fixed_gender_vi} (English mapping: {gender_en})
-    
-    QUY ĐỊNH KHÓA BỐI CẢNH GỐC (MASTER ENVIRONMENT LOCK - CRITICAL):
-    - Đặt ra 1 chuỗi mô tả không gian chuẩn bằng tiếng Anh cho kịch bản này (Ví dụ: "inside a cozy warm-lit Vietnamese family living room with a sofa background"). 
-    - MỌI `image_prompt` và `video_prompt` của TẤT CẢ các cảnh trong kịch bản này BẮT BUỘC phải chứa câu mô tả không gian gốc đó để đảm bảo không bao giờ bị lệch cảnh (Ví dụ: đang ăn lẩu ở quán thì không được lệch đi đâu khác).                                                                       
     Ngữ cảnh sản phẩm/dịch vụ: "{product_ctx}"
     Phân tích Gốc: {mechanical_dna}
     Đối tượng mục tiêu: {target_audience}
@@ -725,11 +714,11 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     TRANG PHỤC CỐ ĐỊNH CHO KỊCH BẢN NÀY: {outfit_setup}
     GIỚI TÍNH ĐÃ CHỐT: {fixed_gender_vi} (English mapping: {gender_en})
     
-    QUY ĐỊNH ĐẠO DIỄN LÊN PROMPT (BẮT BUỘC):
-    0. KHÓA ĐỒNG BỘ GIỚI TÍNH VÀ POLICY (CRITICAL): Trong `image_prompt` và `video_prompt`, BẮT BUỘC sử dụng chữ '{gender_en} character' thay vì 'Nam character'.
+    QUY ĐỊNH ĐẠO DIỄN LÊN PROMPT & KHÓA BỐI CẢNH (MASTER ENVIRONMENT LOCK - CRITICAL):
+    0. THIẾT LẬP KHÓA BỐI CẢNH GỐC: Tự định nghĩa một chuỗi mô tả không gian cố định bằng tiếng Anh cho kịch bản này (Ví dụ: "inside a cozy warm-lit Vietnamese family living room with wooden dining table and steaming hotpot"). Đảm bảo chuỗi này PHẢI XUẤT HIỆN TRONG TẤT CẢ các image_prompt và video_prompt để không bao giờ bị trôi bối cảnh.
     1. KỶ LUẬT THỜI LƯỢNG & NHỊP ĐỘ (VOICE PACING): SỐ TỪ trong `voiceover_vi` KHÔNG ĐƯỢC QUÁ NGẮN HOẶC QUÁ DÀI. Áp dụng: Cảnh 4s (12-14 từ); Cảnh 6s (18-21 từ); Cảnh 8s (24-28 từ). {duration_rule_scene}
     2. NGẮT NHỊP & CẢM XÚC THUYẾT MINH (PAUSE & RHYTHM): Trong `voiceover_vi`, BẮT BUỘC khéo léo chèn dấu phẩy (,), dấu chấm lửng (...) hoặc dấu gạch ngang (-) để tạo quãng nghỉ lấy hơi, giúp nhân vật đọc có ngữ điệu cuốn hút, tự nhiên và có cảm xúc hơn.
-    3. CHUYỂN CẢNH ĐỘNG: Luân phiên [Cắt cứng (Hard Cut)] và [Nối liền mạch (Match Cut)]. Nếu là [Match Cut], `image_prompt` ghi: "Dùng ảnh cuối của cảnh trước làm ảnh tham chiếu cho video".
+    3. CHUYỂN CẢNH ĐỘNG & NEO KHUNG HÌNH: Cảnh 1 bắt buộc là Wide Shot quy tụ đủ nhân vật làm mỏ neo. Các cảnh sau sử dụng [Nối liền mạch (Match Cut)] với `image_prompt`: "Dùng ảnh cuối của cảnh trước làm ảnh tham chiếu cho video".
     4. MẠCH THOẠI SẠCH VÀ LIỀN MẠCH: Lời thoại nối liền bằng từ nối tò mò (VD: "Thế nhưng...", "Chưa hết đâu!"). TUYỆT ĐỐI KHÔNG chứa dấu ngoặc đơn (như `(Cười)`) bên trong `voiceover_vi`.
     5. DIỄN XUẤT, SFX & ÂM THANH NỀN: Biểu cảm phi ngôn ngữ miêu tả bằng tiếng Anh. Thêm âm thanh môi trường nếu có hành động thực tế.
     6. CHỐNG BIẾN DẠNG & KHÔNG CHE KHUẤT: Lệnh "product is fully visible, strictly NO hands or objects obscuring the main body" trong image_prompt.
@@ -748,11 +737,11 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         {{
           "scene_number": 1, 
           "duration": "8s", 
-          "scene_setting": "Mô tả bối cảnh góc toàn cảnh...", 
-          "transition_type": "Mở đầu", 
+          "scene_setting": "Mô tả bối cảnh góc toàn cảnh quy tụ các nhân vật...", 
+          "transition_type": "Mở đầu (Master Anchor Shot)", 
           "voice_director_vn": "{voice_director_rule}", 
           "voiceover_vi": "U là trời..., chiếc máy chiếu này nhỏ gọn lắm nhé! Mà chiếu lên nét căng đét luôn..., xem phim ở phòng ngủ cứ gọi là đỉnh chóp.", 
-          "image_prompt": "Prompt Imagen 3 (tiếng Anh). ÉP LỆNH: '{gender_en} character... wearing {outfit_setup}...'. ÉP KÍCH THƯỚC: 'featuring the EXACT product which fits exactly in the palm, fully visible, strictly NO hands obscuring'.", 
+          "image_prompt": "Prompt Imagen 3 (tiếng Anh). Bao gồm Master Setting. ÉP LỆNH: '{gender_en} character... wearing {outfit_setup}...'. ÉP KÍCH THƯỚC: 'featuring the EXACT product which fits exactly in the palm, fully visible, strictly NO hands obscuring'.", 
           "video_prompt": "{video_audio_prompt_rule}"
         }},
         {{
@@ -762,7 +751,7 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
           "transition_type": "Cắt cứng (Hard Cut)", 
           "voice_director_vn": "{voice_director_rule}", 
           "voiceover_vi": "Nhưng đừng lo..., vì hôm nay mình đã mang đến giải pháp đỉnh cao giải quyết triệt để vấn đề rồi đây.", 
-          "image_prompt": "Viết PROMPT ẢNH HOÀN TOÀN MỚI để tạo góc quay cận cảnh mới.", 
+          "image_prompt": "Viết PROMPT ẢNH HOÀN TOÀN MỚI có chứa Master Setting.", 
           "video_prompt": "{video_audio_prompt_rule}"
         }},
         {{
@@ -1035,8 +1024,8 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
                 {{
                   "id": 1,
                   "title": "Tên kịch bản 1 (Tình huống đời sống & Nỗi đau PAS)",
-                  "setting_style": "Mô tả bối cảnh",
-                  "script_outfit_setup": "Mô tả 1 bộ đồ cho nhân vật (BẮT BUỘC CHỈ ĐỊNH RÕ MÀU SẮC)",
+                  "setting_style": "Mô tả bối cảnh không gian cố định",
+                  "script_outfit_setup": "Mô tả trang phục nhân vật (BẮT BUỘC CHỈ ĐỊNH RÕ MÀU SẮC)",
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu mạnh mẽ, thu hút",
                   "recommended_scenes_count": "Tự động phân bổ linh hoạt",
@@ -1045,7 +1034,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
                 {{
                   "id": 2,
                   "title": "Tên kịch bản 2 (Giải pháp đột phá & Trải nghiệm)",
-                  "setting_style": "Mô tả bối cảnh",
+                  "setting_style": "Mô tả bối cảnh không gian cố định",
                   "script_outfit_setup": "Mô tả trang phục (BẮT BUỘC CHỈ ĐỊNH RÕ MÀU SẮC)",
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
@@ -1055,7 +1044,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
                 {{
                   "id": 3,
                   "title": "Tên kịch bản 3 (Review bóc trần / Thử thách)",
-                  "setting_style": "Mô tả bối cảnh",
+                  "setting_style": "Mô tả bối cảnh không gian cố định",
                   "script_outfit_setup": "Mô tả trang phục (BẮT BUỘC CHỈ ĐỊNH RÕ MÀU SẮC)",
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
@@ -1065,7 +1054,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
                 {{
                   "id": 4,
                   "title": "Tên kịch bản 4 (Tình huống hài hước / Plot Twist)",
-                  "setting_style": "Mô tả bối cảnh",
+                  "setting_style": "Mô tả bối cảnh không gian cố định",
                   "script_outfit_setup": "Mô tả trang phục (BẮT BUỘC CHỈ ĐỊNH RÕ MÀU SẮC)",
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
@@ -1075,7 +1064,7 @@ if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", typ
                 {{
                   "id": 5,
                   "title": "Tên kịch bản 5 (Flash Sale & Deal hời giới hạn)",
-                  "setting_style": "Mô tả bối cảnh",
+                  "setting_style": "Mô tả bối cảnh không gian cố định",
                   "script_outfit_setup": "Mô tả trang phục (BẮT BUỘC CHỈ ĐỊNH RÕ MÀU SẮC)",
                   "angle": "Góc tiếp cận",
                   "target_hook": "Câu mở đầu",
