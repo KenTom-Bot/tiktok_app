@@ -532,6 +532,7 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
         voiceover_instruction = f"""
         7. QUY CHUẨN THUYẾT MINH, ĐỒNG BỘ & ÂM THANH NỀN:
             - {goal_directive}
+            - NGẮT NHỊP & CẢM XÚC THUYẾT MINH (PAUSE & RHYTHM): Trong câu thoại `voiceover_vi`, BẮT BUỘC phải khéo léo chèn các dấu phẩy (,), dấu chấm lửng (...) hoặc dấu gạch ngang (-) tại các nhịp nghỉ hợp lý. Điều này giúp bộ đọc Text-to-Speech (TTS) tự động ngắt nghỉ đúng chỗ, tạo điểm nhấn cảm xúc, giúp người nghe dễ thấm và tự nhiên hơn.
             - CẤM DÙNG GIỌNG THUYẾT MINH PHIM TÀI LIỆU (NO NARRATOR VOICE): Giọng nói phải là CỦA CÙNG MỘT NGƯỜI (KOC/Diễn viên) xuất hiện trực tiếp trước ống kính. 
             - ÂM THANH NỀN (AMBIENT/FOLEY SOUND): Nếu cảnh quay có hành động thực tế (như nấu ăn, gõ phím, tiếng gió), BẮT BUỘC thêm mô tả âm thanh nền vào video_prompt bằng tiếng Anh (VD: "Background ambient sound: sizzling meat / wind blowing, volume strictly lower than voiceover").
             - ĐỒNG NHẤT GIỌNG MIỀN BẮC CHUẨN (HÀ NỘI): Bắt buộc chèn lệnh "strict standard Northern Vietnamese (Hanoi) accent, strongly suppress any Southern or Saigon accents" vào MỌI video_prompt.
@@ -719,7 +720,10 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
     0. KHÓA ĐỒNG BỘ GIỚI TÍNH VÀ POLICY (CRITICAL): Trong `image_prompt` và `video_prompt`, BẮT BUỘC sử dụng chữ '{gender_en} character' thay vì 'Nam character'.
     1. KỶ LUẬT THỜI LƯỢNG & NHỊP ĐỘ (VOICE PACING): SỐ TỪ trong `voiceover_vi` KHÔNG ĐƯỢC QUÁ NGẮN HOẶC QUÁ DÀI. Áp dụng: Cảnh 4s (12-14 từ); Cảnh 6s (18-21 từ); Cảnh 8s (24-28 từ). {duration_rule_scene}
     2. CHUYỂN CẢNH ĐỘNG: Luân phiên [Cắt cứng (Hard Cut)] và [Nối liền mạch (Match Cut)]. Nếu là [Match Cut], `image_prompt` ghi: "Dùng ảnh cuối của cảnh trước làm ảnh tham chiếu cho video".
-    3. MẠCH THOẠI SẠCH VÀ LIỀN MẠCH: Lời thoại nối liền bằng từ nối tò mò (VD: "Thế nhưng...", "Chưa hết đâu!"). TUYỆT ĐỐI KHÔNG chứa dấu ngoặc đơn (như `(Cười)`) bên trong `voiceover_vi`.
+    3. MẠCH THOẠI SẠCH VÀ LIỀN MẠCH: 
+        - Lời thoại `voiceover_vi` giữa các phân cảnh PHẢI ĐƯỢC KẾT NỐI CHẶT CHẼ bằng các từ nối tạo sự tò mò (VD: "Thế nhưng...", "Chưa hết đâu!"). 
+        - NGẮT NHỊP TỰ NHIÊN: Chủ động phân bổ dấu phẩy (,) hoặc dấu lửng (...) trong câu để tạo quãng nghỉ lấy hơi cho giọng đọc, giúp nhân vật có ngữ điệu cuốn hút, cảm xúc và không bị đọc dồn dập quá mức gây hụt hơi.
+        - TUYỆT ĐỐI KHÔNG đưa mức giá cụ thể bằng con số vào thoại.
     4. DIỄN XUẤT, SFX & ÂM THANH NỀN: Biểu cảm phi ngôn ngữ miêu tả bằng tiếng Anh. Thêm âm thanh môi trường nếu có hành động thực tế.
     5. CHỐNG BIẾN DẠNG & KHÔNG CHE KHUẤT: Lệnh "product is fully visible, strictly NO hands or objects obscuring the main body" trong image_prompt.
     6. TỶ LỆ KÍCH THƯỚC: Thiết lập hệ quy chiếu vật lý rõ ràng.
