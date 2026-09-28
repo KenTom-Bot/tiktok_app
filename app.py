@@ -486,10 +486,10 @@ with col_strat:
 with col_ratio: 
     selected_aspect = "9:16" if "9:16" in st.selectbox("Tỷ lệ khung hình:", ["9:16 (Dọc TikTok/Reels)", "16:9 (Ngang YouTube)"]) else "16:9"
 with col_time: 
-    # ĐÃ SỬA LOGIC THỜI LƯỢNG CHO TIKTOK SHOP
-    if "Bán Hàng" in selected_mode or "Mẹ & Bé" in selected_mode:
-        st.markdown("<div style='margin-top: 28px; font-weight: bold; color: #d97706;'>⏱️ Tối ưu: 3-5 cảnh (15-30s)</div>", unsafe_allow_html=True)
-        target_duration_mins = 0.5 # Tự động ép AI chạy cấu trúc 3-5 cảnh
+    # CHỈ RIÊNG TIKTOK SHOP MỚI KHÓA 3-5 CẢNH, CÁC THỂ LOẠI KHÁC TỰ DO CHỌN PHÚT
+    if selected_mode == "🛒 TikTok Shop & Bán Hàng":
+        st.markdown("<div style='margin-top: 28px; font-weight: bold; color: #d97706;'>⏱️ Tối ưu: 3-5 cảnh (20-30s)</div>", unsafe_allow_html=True)
+        target_duration_mins = 0.5 
     else:
         target_duration_mins = st.number_input("⏱️ Thời lượng (Phút):", min_value=0.5, max_value=30.0, value=1.0, step=0.5)
 with col_audio: 
