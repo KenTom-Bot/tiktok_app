@@ -517,6 +517,9 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
     
     if is_offscreen_narrator:
         voiceover_instruction = f"""
+        6.1. ĐỒNG NHẤT BỐI CẢNH 100% (SCENE ENVIRONMENT LOCK): 
+             - Nếu kịch bản diễn ra tại một không gian cố định (như bàn ăn lẩu, phòng khách, văn phòng), MỌI `image_prompt` và `video_prompt` của tất cả các cảnh TRONG CÙNG MỘT KỊCH BẢN BẮT BUỘC phải giữ nguyên cấu trúc mô tả không gian gốc (Master Setting). 
+             - TUYỆT ĐỐI CẤM tự ý đổi bối cảnh, đổi màu sắc đèn hoặc kiểu nội thất giữa các cảnh nếu câu chuyện không yêu cầu chuyển địa điểm.
         7. QUY CHUẨN THUYẾT MINH NGOÀI (OFF-SCREEN NARRATOR):
             - {goal_directive}
             - SỬ DỤNG GIỌNG ĐỌC LỒNG TIẾNG NGOÀI (OFF-SCREEN NARRATOR): Giọng đọc là người dẫn chuyện không xuất hiện nói trước ống kính. Visual tập trung 100% vào bối cảnh, con người và hành động thực tế (B-roll footage/Documentary style).
@@ -529,6 +532,9 @@ def get_system_instructions(mode: str, style: str, aspect_ratio: str, goal: str,
         """
     else:
         voiceover_instruction = f"""
+        6.1. ĐỒNG NHẤT BỐI CẢNH 100% (SCENE ENVIRONMENT LOCK): 
+            - Nếu kịch bản diễn ra tại một không gian cố định (như bàn ăn lẩu, phòng khách, văn phòng), MỌI `image_prompt` và `video_prompt` của tất cả các cảnh TRONG CÙNG MỘT KỊCH BẢN BẮT BUỘC phải giữ nguyên cấu trúc mô tả không gian gốc (Master Setting). 
+            - TUYỆT ĐỐI CẤM tự ý đổi bối cảnh, đổi màu sắc đèn hoặc kiểu nội thất giữa các cảnh nếu câu chuyện không yêu cầu chuyển địa điểm.
         7. QUY CHUẨN THUYẾT MINH, ĐỒNG BỘ & ÂM THANH NỀN:
             - {goal_directive}
             - CẤM DÙNG GIỌNG THUYẾT MINH PHIM TÀI LIỆU: Giọng nói phải là CỦA CÙNG MỘT NGƯỜI (KOC/Diễn viên) xuất hiện trực tiếp trước ống kính. 
@@ -702,6 +708,13 @@ def create_scene_details_for_id(target_id: int, current_mode: str, current_style
         voice_director_rule = f"Giọng {fixed_gender_vi} Miền Bắc chuẩn (Hà Nội)... (BẮT BUỘC GHI RÕ HÀNH ĐỘNG KHUÔN MẶT)"
 
     prompt_detail = f"""
+    Bối cảnh định hướng: {safe_setting} | Góc tiếp cận: {safe_angle} | Hook: {safe_hook}
+    TRANG PHỤC CỐ ĐỊNH CHO KỊCH BẢN NÀY: {outfit_setup}
+    GIỚI TÍNH ĐÃ CHỐT: {fixed_gender_vi} (English mapping: {gender_en})
+    
+    QUY ĐỊNH KHÓA BỐI CẢNH GỐC (MASTER ENVIRONMENT LOCK - CRITICAL):
+    - Đặt ra 1 chuỗi mô tả không gian chuẩn bằng tiếng Anh cho kịch bản này (Ví dụ: "inside a cozy warm-lit Vietnamese family living room with a sofa background"). 
+    - MỌI `image_prompt` và `video_prompt` của TẤT CẢ các cảnh trong kịch bản này BẮT BUỘC phải chứa câu mô tả không gian gốc đó để đảm bảo không bao giờ bị lệch cảnh (Ví dụ: đang ăn lẩu ở quán thì không được lệch đi đâu khác).                                                                       
     Ngữ cảnh sản phẩm/dịch vụ: "{product_ctx}"
     Phân tích Gốc: {mechanical_dna}
     Đối tượng mục tiêu: {target_audience}
