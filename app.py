@@ -792,8 +792,8 @@ def clone_script_id(target_id, current_mode, current_style, aspect_ratio, goal, 
 # ==============================================================================
 st.markdown("""
 <div class="header-container">
-    <div class="header-badge">🌟 STUDIO VIDEO AI ĐA NĂNG TOÀN DIỆN</div>
-    <div class="main-title">🎬 Hệ Thống Kịch Bản Đa Vũ Trụ Pro</div>
+    <div class="header-badge">🌟 BÌNH NGUYÊN STUDIO VIDEO AI</div>
+    <div class="main-title">🎬 Hệ Thống Kịch Bản Pro</div>
     <div class="sub-title">TikTok Shop, Mẹ & Bé Viral, TVC Điện Ảnh, Phim Đời Sống & Giáo Dục</div>
 </div>
 """, unsafe_allow_html=True)
