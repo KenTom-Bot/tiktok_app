@@ -1058,7 +1058,7 @@ if num_chars > 0:
                         char_inputs.append({"id": i+1, "role": c_role.strip(), "file": c_file})
 
 # Xử lý Logic Phân tích chính
-if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files or char_inputs)):
+if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files or char_inputs)):
     st.toast("⏳ Đang kết nối phân tích DNA... Vui lòng đợi trong giây lát!", icon="🤖")
     with st.spinner("⏳ Đang phân tích DNA chuyên sâu và Gán vai diễn viên..."):
         try:
@@ -1349,7 +1349,7 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
     outfit_setup_text = active_script.get('script_outfit_setup', 'Đồng phục bối cảnh')
 
     st.markdown(f"### 🎬 **KỊCH BẢN CHI TIẾT: {str(script_title).upper()}**")
-    st.info(f"⏱️ Thời lượng: **{total_dur}** | 🎙️ Giọng: **{vp.get('gender', 'Nữ')} ({vp.get('tone', 'Truyền cảm')})** | 👔 Trang phục toàn diện: **{outfit_setup_text}** | 📐 Khung hình: **{selected_aspect}**")
+    st.info(f"⏱️️ Thời lượng: **{total_dur}** | 🎙️ Giọng: **{vp.get('gender', 'Nữ')} ({vp.get('tone', 'Truyền cảm')})** | 👔 Trang phục toàn diện: **{outfit_setup_text}** | 📐 Khung hình: **{selected_aspect}**")
 
     # BẢNG ĐIỀU PHỐI SẢN XUẤT HÀNG LOẠT (BATCH PRODUCTION)
     with st.container(border=True):
@@ -1359,7 +1359,6 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
 
         if st.button("🚀 Render Hàng Loạt Tất Cả Ảnh (-5 Credits)", key="btn_batch_img_top", type="primary", use_container_width=True):
             user_email_curr = st.session_state.current_user_email
-            # Tính tổng số ảnh cần tạo
             valid_scenes_count = sum(1 for sc in scenes_list if sc.get('image_prompt') and "dùng ảnh cuối của cảnh trước" not in sc.get('image_prompt', '').lower())
             
             if deduct_user_credit(user_email_curr, amount=valid_scenes_count):
@@ -1384,15 +1383,28 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
         dur = scene.get("duration", "6s")
         st.markdown(f"#### **📍 Phân cảnh {idx} ({dur}) — [ {scene.get('transition_type', 'Cắt cứng dồn dập')} ]**")
         
-        # Chia đôi màn hình: Cột trái (Kịch bản & Prompt), Cột phải (Media Workspace & API Controls)
+        # Chia đôi màn hình: Cột trái (Kịch bản & Sửa Voiceover), Cột phải (Media Workspace)
         col_script, col_media = st.columns([1, 1], gap="medium")
         
         with col_script:
             with st.container(border=True):
-                st.markdown(f"<b style='color: #d90429;'>📝 Kịch bản & Prompt Cảnh {idx}</b>", unsafe_allow_html=True)
+                st.markdown(f"<b style='color: #d90429;'>📝 Kịch bản & Tinh chỉnh Voiceover Cảnh {idx}</b>", unsafe_allow_html=True)
                 st.markdown(f"🏛️ **Bối cảnh:** *{scene.get('scene_setting')}*")
                 st.markdown(f"**🎙️ Ngữ điệu & SFX:** *{scene.get('voice_director_vn')}*")
-                st.markdown(f"**💬 Voiceover:** `\"{scene.get('voiceover_vi')}\"`")
+                
+                # --- CHO PHÉP CHỈNH SỬA TRỰC TIẾP LỜI THOẠI (VOICEOVER) ---
+                current_vo_key = f"vo_text_{st.session_state.active_script_id}_{idx}"
+                if current_vo_key not in st.session_state:
+                    st.session_state[current_vo_key] = scene.get('voiceover_vi', '')
+                
+                edited_voiceover = st.text_area(
+                    "💬 Chỉnh sửa lời thoại (Voiceover):",
+                    value=st.session_state[current_vo_key],
+                    key=f"input_vo_{st.session_state.active_script_id}_{idx}",
+                    height=70,
+                    help="Bạn có thể sửa lại câu từ, dấu ngắt nghỉ hoặc tiếng địa phương trực tiếp tại đây trước khi mang đi lồng tiếng."
+                )
+                st.session_state[current_vo_key] = edited_voiceover
                 
                 img_p = scene.get('image_prompt', '')
                 if img_p:
