@@ -162,8 +162,7 @@ def load_licensed_accounts():
         ADMIN_EMAIL: {
             "contact": ADMIN_EMAIL,
             "roles": ["Tất cả thể loại"],
-            "expires_at": "2099-12-31",
-            "credits": 9999
+            "expires_at": "2099-12-31"
         }
     }
     save_licensed_accounts(default_accounts)
@@ -175,17 +174,6 @@ def save_licensed_accounts(accounts_dict):
             json.dump(accounts_dict, f, ensure_ascii=False, indent=2)
     except Exception as e:
         st.error(f"Lỗi lưu danh sách tài khoản: {e}")
-
-def deduct_user_credit(email, amount=1):
-    if email == ADMIN_EMAIL:
-        return True
-    if email in st.session_state.licensed_accounts:
-        curr_cred = st.session_state.licensed_accounts[email].get("credits", 10)
-        if curr_cred >= amount:
-            st.session_state.licensed_accounts[email]["credits"] = curr_cred - amount
-            save_licensed_accounts(st.session_state.licensed_accounts)
-            return True
-    return False
 
 # ==============================================================================
 # KHỞI TẠO SESSION STATE & GLOBAL TOAST
@@ -275,47 +263,6 @@ def format_analysis_field(field_val) -> str:
             else:
                 formatted_output.append(f"<div style='margin-left: 15px; margin-top: 4px;'>• {line}</div>")
     return "".join(formatted_output) if formatted_output else text
-
-# ==============================================================================
-# HÀM HỖ TRỢ API TẠO ẢNH VÀ VIDEO TRỰC TIẾP
-# ==============================================================================
-def generate_image_with_imagen(prompt_text, aspect_ratio_str="9:16"):
-    try:
-        result = client.models.generate_images(
-            model='imagen-3.0-generate-002',
-            prompt=prompt_text,
-            config=types.GenerateImagesConfig(
-                number_of_images=1,
-                output_mime_type="image/jpeg",
-                aspect_ratio="9:16" if "9:16" in aspect_ratio_str else "16:9"
-            )
-        )
-        for generated_image in result.generated_images:
-            return generated_image.image.image_bytes
-    except Exception as e:
-        st.error(f"Lỗi tạo ảnh: {e}")
-    return None
-
-def generate_video_with_veo(image_bytes, video_prompt_text):
-    try:
-        operation = client.models.generate_videos(
-            model='veo-2.0-generate-001',
-            prompt=video_prompt_text,
-            image=types.Image.from_bytes(data=image_bytes),
-            config=types.GenerateVideosConfig(
-                fps=24,
-                duration_seconds=5
-            )
-        )
-        while not operation.done:
-            time.sleep(10)
-            operation = client.operations.get(operation)
-        
-        video_result = operation.response
-        return video_result.generated_videos[0].video.video_bytes
-    except Exception as e:
-        st.error(f"Lỗi tạo video: {e}")
-    return None
 
 with st.sidebar:
     if not st.session_state.is_logged_in:
@@ -454,12 +401,11 @@ with st.sidebar:
                 new_account_id = st.text_input("Email / SĐT khách hàng:")
                 assigned_modules = st.multiselect("Phân quyền chức năng:", options=ALL_MODULES, default=["🛒 TikTok Shop & Bán Hàng"])
                 duration_option = st.selectbox("Thời hạn:", options=["Dùng thử 3 ngày", "1 Tháng", "3 Tháng", "6 Tháng", "1 Năm", "2 Năm", "3 Năm", "5 Năm", "10 Năm", "Vĩnh viễn (Trọn đời)"], index=0)
-                init_credits = st.number_input("Tặng Credit khởi tạo:", min_value=1, max_value=1000, value=20)
                 
                 if st.form_submit_button("💾 Lưu / Cấp Quyền Mới", use_container_width=True):
                     if new_account_id.strip():
                         expiry_date = "2099-12-31" if "Vĩnh viễn" in duration_option else (datetime.now() + timedelta(days=3 if "Dùng thử" in duration_option else {"1 Tháng": 30, "3 Tháng": 90, "6 Tháng": 180, "1 Năm": 365, "2 Năm": 730, "3 Năm": 1095, "5 Năm": 1825, "10 Năm": 3650}.get(duration_option, 30))).strftime("%Y-%m-%d")
-                        st.session_state.licensed_accounts[new_account_id.strip()] = {"contact": new_account_id.strip(), "roles": assigned_modules, "expires_at": expiry_date, "credits": int(init_credits)}
+                        st.session_state.licensed_accounts[new_account_id.strip()] = {"contact": new_account_id.strip(), "roles": assigned_modules, "expires_at": expiry_date}
                         save_licensed_accounts(st.session_state.licensed_accounts)
                         
                         st.session_state.global_toast = f"Đã cấp quyền thành công cho: {new_account_id.strip()}!"
@@ -470,7 +416,7 @@ with st.sidebar:
                 with st.expander(f"📋 Danh sách tài khoản đã cấp ({len(st.session_state.licensed_accounts)})"):
                     for acc, info in list(st.session_state.licensed_accounts.items()):
                         st.markdown(f"**👤 {acc}**")
-                        st.caption(f"• Quyền: {', '.join(info.get('roles', []))}<br>• Hết hạn: {info.get('expires_at')}<br>• Credit: {info.get('credits', 10)}", unsafe_allow_html=True)
+                        st.caption(f"• Quyền: {', '.join(info.get('roles', []))}<br>• Hết hạn: {info.get('expires_at')}", unsafe_allow_html=True)
                         if acc != ADMIN_EMAIL and st.button(f"🗑️ Xóa {acc}", key=f"del_acc_{acc}"):
                             del st.session_state.licensed_accounts[acc]
                             save_licensed_accounts(st.session_state.licensed_accounts)
@@ -498,12 +444,6 @@ with st.sidebar:
         st.markdown("---")
         st.markdown("### 👤 **Thông Tin Tài Khoản**")
         st.success(f"Đang đăng nhập: **{st.session_state.current_user_email}**")
-        
-        # Hiển thị số dư Credit khả dụng
-        user_info = st.session_state.licensed_accounts.get(st.session_state.current_user_email, {})
-        current_credits = user_info.get("credits", 10)
-        st.metric(label="💎 Số Dư Credit Khả Dụng", value=f"{current_credits} Credits")
-        
         if st.button("🚪 Đăng Xuất", use_container_width=True):
             st.session_state.is_logged_in = False
             st.session_state.current_user_email = ""
@@ -1058,7 +998,7 @@ if num_chars > 0:
                         char_inputs.append({"id": i+1, "role": c_role.strip(), "file": c_file})
 
 # Xử lý Logic Phân tích chính
-if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files or char_inputs)):
+if st.button("🚀 Bắt Đầu Phân Tích Chi Tiết & Lên Kịch Bản", type="primary", use_container_width=True, disabled=not (input_text.strip() or uploaded_files or char_inputs)):
     st.toast("⏳ Đang kết nối phân tích DNA... Vui lòng đợi trong giây lát!", icon="🤖")
     with st.spinner("⏳ Đang phân tích DNA chuyên sâu và Gán vai diễn viên..."):
         try:
@@ -1314,9 +1254,7 @@ if all_combined_scripts_list and st.session_state.active_script_id is None and n
             st.session_state.action_trigger = "generate_more"
             st.rerun()
 
-# ==============================================================================
-# GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & GIAO DIỆN CHIA ĐÔI MÀN HÌNH (SPLIT-SCREEN)
-# ==============================================================================
+# GIAI ĐOẠN 2: CHI TIẾT KỊCH BẢN & BỐ CỤC ĐIỀU HƯỚNG
 if st.session_state.active_script_id and st.session_state.active_script_id in st.session_state.generated_details and not st.session_state.action_trigger:
     st.divider()
 
@@ -1349,139 +1287,32 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
     outfit_setup_text = active_script.get('script_outfit_setup', 'Đồng phục bối cảnh')
 
     st.markdown(f"### 🎬 **KỊCH BẢN CHI TIẾT: {str(script_title).upper()}**")
-    st.info(f"⏱️️ Thời lượng: **{total_dur}** | 🎙️ Giọng: **{vp.get('gender', 'Nữ')} ({vp.get('tone', 'Truyền cảm')})** | 👔 Trang phục toàn diện: **{outfit_setup_text}** | 📐 Khung hình: **{selected_aspect}**")
+    st.info(f"⏱️ Thời lượng: **{total_dur}** | 🎙️ Giọng: **{vp.get('gender', 'Nữ')} ({vp.get('tone', 'Truyền cảm')})** | 👔 Trang phục toàn diện: **{outfit_setup_text}** | 📐 Khung hình: **{selected_aspect}**")
 
-    # BẢNG ĐIỀU PHỐI SẢN XUẤT HÀNG LOẠT (BATCH PRODUCTION)
-    with st.container(border=True):
-        st.markdown("##### ⚡ **Bảng Điều Phối Sản Xuất Hàng Loạt Trực Tiếp (API Studio)**")
-        scenes_list = active_script.get("scenes", []) if isinstance(active_script, dict) else []
-        if isinstance(scenes_list, dict): scenes_list = [scenes_list]
-
-        if st.button("🚀 Render Hàng Loạt Tất Cả Ảnh (-5 Credits)", key="btn_batch_img_top", type="primary", use_container_width=True):
-            user_email_curr = st.session_state.current_user_email
-            valid_scenes_count = sum(1 for sc in scenes_list if sc.get('image_prompt') and "dùng ảnh cuối của cảnh trước" not in sc.get('image_prompt', '').lower())
-            
-            if deduct_user_credit(user_email_curr, amount=valid_scenes_count):
-                progress_bar = st.progress(0)
-                total_sc = len(scenes_list)
-                for idx_b, sc_b in enumerate(scenes_list, start=1):
-                    img_p_b = sc_b.get('image_prompt', '')
-                    if img_p_b and "dùng ảnh cuối của cảnh trước" not in img_p_b.lower():
-                        img_bytes_b = generate_image_with_imagen(img_p_b, selected_aspect)
-                        if img_bytes_b:
-                            st.session_state[f"img_bytes_{st.session_state.active_script_id}_{idx_b}"] = img_bytes_b
-                    progress_bar.progress(idx_b / total_sc)
-                st.success(f"✅ Đã hoàn tất render hàng loạt ảnh (-{valid_scenes_count} Credits)!")
-                time.sleep(0.3)
-                st.rerun()
-            else:
-                st.error("❌ Tài khoản của bạn không đủ credit để thực hiện render hàng loạt!")
-
-    # HIỂN THỊ CÁC PHÂN CẢNH THEO GIAO DIỆN CHIA ĐÔI MÀN HÌNH (SPLIT-SCREEN)
+    scenes_list = active_script.get("scenes", []) if isinstance(active_script, dict) else []
+    if isinstance(scenes_list, dict): scenes_list = [scenes_list]
+    
     for idx, scene in enumerate(scenes_list, start=1):
         if not isinstance(scene, dict): continue
         dur = scene.get("duration", "6s")
         st.markdown(f"#### **📍 Phân cảnh {idx} ({dur}) — [ {scene.get('transition_type', 'Cắt cứng dồn dập')} ]**")
+        st.markdown(f"🏛️ **Bối cảnh & Miêu tả:** *{scene.get('scene_setting')}*")
+        st.markdown(f"**🎙️ Đạo diễn ngữ điệu & SFX:** *{scene.get('voice_director_vn')}*")
+        st.markdown(f"**💬 Lời thuyết minh (Voiceover):** `\"{scene.get('voiceover_vi')}\"`")
         
-        # Chia đôi màn hình: Cột trái (Kịch bản & Sửa Voiceover), Cột phải (Media Workspace)
-        col_script, col_media = st.columns([1, 1], gap="medium")
-        
-        with col_script:
-            with st.container(border=True):
-                st.markdown(f"<b style='color: #d90429;'>📝 Kịch bản & Tinh chỉnh Voiceover Cảnh {idx}</b>", unsafe_allow_html=True)
-                st.markdown(f"🏛️ **Bối cảnh:** *{scene.get('scene_setting')}*")
-                st.markdown(f"**🎙️ Ngữ điệu & SFX:** *{scene.get('voice_director_vn')}*")
-                
-                # --- CHO PHÉP CHỈNH SỬA TRỰC TIẾP LỜI THOẠI (VOICEOVER) ---
-                current_vo_key = f"vo_text_{st.session_state.active_script_id}_{idx}"
-                if current_vo_key not in st.session_state:
-                    st.session_state[current_vo_key] = scene.get('voiceover_vi', '')
-                
-                edited_voiceover = st.text_area(
-                    "💬 Chỉnh sửa lời thoại (Voiceover):",
-                    value=st.session_state[current_vo_key],
-                    key=f"input_vo_{st.session_state.active_script_id}_{idx}",
-                    height=70,
-                    help="Bạn có thể sửa lại câu từ, dấu ngắt nghỉ hoặc tiếng địa phương trực tiếp tại đây trước khi mang đi lồng tiếng."
-                )
-                st.session_state[current_vo_key] = edited_voiceover
-                
-                img_p = scene.get('image_prompt', '')
-                if img_p:
-                    st.markdown(f"**🖼️ Prompt Ảnh (Imagen 3):**")
-                    if "dùng ảnh cuối của cảnh trước" in img_p.lower() or "dùng frame ảnh cuối" in img_p.lower():
-                        st.info("🔗 Dùng frame cuối của cảnh trước (Match Cut).")
-                    else:
-                        st.code(img_p, language="text")
-                        safe_copy_button(img_p, f"📋 Sao Chép Prompt Ảnh {idx}")
-                
-                vid_p = scene.get('video_prompt', '')
-                st.markdown(f"**🎥 Prompt Video (Veo 3):**")
-                st.code(vid_p, language="text")
-                safe_copy_button(vid_p, f"📋 Sao Chép Prompt Video {idx}")
-
-        with col_media:
-            with st.container(border=True):
-                st.markdown(f"<b style='color: #166534;'>🎬 Không Gian Sản Xuất Media Cảnh {idx}</b>", unsafe_allow_html=True)
-                
-                # 1. Phần tạo Ảnh trực tiếp
-                img_p = scene.get('image_prompt', '')
-                img_key = f"img_bytes_{st.session_state.active_script_id}_{idx}"
-                
-                if img_p and "dùng ảnh cuối của cảnh trước" not in img_p.lower():
-                    if st.button(f"🎨 [API] Tạo Ảnh Ngay (-1 Credit)", key=f"btn_gen_img_{idx}"):
-                        user_email_curr = st.session_state.current_user_email
-                        if deduct_user_credit(user_email_curr, amount=1):
-                            with st.spinner("⏳ Đang kết nối Imagen 3 để vẽ ảnh..."):
-                                img_bytes = generate_image_with_imagen(img_p, selected_aspect)
-                                if img_bytes:
-                                    st.session_state[img_key] = img_bytes
-                                    st.success("✅ Đã tạo ảnh thành công (-1 Credit)!")
-                                    st.rerun()
-                        else:
-                            st.error("❌ Bạn đã hết credit!")
-                
-                # Hiển thị ảnh nếu có
-                if img_key in st.session_state:
-                    st.image(st.session_state[img_key], caption=f"Ảnh kết xuất Cảnh {idx}", use_column_width=True)
-
-                st.markdown("---")
-
-                # 2. Phần tạo Video trực tiếp
-                vid_key = f"vid_bytes_{st.session_state.active_script_id}_{idx}"
-                img_key_ref = f"img_bytes_{st.session_state.active_script_id}_{idx}"
-                
-                if st.button(f"🎬 [API] Tạo Video Veo Ngay (-3 Credits)", key=f"btn_gen_vid_{idx}", type="primary"):
-                    source_img = st.session_state.get(img_key_ref)
-                    if not source_img and idx > 1:
-                        prev_img_key = f"img_bytes_{st.session_state.active_script_id}_{idx-1}"
-                        source_img = st.session_state.get(prev_img_key)
-                        
-                    if source_img:
-                        user_email_curr = st.session_state.current_user_email
-                        if deduct_user_credit(user_email_curr, amount=3):
-                            with st.spinner("⏳ Đang kết nối Veo 3 để dựng video (1-2 phút)..."):
-                                vid_bytes = generate_video_with_veo(source_img, vid_p)
-                                if vid_bytes:
-                                    st.session_state[vid_key] = vid_bytes
-                                    st.success("✅ Đã render video thành công (-3 Credits)!")
-                                    st.rerun()
-                        else:
-                            st.error("❌ Không đủ credit (Cần 3 credits)!")
-                    else:
-                        st.warning("⚠️ Vui lòng tạo ảnh cho cảnh này trước!")
-                
-                # Hiển thị video nếu có
-                if vid_key in st.session_state:
-                    st.video(st.session_state[vid_key])
-                    st.download_button(
-                        label=f"📥 Tải Video Cảnh {idx} (.mp4)",
-                        data=st.session_state[vid_key],
-                        file_name=f"scene_{idx}_veo3.mp4",
-                        mime="video/mp4",
-                        key=f"dl_vid_{idx}"
-                    )
-
+        img_p = scene.get('image_prompt', '')
+        if img_p:
+            st.markdown(f"**🖼️ Prompt Ảnh (Imagen 3 - {selected_aspect}):**")
+            if "dùng ảnh cuối của cảnh trước" in img_p.lower() or "dùng frame ảnh cuối" in img_p.lower():
+                st.info("🔗 Phân cảnh này sử dụng liên tục frame cuối của cảnh trước làm ảnh tham chiếu (Match Cut), không cần tạo ảnh mới.")
+            else:
+                st.code(img_p, language="text")
+                safe_copy_button(img_p, f"📋 Sao Chép Prompt Ảnh Cảnh {idx}")
+            
+        vid_p = scene.get('video_prompt', '')
+        st.markdown(f"**🎥 Prompt Video (Veo 3):**")
+        st.code(vid_p, language="text")
+        safe_copy_button(vid_p, f"📋 Sao Chép Prompt Video Cảnh {idx}")
         st.markdown("---")
 
     col_left, col_right = st.columns([1.1, 0.9])
