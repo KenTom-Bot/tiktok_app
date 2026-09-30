@@ -8,8 +8,6 @@ import os
 import re
 import time
 import ast
-import cv2
-import tempfile
 from datetime import datetime, timedelta
 
 # ==============================================================================
@@ -149,7 +147,7 @@ ADMIN_EMAIL = "binhnguyenmedia.vn@gmail.com"
 ALL_MODULES = [
     "🛒 TikTok Shop & Bán Hàng", "👶 Mẹ & Bé & Cùng Con Học (Viral Parenting)", "📺 TVC Quảng Cáo & Thương Hiệu Cao Cấp",
     "🏡 Nhà Cửa, Kiến Trúc & Cảnh Quan", "🌿 Du Lịch & Phong Cảnh Đất Nước", "🚗 Xe Cộ & Trải Nghiệm Lái",
-    "🍲 Ẩm Thực & Đời Sống", "📖 Đời Sống & Giáo Dục", "🏛️️ Lịch Sử & Tín Ngưỡng Di Sản", "🧘 Chữa Lành & Phong Cách Sống",
+    "🍲 Ẩm Thực & Đời Sống", "📖 Đời Sống & Giáo Dục", "🏛️ Lịch Sử & Tín Ngưỡng Di Sản", "🧘 Chữa Lành & Phong Cách Sống",
     "📢 Tuyên Truyền, Phóng Sự & Thông Điệp Xã Hội", "🏢 Giới Thiệu Doanh Nghiệp & Hồ Sơ Năng Lực"
 ]
 
@@ -267,7 +265,7 @@ def format_analysis_field(field_val) -> str:
     return "".join(formatted_output) if formatted_output else text
 
 # ==============================================================================
-# HÀM HỖ TRỢ API TẠO ẢNH, VIDEO VÀ TRÍCH XUẤT FRAME CUỐI
+# HÀM HỖ TRỢ API TẠO ẢNH VÀ VIDEO TRỰC TIẾP
 # ==============================================================================
 def generate_image_with_imagen(prompt_text, aspect_ratio_str="9:16"):
     try:
@@ -305,33 +303,6 @@ def generate_video_with_veo(image_bytes, video_prompt_text):
         return video_result.generated_videos[0].video.video_bytes
     except Exception as e:
         st.error(f"Lỗi tạo video: {e}")
-    return None
-
-def extract_last_frame(video_bytes):
-    try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_video:
-            temp_video.write(video_bytes)
-            temp_video_path = temp_video.name
-
-        cap = cv2.VideoCapture(temp_video_path)
-        if not cap.isOpened():
-            return None
-
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        if total_frames > 0:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, total_frames - 1)
-            ret, frame = cap.read()
-            if ret:
-                success, encoded_image = cv2.imencode('.jpg', frame)
-                cap.release()
-                os.unlink(temp_video_path)
-                if success:
-                    return encoded_image.tobytes()
-        
-        cap.release()
-        os.unlink(temp_video_path)
-    except Exception as e:
-        st.error(f"Lỗi trích xuất frame cuối: {e}")
     return None
 
 with st.sidebar:
@@ -464,7 +435,7 @@ with st.sidebar:
 
         if st.session_state.current_user_email == ADMIN_EMAIL:
             st.markdown("---")
-            st.markdown("### ⚙️️ **Quản Lý Tài Khoản (Quản Trị)**")
+            st.markdown("### ⚙️ **Quản Lý Tài Khoản (Quản Trị)**")
 
             with st.form("add_license_form"):
                 st.markdown("<b>➕ Cấp Quyền Tài Khoản Mới</b>", unsafe_allow_html=True)
@@ -492,7 +463,7 @@ with st.sidebar:
                             save_licensed_accounts(st.session_state.licensed_accounts)
                             
                             st.session_state.global_toast = f"Đã xóa tài khoản {acc}!"
-                            st.session_state.global_toast_icon = "🗑️️"
+                            st.session_state.global_toast_icon = "🗑️"
                             st.rerun()
                         st.markdown("---")
 
@@ -1279,7 +1250,7 @@ if all_combined_scripts_list and st.session_state.active_script_id is None and n
                 col_i2, col_a2 = st.columns([3, 1.2])
                 with col_i2:
                     st.markdown(f"**#{sc_id}. {outline.get('title')}** — <span class='badge-pending'>ĐANG CHỜ</span>", unsafe_allow_html=True)
-                    st.caption(f"🏛️ Bối cảnh: {outline.get('setting_style')} | ⚡ Hook: *\"{outline.get('target_hook')}\"*")
+                    st.caption(f"🏛️️ Bối cảnh: {outline.get('setting_style')} | ⚡ Hook: *\"{outline.get('target_hook')}\"*")
                 with col_a2:
                     if st.button("✨ Tạo chi tiết ngay", key=f"btn_cre_v2_main_{sc_id}", use_container_width=True):
                         st.session_state.action_trigger = "create_detail"
@@ -1362,51 +1333,22 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
     # BẢNG ĐIỀU PHỐI SẢN XUẤT HÀNG LOẠT (BATCH PRODUCTION)
     with st.container(border=True):
         st.markdown("##### ⚡ **Bảng Điều Phối Sản Xuất Hàng Loạt Trực Tiếp (API Studio)**")
-        col_b1, col_b2 = st.columns(2)
         scenes_list = active_script.get("scenes", []) if isinstance(active_script, dict) else []
         if isinstance(scenes_list, dict): scenes_list = [scenes_list]
 
-        with col_b1:
-            if st.button("🚀 Render Hàng Loạt Tất Cả Ảnh (Imagen 3)", key="btn_batch_img_top", type="primary", use_container_width=True):
-                progress_bar = st.progress(0)
-                total_sc = len(scenes_list)
-                for idx_b, sc_b in enumerate(scenes_list, start=1):
-                    img_p_b = sc_b.get('image_prompt', '')
-                    if img_p_b and "dùng ảnh cuối của cảnh trước" not in img_p_b.lower():
-                        img_bytes_b = generate_image_with_imagen(img_p_b, selected_aspect)
-                        if img_bytes_b:
-                            st.session_state[f"img_bytes_{st.session_state.active_script_id}_{idx_b}"] = img_bytes_b
-                    progress_bar.progress(idx_b / total_sc)
-                st.success("✅ Đã hoàn tất render hàng loạt ảnh cho kịch bản!")
-                time.sleep(0.3)
-                st.rerun()
-
-        with col_b2:
-            if st.button("🎬 Render Hàng Loạt Tuần Tự Video (Veo 3)", key="btn_batch_vid_top", type="secondary", use_container_width=True):
-                progress_bar_v = st.progress(0)
-                total_sc_v = len(scenes_list)
-                prev_img_bytes = None
-                
-                for idx_v, sc_v in enumerate(scenes_list, start=1):
-                    img_key_curr = f"img_bytes_{st.session_state.active_script_id}_{idx_v}"
-                    vid_key_curr = f"vid_bytes_{st.session_state.active_script_id}_{idx_v}"
-                    
-                    # Xác định nguồn ảnh đầu vào cho Veo
-                    input_img = st.session_state.get(img_key_curr)
-                    if not input_img and prev_img_bytes:
-                        input_img = prev_img_bytes
-                        st.session_state[img_key_curr] = input_img # Lưu lại ảnh tham chiếu mỏ neo
-                        
-                    if input_img:
-                        vid_bytes = generate_video_with_veo(input_img, sc_v.get('video_prompt', ''))
-                        if vid_bytes:
-                            st.session_state[vid_key_curr] = vid_bytes
-                            # Tự động trích xuất frame cuối làm ảnh tham chiếu cho cảnh tiếp theo
-                            prev_img_bytes = extract_last_frame(vid_bytes)
-                    progress_bar_v.progress(idx_v / total_sc_v)
-                st.success("✅ Đã hoàn tất render tuần tự video cho toàn bộ các cảnh!")
-                time.sleep(0.3)
-                st.rerun()
+        if st.button("🚀 Render Hàng Loạt Tất Cả Ảnh (Imagen 3)", key="btn_batch_img_top", type="primary", use_container_width=True):
+            progress_bar = st.progress(0)
+            total_sc = len(scenes_list)
+            for idx_b, sc_b in enumerate(scenes_list, start=1):
+                img_p_b = sc_b.get('image_prompt', '')
+                if img_p_b and "dùng ảnh cuối của cảnh trước" not in img_p_b.lower():
+                    img_bytes_b = generate_image_with_imagen(img_p_b, selected_aspect)
+                    if img_bytes_b:
+                        st.session_state[f"img_bytes_{st.session_state.active_script_id}_{idx_b}"] = img_bytes_b
+                progress_bar.progress(idx_b / total_sc)
+            st.success("✅ Đã hoàn tất render hàng loạt ảnh cho kịch bản!")
+            time.sleep(0.3)
+            st.rerun()
 
     for idx, scene in enumerate(scenes_list, start=1):
         if not isinstance(scene, dict): continue
@@ -1457,10 +1399,6 @@ if st.session_state.active_script_id and st.session_state.active_script_id in st
                     vid_bytes = generate_video_with_veo(source_img, vid_p)
                     if vid_bytes:
                         st.session_state[vid_key] = vid_bytes
-                        # Tự động cắt frame cuối để lưu cho cảnh kế tiếp nếu là match cut
-                        last_frame = extract_last_frame(vid_bytes)
-                        if last_frame and idx < len(scenes_list):
-                            st.session_state[f"img_bytes_{st.session_state.active_script_id}_{idx+1}"] = last_frame
                         st.success("✅ Đã render video thành công!")
             else:
                 st.warning("⚠️ Vui lòng bấm 'Tạo Ảnh Ngay' cho cảnh này (hoặc cảnh trước) trước khi tạo video vì Veo cần ảnh gốc.")
