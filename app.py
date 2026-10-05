@@ -101,7 +101,8 @@ def check_usage_limit(email):
     if plan == "VIP":
         return True, ""
         
-    limit = 20 if plan == "Standard" else 3
+    limit_map = {"Advanced": 20, "Basic": 10, "Trial": 3}
+    limit = limit_map.get(plan, 3)
     today = datetime.now().strftime("%Y-%m-%d")
     
     if acc.get("last_generation_date") != today:
@@ -109,7 +110,7 @@ def check_usage_limit(email):
         acc["last_generation_date"] = today
         
     if acc.get("daily_usage_count", 0) >= limit:
-        return False, f"Bạn đã dùng hết {limit}/{limit} lượt của hôm nay! Vui lòng quay lại vào ngày mai hoặc mua gói VIP để không giới hạn."
+        return False, f"Bạn đã dùng hết {limit}/{limit} lượt của hôm nay! Vui lòng quay lại vào ngày mai hoặc nâng cấp gói cước."
         
     acc["daily_usage_count"] += 1
     save_licensed_accounts(accs)
@@ -197,7 +198,7 @@ if st.session_state.scroll_to_detail:
     st.session_state.scroll_to_detail = False
 
 # ==============================================================================
-# 2. HÀM AI LÕI & LUẬT THÉP V3 (TỐI ƯU COPYWRITING & SYSTEM OVERRIDE)
+# 2. HÀM AI LÕI & LUẬT THÉP V3
 # ==============================================================================
 def get_dynamic_realtime_context(mode):
     now = datetime.now()
@@ -267,7 +268,7 @@ def get_sys_inst_outlines(mode, style, narrator_mode, char_rules, num_chars, ang
     elif "Giữ nguyên" in angle:
         strat_cmd = "ĐỊNH HƯỚNG SÁNG TẠO: Bám sát và GIỮ NGUYÊN chiến lược cốt lõi của kịch bản gốc."
     else:
-        strat_cmd = f"🛑 LỆNH ĐIỀU HƯỚNG TUYỆT ĐỐI: TOÀN BỘ CÁC KỊCH BẢN TẠO RA PHẢI TUÂN THỦ NGHIÊM NGẶT CHIẾN LƯỢC: '{angle}'. Mọi kịch bản phải bám sát định hướng này (VD: Nếu chọn Flash Sale, tất cả phải mang không khí dồn dập săn sale)."
+        strat_cmd = f"🛑 LỆNH ĐIỀU HƯỚNG TUYỆT ĐỐI: TOÀN BỘ CÁC KỊCH BẢN TẠO RA PHẢI TUÂN THỦ NGHIÊM NGẶT CHIẾN LƯỢC: '{angle}'. Mọi kịch bản phải bám sát định hướng này."
 
     return f"""
     BẠN LÀ TỔNG ĐẠO DIỄN VIRTUAL CHO VEO 3 VÀ IMAGEN 3. PHONG CÁCH: {style} | ĐỊNH DẠNG: {HARDCODED_ASPECT}
@@ -300,7 +301,7 @@ def get_sys_inst_details(mode, style, narrator_mode, char_rules, num_chars, dura
     4. NGÔN TỪ THỰC TẾ & XƯNG HÔ THÔNG MINH (CỰC KỲ QUAN TRỌNG): 
        - Xưng hô chuẩn xác: Nữ -> "chị em", Nam -> "anh em", Chung -> "anh chị". CẤM dùng "Mấy bạn", "Hội", "Dân...". KHÔNG dùng "Cái nồi" -> chỉ dùng "Nồi".
        - Dùng từ chuẩn thực tế: Hầm thịt thì là "chín mềm" (không dùng "mọng nước"), lau chùi thì là "dễ lau chùi" (không dùng "siêu khỏe"). 
-       - TUYỆT ĐỐI CẤM nhồi nhét thời tiết, mùa vụ máy móc. CẤM dùng từ lố bịch giả tạo ("Thèm nồi lẩu nghi ngút").
+       - TUYỆT ĐỐI CẤM nhồi nhét thời tiết, mùa vụ máy móc. CẤM dùng từ lố bịch giả tạo.
     5. NGỮ PHÁP, DẤU CÂU & SEAMLESS FLOW:
        - CÂU PHẢI CÓ ĐỦ CHỦ NGỮ - VỊ NGỮ. 
        - BẮT BUỘC dùng dấu phẩy (,) và dấu chấm (.) chính xác để AI Voice ngắt nghỉ, tạo nhịp điệu và cảm xúc như người thật.
@@ -342,9 +343,9 @@ def create_scene_details(target_id, mode, style, narrator_mode, char_rules):
     THUYẾT MINH: {audio_instruction}
     
     LƯU Ý ĐẶC BIỆT (PHẢI TUÂN THỦ TÙY TỪNG CHỮ):
-    - LIỀN KHỐI & NGỮ PHÁP: Toàn bộ thoại phải ghép lại thành 1 đoạn văn DÂN DÃ. Có đủ CHỦ-VỊ, DẤU PHẨY, DẤU CHẤM chuẩn xác. Không cụt lủn.
+    - ĐOẠN VĂN LIỀN KHỐI: Toàn bộ thoại phải ghép lại thành 1 đoạn văn DÂN DÃ. Có đủ CHỦ-VỊ, DẤU PHẨY, DẤU CHẤM chuẩn xác. Không cụt lủn.
     - XƯNG HÔ THÔNG MINH: Nữ -> "chị em", Nam -> "anh em", Chung -> "anh chị". CẤM xưng "Hội", "Mấy bạn".
-    - NGÔN TỪ THỰC TẾ: Dùng từ bối cảnh sinh hoạt chân thật (VD: "Gia đình quây quần ăn lẩu", "Anh chị nào hay..."). CẤM dùng từ thèm thuồng lố bịch ("Thèm nồi lẩu").
+    - NGÔN TỪ THỰC TẾ: Dùng từ bối cảnh sinh hoạt chân thật. CẤM dùng từ thèm thuồng lố bịch. CẤM nhắc thời tiết máy móc.
     - HOOK & CTA: Cảnh 1 TUYỆT ĐỐI KHÔNG kêu gọi mua hàng. CTA bấm giỏ hàng CHỈ NẰM Ở CẢNH CUỐI CÙNG.
     - ĐẾM ĐÚNG SỐ ÂM TIẾT WPM. 4s <= 16 âm tiết, 6s <= 24 âm tiết. KHÔNG DÙNG TỪ CẤM.
     
@@ -396,7 +397,7 @@ def clone_script(script_id):
     DỮ LIỆU GỐC: {dna_str}
     Nhân bản kịch bản gốc: {json.dumps(target, ensure_ascii=False)}. 
     Dựa BẮT BUỘC vào dữ liệu Gốc ở trên, tạo chính xác 5 biến thể mới. 
-    YÊU CẦU ĐẶC BIỆT: Hook CỰC KỲ dân dã, đời thường. Xưng "anh chị", "chị em". KHÔNG nhắc thời tiết. KHÔNG xưng "Mấy bạn". CẤM kêu gọi mua hàng ở Hook. LÁCH MỌI TỪ KHÓA BỊ CẤM.
+    YÊU CẦU ĐẶC BIỆT: Lời thoại tóm tắt phải CỰC KỲ dân dã, đời thường. Xưng "anh chị", "chị em". KHÔNG nhắc thời tiết. KHÔNG xưng "Mấy bạn". CẤM kêu gọi mua hàng ở Hook. LÁCH MỌI TỪ KHÓA BỊ CẤM.
     BẮT BUỘC TRẢ VỀ ĐỊNH DẠNG JSON GỒM CÁC KEY SAU:
     {{
         "outlines": [
@@ -754,7 +755,7 @@ with st.sidebar:
                 try:
                     exp_dt = datetime.strptime(exp_str, "%Y-%m-%d")
                     d_left = (exp_dt - datetime.now()).days
-                    if d_left <= 7 or (acc_plan == "Trial" and usage >= 3) or (acc_plan == "Standard" and usage >= 20): 
+                    if d_left <= 7 or (acc_plan == "Trial" and usage >= 3) or (acc_plan == "Basic" and usage >= 10) or (acc_plan == "Advanced" and usage >= 20): 
                         expired_or_soon.append((acc, info, d_left, exp_str, usage, acc_plan))
                 except: pass
             
@@ -768,9 +769,10 @@ with st.sidebar:
                     
                     alert_reason = "⚠️ " + status_text
                     if acc_plan == "Trial" and usage >= 3: alert_reason += " | 🔥 HẾT LƯỢT (3/3)"
-                    if acc_plan == "Standard" and usage >= 20: alert_reason += " | 🔥 HẾT LƯỢT (20/20)"
+                    if acc_plan == "Basic" and usage >= 10: alert_reason += " | 🔥 HẾT LƯỢT (10/10)"
+                    if acc_plan == "Advanced" and usage >= 20: alert_reason += " | 🔥 HẾT LƯỢT (20/20)"
                     
-                    badge_color = "#fde047" if acc_plan == "Trial" else "#93c5fd" if acc_plan == "Standard" else "#86efac"
+                    badge_color = "#fde047" if acc_plan == "Trial" else "#93c5fd" if acc_plan == "Basic" else "#c4b5fd" if acc_plan == "Advanced" else "#86efac"
                     
                     with st.container(border=True):
                         st.markdown(f"**👤 {cust}** <span style='font-size: 11px; padding: 2px 6px; background: {badge_color}; border-radius: 4px; font-weight: bold;'>{acc_plan.upper()}</span>", unsafe_allow_html=True)
@@ -786,13 +788,23 @@ with st.sidebar:
                 new_acc = st.text_input("Email khách hàng:")
                 new_phone = st.text_input("Số điện thoại (SĐT):")
                 new_pass = st.text_input("Mật khẩu:", value="123456")
-                acc_type = st.radio("Loại Tài Khoản:", ["Gói VIP (Không giới hạn)", "Gói Tiêu chuẩn (20 lượt/ngày)", "Trải nghiệm (3 lượt/ngày)"], index=0)
+                acc_type = st.radio("Loại Tài Khoản:", [
+                    "Gói VIP (Không giới hạn)", 
+                    "Gói Nâng cao (20 lượt/ngày)", 
+                    "Gói Cơ bản (10 lượt/ngày)", 
+                    "Gói Trải nghiệm (3 lượt/ngày)"
+                ], index=0)
                 assigned_modules = st.multiselect("Phân quyền thể loại:", options=ALL_MODULES, default=ALL_MODULES)
                 duration_opt = st.selectbox("Thời hạn:", ["1 Tháng", "3 Tháng", "6 Tháng", "1 Năm", "3 Ngày (Dùng thử)", "Vĩnh viễn (Trọn đời)"])
                 btn_add_lic = st.form_submit_button("💾 Cấp Quyền & Lưu")
                 if btn_add_lic:
                     with st.spinner("⏳ Đang cấp quyền..."):
-                        plan_map = {"Gói VIP (Không giới hạn)": "VIP", "Gói Tiêu chuẩn (20 lượt/ngày)": "Standard", "Trải nghiệm (3 lượt/ngày)": "Trial"}
+                        plan_map = {
+                            "Gói VIP (Không giới hạn)": "VIP", 
+                            "Gói Nâng cao (20 lượt/ngày)": "Advanced", 
+                            "Gói Cơ bản (10 lượt/ngày)": "Basic", 
+                            "Gói Trải nghiệm (3 lượt/ngày)": "Trial"
+                        }
                         selected_plan = plan_map.get(acc_type, "Trial")
                         days_add = 3 if selected_plan == "Trial" else {"1 Tháng": 30, "3 Tháng": 90, "6 Tháng": 180, "1 Năm": 365, "Vĩnh viễn (Trọn đời)": 3650}.get(duration_opt, 30)
                         exp_date = "2099-12-31" if "Vĩnh viễn" in duration_opt else (datetime.now() + timedelta(days=days_add)).strftime("%Y-%m-%d")
@@ -816,7 +828,7 @@ with st.sidebar:
                 for acc, info in filtered_accs:
                     with st.container(border=True):
                         acc_plan = info.get("plan_type", "Trial")
-                        badge_color = "#fde047" if acc_plan == "Trial" else "#93c5fd" if acc_plan == "Standard" else "#86efac"
+                        badge_color = "#fde047" if acc_plan == "Trial" else "#93c5fd" if acc_plan == "Basic" else "#c4b5fd" if acc_plan == "Advanced" else "#86efac"
                         st.markdown(f"**👤 {acc}** <span style='font-size: 11px; padding: 2px 6px; background: {badge_color}; border-radius: 4px; font-weight: bold;'>{acc_plan.upper()}</span>", unsafe_allow_html=True)
                         phone_val = info.get('phone', '')
                         pass_val = info.get('password', '')
@@ -824,7 +836,7 @@ with st.sidebar:
                         exp_val = info.get('expires_at', '2099-12-31')
                         today_str = datetime.now().strftime("%Y-%m-%d")
                         usage = info.get("daily_usage_count", 0) if info.get("last_generation_date") == today_str else 0
-                        limit_val = "Không giới hạn" if acc_plan == "VIP" else "20" if acc_plan == "Standard" else "3"
+                        limit_val = "Không giới hạn" if acc_plan == "VIP" else ("20" if acc_plan == "Advanced" else ("10" if acc_plan == "Basic" else "3"))
                         usage_text = f"{usage}/{limit_val}" if limit_val != "Không giới hạn" else usage
                         
                         st.caption(f"📞 SĐT: {phone_val or 'Chưa có'} | 🔑 Pass: `{pass_val}`<br>• Quyền: {', '.join(roles_val)}<br>• Hết hạn: {exp_val} <br>• Lượt dùng hôm nay: {usage_text}", unsafe_allow_html=True)
@@ -848,14 +860,25 @@ with st.sidebar:
                                 st.markdown(f"**Cập nhật cho: {acc}**")
                                 upd_phone = st.text_input("SĐT mới:", value=phone_val)
                                 upd_pass = st.text_input("Mật khẩu:", value=pass_val)
-                                plan_idx = 0 if acc_plan == "VIP" else 1 if acc_plan == "Standard" else 2
-                                upd_plan = st.radio("Loại Tài Khoản:", ["Gói VIP", "Gói Tiêu chuẩn", "Trải nghiệm"], index=plan_idx)
+                                plan_idx_map = {"VIP": 0, "Advanced": 1, "Basic": 2, "Trial": 3}
+                                plan_idx = plan_idx_map.get(acc_plan, 3)
+                                upd_plan = st.radio("Loại Tài Khoản:", [
+                                    "Gói VIP (Không giới hạn)", 
+                                    "Gói Nâng cao (20 lượt/ngày)", 
+                                    "Gói Cơ bản (10 lượt/ngày)", 
+                                    "Gói Trải nghiệm (3 lượt/ngày)"
+                                ], index=plan_idx)
                                 upd_roles = st.multiselect("Phân quyền thể loại:", options=ALL_MODULES, default=roles_val)
                                 upd_exp = st.text_input("Ngày hết hạn (YYYY-MM-DD):", value=exp_val)
                                 btn_save_upd = st.form_submit_button("💾 Lưu Cập Nhật")
                                 if btn_save_upd:
                                     with st.spinner("⏳ Đang lưu..."):
-                                        p_map = {"Gói VIP": "VIP", "Gói Tiêu chuẩn": "Standard", "Trải nghiệm": "Trial"}
+                                        p_map = {
+                                            "Gói VIP (Không giới hạn)": "VIP", 
+                                            "Gói Nâng cao (20 lượt/ngày)": "Advanced", 
+                                            "Gói Cơ bản (10 lượt/ngày)": "Basic", 
+                                            "Gói Trải nghiệm (3 lượt/ngày)": "Trial"
+                                        }
                                         st.session_state.licensed_accounts[acc].update({
                                             "roles": upd_roles, "phone": upd_phone.strip(), "password": upd_pass.strip(), 
                                             "expires_at": upd_exp.strip(), "plan_type": p_map.get(upd_plan, "Trial")
@@ -892,12 +915,12 @@ with st.sidebar:
             plan = user_info.get("plan_type", "Trial")
             today_str = datetime.now().strftime("%Y-%m-%d")
             used = user_info.get("daily_usage_count", 0) if user_info.get("last_generation_date") == today_str else 0
-            limit = 20 if plan == "Standard" else 3
             
             if plan == "VIP":
                 st.success(f"**GÓI VIP** (Không giới hạn)\n\n• Email: {st.session_state.current_email}\n• Hết hạn: {user_info.get('expires_at')}")
             else:
-                plan_name = "GÓI TIÊU CHUẨN" if plan == "Standard" else "GÓI TRẢI NGHIỆM TÂN THỦ"
+                plan_name = "GÓI NÂNG CAO" if plan == "Advanced" else ("GÓI CƠ BẢN" if plan == "Basic" else "GÓI TRẢI NGHIỆM TÂN THỦ")
+                limit = 20 if plan == "Advanced" else (10 if plan == "Basic" else 3)
                 st.info(f"**{plan_name}**\n\n• Email: {st.session_state.current_email}\n• Đã dùng: **{used}/{limit}** lượt hôm nay\n• Hết hạn: {user_info.get('expires_at')}")
 
         btn_logout_ph = st.empty()
