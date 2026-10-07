@@ -231,7 +231,7 @@ if st.session_state.scroll_to_detail:
     st.session_state.scroll_to_detail = False
 
 # ==============================================================================
-# 2. HÀM AI LÕI & LUẬT THÉP V29.0 (BALANCED PACING & PURE VOICEOVER)
+# 2. HÀM AI LÕI & LUẬT THÉP V29.0 (BẢNG TRA CỨU THỜI GIAN TUYỆT ĐỐI & PURE VOICEOVER)
 # ==============================================================================
 def clean_and_parse_json(text_content: str):
     cleaned = re.sub(r'```(?:json)?', '', text_content).strip()
@@ -279,7 +279,7 @@ def get_sys_inst_outlines(mode, style, narrator_mode, char_rules, num_chars, ang
     🛑 QUY TẮC CỐT LÕI (TUÂN THỦ 100%):
     1. BỘ LỌC CHÍNH SÁCH VĨNH VIỄN (MỌI NGÀNH HÀNG): CẤM TUYỆT ĐỐI các từ "tuyệt đối", "hoàn toàn", "100%", "chắc chắn", "cam kết", "thuốc", "đặc trị", "trị dứt điểm", "trị bệnh". Phải dùng "cực kỳ", "rất", "hỗ trợ", "cải thiện". 
     2. PERSONA HÀ NỘI CHUẨN: Lời thoại mang đậm chất Bắc Bộ. CẤM TUYỆT ĐỐI từ miền Nam: "nha", "nè", "nghen", "vô", "xài", "dzậy".
-    3. CẤU TRÚC THOẠI VÀ DẤU CÂU (NHỊP THỞ TỰ NHIÊN): Ưu tiên thoại câu dài trôi chảy. Sử dụng dấu phẩy (,) ngắt nghỉ một cách CÂN XỨNG VÀ TỰ NHIÊN theo cụm ý. TUYỆT ĐỐI KHÔNG lạm dụng dấu phẩy làm ngắt vụn câu (Cấm viết: Chỉ với, chưa tới, hai triệu...).
+    3. CẤU TRÚC THOẠI VÀ DẤU CÂU (NHỊP THỞ TỰ NHIÊN): Ưu tiên thoại câu dài trôi chảy. Sử dụng dấu phẩy (,) ngắt nghỉ một cách CÂN XỨNG VÀ TỰ NHIÊN theo cụm ý. TUYỆT ĐỐI KHÔNG lạm dụng dấu phẩy làm ngắt vụn câu chắp vá.
     4. BỘ LỌC THUẬT NGỮ ĐO LƯỜNG: Nệm/Thảm/Mền BẮT BUỘC dùng từ "ĐỘ DÀY" kèm từ ước lượng (VD: "dày khoảng 20 phân"). Cấm 'Chiều cao'. Nếu có nhiều kích thước, phải liệt kê rõ.
     5. CÔNG THỨC HOOK FLASH SALE: ĐƯA MỨC GIÁ LÊN NGAY CÂU ĐẦU TIÊN KÈM CẦU NỐI LOGIC. CẤM đọc số lẻ. CẤM dùng từ "cành". Làm tròn lên và dùng "Chưa tới".
     6. BỐI CẢNH ĐỒNG NHẤT: BẮT BUỘC TOÀN BỘ KỊCH BẢN PHẢI DIỄN RA TẠI CÙNG 1 BỐI CẢNH (KHO HÀNG/SHOWROOM nếu là Flash Sale).
@@ -301,9 +301,14 @@ def get_sys_inst_details(mode, style, narrator_mode, char_rules, duration_instru
     BẠN LÀ ĐẠO DIỄN VIRTUAL CHO VEO 3. PHONG CÁCH: {style}
     
     🛑 QUY TẮC QUAY DỰNG VÀ VIẾT THOẠI:
-    1. ƯU TIÊN PHÂN CẢNH DÀI & ĐẾM TỪ NGƯỢC (TỐC ĐỘ 4.5 TỪ/S):
+    1. ƯU TIÊN PHÂN CẢNH DÀI & ĐẾM TỪ TRA BẢNG (BẢNG THỜI GIAN TUYỆT ĐỐI):
        - MỤC TIÊU LÀ ĐỌC LIÊN THANH. Viết xong thoại, BẮT BUỘC tự ĐẾM CHÍNH XÁC TỔNG SỐ TỪ. Điền vào 'word_count'.
-       - TÍNH SỐ GIÂY bằng công thức: [Số từ chia cho 4.5] (làm tròn số). Gán vào 'dur'.
+       - TUYỆT ĐỐI KHÔNG DÙNG PHÉP CHIA. HÃY TRA BẢNG SAU ĐỂ GÁN SỐ GIÂY ('dur'):
+         + Nếu số từ từ 1 đến 20 từ ➔ BẮT BUỘC gán "4s"
+         + Nếu số từ từ 21 đến 30 từ ➔ BẮT BUỘC gán "6s" 
+         + Nếu số từ từ 31 đến 40 từ ➔ BẮT BUỘC gán "8s" (Ví dụ: 32 từ thì phải nhảy lên 8s, cấm để 6s)
+         + Nếu số từ từ 41 đến 50 từ ➔ BẮT BUỘC gán "10s"
+         + CẤM VIẾT QUÁ 50 TỪ.
 
     2. CÂN BẰNG NHỊP THỞ (SYLLABLE BALANCING) & DẤU CÂU:
        - ĐỂ TRÁNH GIỌNG ĐỌC BỊ DỒN CHỮ Ở CUỐI CÂU: Bắt buộc CHIA ĐỀU SỐ TỪ giữa các dấu phẩy (,). Các vế câu phải cân xứng nhịp điệu (5-8 từ/vế). KHÔNG ngắt vụn câu (Cấm: Chỉ với, chưa tới, hai triệu).
@@ -357,13 +362,18 @@ def create_scene_details(target_id, mode, style):
     THUYẾT MINH: {audio_instruction} | LOẠI: {mode}
     
     LƯU Ý ĐẶC BIỆT:
-    - TOÁN HỌC ĐẾM TỪ (4.5 từ/s): Ưu tiên thoại dài. Đếm CHÍNH XÁC số từ điền vào 'word_count'. Tính 'dur' = Số từ / 4.5. 
-    - CHIA ĐỀU VẾ CÂU (SYLLABLE BALANCING): Các vế câu ngăn cách bởi dấu phẩy phải dài ngang nhau để nhịp đọc trôi chảy, không bị dồn chữ ở cuối. Cấm ngắt vụn câu (Cấm: "chỉ với, chưa tới").
-    - PURE VOICEOVER: Trường `voiceover` CHỈ CHỨA CHỮ ĐỂ ĐỌC. Cấm TUYỆT ĐỐI các ngoặc đơn chỉ đạo (VD cấm: "(mỉm cười)", "(giọng nam)").
-    - BỘ LỌC CHÍNH SÁCH: Cấm "tuyệt đối", "hoàn toàn", "100%", "chắc chắn", "thuốc", "trị dứt điểm". Nệm/Thảm phải dùng "dày khoảng 20 phân", liệt kê các kích thước.
-    - HOOK FLASH SALE: ĐƯA MỨC GIÁ SỐC LÊN NGAY CẢNH 1 kèm CẦU NỐI LOGIC. CẤM đọc số lẻ. Làm tròn số lên và dùng "CHƯA TỚI".
-    - KHÓA MÀU SẮC VÀ BỐI CẢNH: Dùng chung `global_setting_en`, `global_outfit_en`. Lấy màu chi tiết từ 'product_color_lock' nhúng CHẾT vào 'prod_dna'.
-    - ANTI-UI/TEXT LOCK: Khi KOC chỉ tay, KHÔNG nhắc đến "cart, button, icon". Chèn chuỗi cấm UI/Text vào cuối mọi cảnh.
+    - BẢNG TRA CỨU THỜI GIAN (TUYỆT ĐỐI KHÔNG DÙNG PHÉP CHIA): Viết thoại xong, đếm số từ điền vào 'word_count'. SAU ĐÓ TRA BẢNG ĐỂ GÁN 'dur':
+      + 1 đến 20 từ -> "4s"
+      + 21 đến 30 từ -> "6s"
+      + 31 đến 40 từ -> "8s" (Ví dụ: 32 từ phải gán 8s)
+      + 41 đến 50 từ -> "10s"
+    - ĐẠO DIỄN NHỊP ĐỘ: Cảnh 1 dứt khoát. Cảnh 2 và 3 BẮT BUỘC PHẢI SIÊU TỐC, X2 TỐC ĐỘ, ÉP SALE LIÊN THANH bằng cách nhồi rất nhiều thông tin.
+    - CHIA ĐỀU VẾ CÂU (SYLLABLE BALANCING): Các vế câu ngăn cách bởi dấu phẩy phải dài ngang nhau để nhịp đọc trôi chảy. Cấm ngắt vụn câu.
+    - PURE VOICEOVER: Trường `voiceover` CHỈ CHỨA CHỮ ĐỂ ĐỌC. Cấm TUYỆT ĐỐI các ngoặc đơn chỉ đạo (VD: cấm "(mỉm cười)").
+    - BỘ LỌC CHÍNH SÁCH: Cấm "tuyệt đối", "hoàn toàn", "100%", "chắc chắn", "thuốc". Nệm/Thảm phải dùng "dày khoảng 20 phân", liệt kê các kích thước.
+    - HOOK FLASH SALE: ĐƯA MỨC GIÁ SỐC LÊN NGAY CẢNH 1. CẤM đọc số lẻ. Làm tròn số lên và dùng "CHƯA TỚI".
+    - KHÓA MÀU SẮC VÀ BỐI CẢNH: Dùng chung `global_setting_en`, `global_outfit_en`. Lấy màu chi tiết nhúng CHẾT vào 'prod_dna'.
+    - ANTI-UI/TEXT LOCK: Khi KOC chỉ tay, KHÔNG nhắc đến "cart, button, icon". Chèn chuỗi cấm UI/Text vào cuối mọi ảnh/video.
     
     TRẢ VỀ JSON CHUẨN XÁC:
     {{
@@ -373,18 +383,18 @@ def create_scene_details(target_id, mode, style):
         "global_identity_en": "Exact English desc of Face, Hair, Body.",
         "global_outfit_en": "Exact English desc of the FULL multi-layered outfit. MUST BE LOCKED.",
         "global_setting_en": "Exact English desc of the unified environment/setting. MUST BE LOCKED.",
-        "prod_dna": "Mô tả SP bằng Tiếng Anh. BẮT BUỘC CHỨA MÀU SẮC CHÍNH XÁC (EXACT COLOR OF BODY, LID...).",
+        "prod_dna": "Mô tả SP bằng Tiếng Anh. BẮT BUỘC CHỨA MÀU SẮC CHÍNH XÁC (EXACT COLOR OF BODY, LID...). Neo không gian nếu SP to.",
         "voice": {{"gender": "Nam/Nữ", "tone": "{voice_hint}"}},
         "scenes": [
             {{
                 "scene": 1, 
                 "word_count": "AI điền số nguyên. ĐẾM CHÍNH XÁC TỪNG TỪ.",
-                "dur": "TÍNH TOÁN = word_count / 4.5", 
+                "dur": "TRA BẢNG: <=20 từ gán 4s; 21-30 từ gán 6s; 31-40 từ gán 8s; 41-50 từ gán 10s. (Ví dụ 32 từ phải gán 8s)", 
                 "trans": "Chuyển cảnh mới", 
                 "setting": "Mô tả bối cảnh tiếng Việt...",
-                "action_en": "Miêu tả hành động. Chú ý cơ học nắp mở, gió bay. CẤM NHẮC ĐẾN NÚT/GIỎ HÀNG.",
-                "director": "Chỉ đạo Voice: Giọng Nam/Nữ HÀ NỘI GỐC | Nhịp độ: Dồn dập", 
-                "voiceover": "Thoại CÂU GHÉP CHIA ĐỀU VẾ CÂU. KHÔNG NGẮT VỤN. CẤM BỎ NGOẶC ĐƠN HƯỚNG DẪN VÀO ĐÂY. LÀM TRÒN GIÁ TIỀN (CHƯA TỚI). CẤM ĐỌC SỐ LẺ. LÁCH TỪ VI PHẠM.",
+                "action_en": "Miêu tả hành động. CẤM NHẮC ĐẾN NÚT/GIỎ HÀNG.",
+                "director": "Phân cảnh 1: Dứt khoát | Phân cảnh 2 & 3: SIÊU TỐC, DỒN DẬP X2 | Phân cảnh cuối: Chốt sale mạnh mẽ", 
+                "voiceover": "Thoại CÂU GHÉP CÓ DẤU PHẨY (,) NGẮT NGHỈ TỰ NHIÊN. CẤM BỎ NGOẶC ĐƠN. LÀM TRÒN GIÁ TIỀN (CHƯA TỚI). CẤM ĐỌC SỐ LẺ. LÁCH TỪ VI PHẠM.",
                 "img_p": "Cinematic vertical 9:16 photo. Static shot. [global_setting_en]. Character: [global_identity_en] wearing [global_outfit_en]. Action: [action_en]. Product: [prod_dna]. Maintain EXACT original product colors for all parts. NO generated text, NO subtitles, NO typography, NO watermarks, NO UI elements, NO icons, NO logos, NO buttons, NO floating graphics. Clean frame.", 
                 "vid_p": "Vertical 9:16 video. Static shot. [global_setting_en]. Character: [global_identity_en] wearing [global_outfit_en]. Action: [action_en]. Audio: \\"[LẤY 5-7 TỪ ĐẦU CỦA VOICOVER]\\". Product: [prod_dna]. Maintain absolute scale, rigid parts, and EXACT ORIGINAL PRODUCT COLORS FOR ALL PARTS. NO morphing. NO generated text, NO subtitles, NO typography, NO watermarks, NO UI elements, NO icons, NO logos, NO buttons, NO floating graphics. Clean frame."
             }}
@@ -509,7 +519,8 @@ with st.sidebar:
                 
                 btn_login_ph = st.empty()
                 if st.session_state.get("loading_login", False):
-                    btn_login_ph.markdown("<div style='background: #eff6ff; border: 1px solid #93c5fd; padding: 8px; border-radius: 8px; color: #1e3a8a; text-align: center; font-weight: bold;'>⏳ Đang xác thực...</div>", unsafe_allow_html=True)
+                    btn_login_ph.empty()
+                    st.markdown("<div style='background: #eff6ff; border: 1px solid #93c5fd; padding: 8px; border-radius: 8px; color: #1e3a8a; text-align: center; font-weight: bold;'>⏳ Đang xác thực...</div>", unsafe_allow_html=True)
                     
                     email_check, pass_check = email_input.strip(), pass_input.strip()
                     if email_check in st.session_state.licensed_accounts:
@@ -542,7 +553,8 @@ with st.sidebar:
                 
                 btn_reg_ph = st.empty()
                 if st.session_state.get("loading_reg", False):
-                    btn_reg_ph.markdown("<div style='background: #eff6ff; border: 1px solid #93c5fd; padding: 8px; border-radius: 8px; color: #1e3a8a; text-align: center; font-weight: bold;'>⏳ Đang đăng ký...</div>", unsafe_allow_html=True)
+                    btn_reg_ph.empty()
+                    st.markdown("<div style='background: #eff6ff; border: 1px solid #93c5fd; padding: 8px; border-radius: 8px; color: #1e3a8a; text-align: center; font-weight: bold;'>⏳ Đang đăng ký...</div>", unsafe_allow_html=True)
                     
                     email_check, phone_check = reg_email.strip(), reg_phone.strip()
                     if not email_check or not phone_check or not reg_pass.strip(): st.error("Điền đủ thông tin!"); st.session_state.loading_reg = False
@@ -575,7 +587,8 @@ with st.sidebar:
         st.markdown("### 🗂 LÀM VIỆC")
         btn_new_ph = st.empty()
         if st.session_state.get("loading_new_proj", False):
-            btn_new_ph.markdown("<div style='background: #eff6ff; border: 1px solid #93c5fd; padding: 8px; border-radius: 8px; color: #1e3a8a; text-align: center; font-weight: bold;'>⏳ Đang khởi tạo...</div>", unsafe_allow_html=True)
+            btn_new_ph.empty()
+            st.markdown("<div style='background: #eff6ff; border: 1px solid #93c5fd; padding: 8px; border-radius: 8px; color: #1e3a8a; text-align: center; font-weight: bold;'>⏳ Đang khởi tạo...</div>", unsafe_allow_html=True)
             lock_ui()
             st.session_state.update({k: v for k, v in [("all_scripts", []), ("cloned_scripts", []), ("expanded_scripts", []), ("generated_details", {}), ("content_analysis", None), ("active_script_id", None), ("current_input_context", ""), ("current_product_data_saved", None), ("character_profiles", []), ("current_project_id", None)]})
             st.session_state.active_project_title = f"Chiến dịch {datetime.now().strftime('%d/%m/%Y')}"
@@ -589,7 +602,8 @@ with st.sidebar:
         
         btn_save_ph = st.empty()
         if st.session_state.get("loading_save_proj", False):
-            btn_save_ph.markdown("<div style='background: #eff6ff; border: 1px solid #93c5fd; padding: 8px; border-radius: 8px; color: #1e3a8a; text-align: center; font-weight: bold;'>⏳ Đang lưu...</div>", unsafe_allow_html=True)
+            btn_save_ph.empty()
+            st.markdown("<div style='background: #eff6ff; border: 1px solid #93c5fd; padding: 8px; border-radius: 8px; color: #1e3a8a; text-align: center; font-weight: bold;'>⏳ Đang lưu...</div>", unsafe_allow_html=True)
             lock_ui()
             if not (st.session_state.all_scripts + st.session_state.cloned_scripts + st.session_state.expanded_scripts): st.warning("⚠️ Chưa có kịch bản!")
             else:
@@ -626,7 +640,8 @@ with st.sidebar:
                         open_key = f"open_{p['id']}"
                         btn_o_ph = col_open.empty()
                         if st.session_state.get(open_key, False):
-                            btn_o_ph.markdown("<div style='background: #eff6ff; color: #1e3a8a; border-radius: 6px; padding: 6px; text-align: center; font-size: 12px; font-weight: bold;'>⏳ Đang mở...</div>", unsafe_allow_html=True)
+                            btn_o_ph.empty()
+                            st.markdown("<div style='background: #eff6ff; color: #1e3a8a; border-radius: 6px; padding: 6px; text-align: center; font-size: 12px; font-weight: bold;'>⏳ Đang mở...</div>", unsafe_allow_html=True)
                             lock_ui()
                             sd = p.get("script_content", {})
                             if isinstance(sd, dict):
@@ -644,7 +659,8 @@ with st.sidebar:
                         del_key = f"del_{p['id']}"
                         btn_d_ph = col_del.empty()
                         if st.session_state.get(del_key, False):
-                            btn_d_ph.markdown("<div style='background: #fef2f2; color: #dc2626; border-radius: 6px; padding: 6px; text-align: center; font-size: 12px; font-weight: bold;'>⏳ Đang xóa...</div>", unsafe_allow_html=True)
+                            btn_d_ph.empty()
+                            st.markdown("<div style='background: #fef2f2; color: #dc2626; border-radius: 6px; padding: 6px; text-align: center; font-size: 12px; font-weight: bold;'>⏳ Đang xóa...</div>", unsafe_allow_html=True)
                             lock_ui(); supabase.table("saved_projects").delete().eq("id", p['id']).execute()
                             st.session_state[del_key] = False; st.toast("✅ Đã xóa!"); time.sleep(0.5); st.rerun()
                         else:
@@ -687,7 +703,8 @@ with st.sidebar:
 
         btn_logout_ph = st.empty()
         if st.session_state.get("loading_logout", False):
-            btn_logout_ph.markdown("<div style='background: #eff6ff; border: 1px solid #93c5fd; padding: 8px; border-radius: 8px; color: #1e3a8a; text-align: center; font-weight: bold;'>⏳ Đang thoát...</div>", unsafe_allow_html=True)
+            btn_logout_ph.empty()
+            st.markdown("<div style='background: #eff6ff; border: 1px solid #93c5fd; padding: 8px; border-radius: 8px; color: #1e3a8a; text-align: center; font-weight: bold;'>⏳ Đang thoát...</div>", unsafe_allow_html=True)
             lock_ui(); st.session_state.is_logged_in = False; st.session_state.loading_logout = False
             st.toast("✅ Đăng xuất!")
             time.sleep(0.5)
@@ -754,7 +771,8 @@ if num_chars > 0:
 
 btn_gen_main_ph = st.empty()
 if st.session_state.get("loading_gen_main", False):
-    btn_gen_main_ph.markdown("<div style='background: #fff0f2; border: 1.5px solid #ffa4b4; padding: 14px; border-radius: 8px; color: #d90429; text-align: center; font-weight: bold;'>⏳ Đạo diễn AI đang quét OCR hình ảnh và sinh kịch bản... Vui lòng đợi!</div>", unsafe_allow_html=True)
+    btn_gen_main_ph.empty()
+    st.markdown("<div style='background: #fff0f2; border: 1.5px solid #ffa4b4; padding: 14px; border-radius: 8px; color: #d90429; text-align: center; font-weight: bold;'>⏳ Đạo diễn AI đang quét OCR hình ảnh và sinh kịch bản... Vui lòng đợi!</div>", unsafe_allow_html=True)
     lock_ui()
     try:
         st.session_state.character_profiles = [{"id": c["id"], "role": c["role"]} for c in char_inputs]
@@ -843,7 +861,7 @@ if all_sc:
         if isinstance(scenes, dict): scenes = [scenes]
         for idx, scn in enumerate(scenes, 1):
             st.markdown(f"#### 📍 Phân cảnh {idx} ({scn.get('dur', '8s')}) — [ {scn.get('trans', 'Chuyển cảnh')} ]")
-            st.markdown(f"🏛 **Bối cảnh & Miêu tả:** *{scn.get('setting')}*\n\n**🎙 Đạo diễn & SFX:** *{scn.get('director')}*\n\n**💬 Thoại (Số từ: {scn.get('word_count', 'Không đếm')}):** <span class='voiceover-text'>{scn.get('voiceover')}</span>", unsafe_allow_html=True)
+            st.markdown(f"🏛 **Bối cảnh & Miêu tả:** *{scn.get('setting')}*\n\n**🎙 Đạo diễn & SFX:** *{scn.get('director')}*\n\n**💬 Thoại (Số từ thực tế: {scn.get('word_count', 'Không đếm')}):** <span class='voiceover-text'>{scn.get('voiceover')}</span>", unsafe_allow_html=True)
             
             img_p, vid_p = scn.get('img_p', ''), scn.get('vid_p', '')
             if "nối tiếp" in scn.get('trans', '').lower() or "dùng lại" in img_p.lower():
